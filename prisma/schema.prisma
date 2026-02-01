@@ -1,0 +1,44 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+
+model IotDevice {
+  id         Int                 @id @default(autoincrement())
+  deviceName       String?
+  macAddress String?             @unique @map("mac_address")
+  ipAddress  String             @map("ip_address")
+  driver   String?
+  components IotDeviceComponent[]
+
+  @@map("iot_device")
+}
+
+model IotDeviceComponent {
+  id              Int               @id @default(autoincrement())
+  deviceId        Int              @map("device_id")
+  componentName   String?           @map("component_name")
+  hardwareIndex   Int              @map("hardware_index")
+  hardwareAddress String?           @map("hardware_address")
+  nextValue       String?          @map("next_value")
+  device          IotDevice        @relation(fields: [deviceId], references: [id])
+  telemetryLogs   IotTelemetryLog[]
+
+  @@map("iot_device_component")
+}
+
+model IotTelemetryLog {
+  id Int @id @default(autoincrement())
+  componentId Int              @map("component_id")
+  value      String
+  direction  String
+  createdAt  DateTime          @default(now()) @map("created_at")
+  component  IotDeviceComponent @relation(fields: [componentId], references: [id])
+
+  @@index([componentId, createdAt])
+  @@map("iot_telemetry_log")
+}

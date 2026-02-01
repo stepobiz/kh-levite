@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KH Levite UI</title>
+  <link rel="stylesheet" href="/kh-levite.css" />
+</head>
+<body>
+  <nav class="topbar">
+    <div class="brand">KH Levite UI</div>
+    <div class="nav">
+      <button class="nav-btn active" data-section="devices">Dispositivi</button>
+      <button class="nav-btn" data-section="components">Componenti</button>
+      <button class="nav-btn" data-section="logs">Log</button>
+    </div>
+  </nav>
+
+  <div id="message" class="message-success" style="opacity: 0"></div>
+
+  <main>
+    <section id="devices" class="section active">
+      <div class="toolbar">
+        <h1>Dispositivi</h1>
+        <button class="btn-primary" onclick="openDeviceModal()">＋ Nuovo</button>
+      </div>
+      <div class="card" id="device-table-container">
+        <table id="device-table">
+          <thead>
+            <tr><th>ID</th><th>Nome</th><th>MAC</th><th>IP</th><th>Driver</th><th>Azioni</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="card hidden" id="device-detail-panel">
+        <div class="toolbar">
+          <h2 id="detail-title"></h2>
+          <button class="btn-secondary" onclick="closeDeviceDetail()">Chiudi</button>
+        </div>
+        <table id="device-components-table">
+          <thead>
+            <tr><th>ID</th><th>Nome</th><th>HW Index</th><th>HW Addr</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="components" class="section">
+      <div class="toolbar">
+        <h1>Componenti</h1>
+        <button class="btn-primary" onclick="openComponentModal()">＋ Nuovo</button>
+      </div>
+      <div class="card">
+        <table id="component-table">
+          <thead>
+            <tr><th>ID</th><th>IP Dispositivo</th><th>Nome</th><th>HW Index</th><th>HW Addr</th><th>Azioni</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="logs" class="section">
+      <div class="toolbar">
+        <h1>Log Telemetria</h1>
+      </div>
+      <div class="card">
+        <table id="log-table">
+          <thead>
+            <tr><th>ID</th><th>ID Componente</th><th>Valore</th><th>Direzione</th><th>Creato</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODALI -->
+  <div id="device-modal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Dispositivo</span>
+        <button class="btn-ghost" onclick="closeModal('device-modal')">✖</button>
+      </div>
+      <form id="device-form">
+        <input type="hidden" name="id" />
+        <div class="form-grid">
+          <div class="form-row">
+            <label>Nome</label>
+            <input name="deviceName" />
+          </div>
+          <div class="form-row">
+            <label>MAC</label>
+            <input name="macAddress" />
+          </div>
+          <div class="form-row">
+            <label>IP</label>
+            <input name="ipAddress" required />
+          </div>
+          <div class="form-row">
+            <label>Driver</label>
+            <input name="protocol" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" type="button" onclick="closeModal('device-modal')">Annulla</button>
+          <button class="btn-primary" type="submit">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="component-modal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Componente</span>
+        <button class="btn-ghost" onclick="closeModal('component-modal')">✖</button>
+      </div>
+      <form id="component-form">
+        <input type="hidden" name="id" />
+        <div class="form-grid">
+          <div class="form-row">
+            <label>Dispositivo</label>
+            <select name="deviceId" required></select>
+          </div>
+          <div class="form-row">
+            <label>Nome</label>
+            <input name="componentName" />
+          </div>
+          <div class="form-row">
+            <label>Indice HW</label>
+            <input name="hardwareIndex" type="number" required />
+          </div>
+          <div class="form-row">
+            <label>Indirizzo HW</label>
+            <input name="hardwareAddress" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" type="button" onclick="closeModal('component-modal')">Annulla</button>
+          <button class="btn-primary" type="submit">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/kh-levite.js"></script>
+</body>
+</html>

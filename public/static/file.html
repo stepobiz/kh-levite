@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <title>KH Novara – HVAC Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">KH Novara – HVAC Admin</div>
+    <nav class="nav">
+      <button class="nav-btn active" data-section="devices">Dispositivi</button>
+      <button class="nav-btn" data-section="rooms">Stanze</button>
+      <button class="nav-btn" data-section="zones">Zone</button>
+      <button class="nav-btn" data-section="settings">Impostazioni</button>
+      <button class="nav-btn" data-section="setpoint-profiles">Profili Setpoint</button>
+      <button class="nav-btn" data-section="overrides">Overrides</button>
+      <button class="nav-btn" data-section="event-windows">Finestre Evento</button>
+      <button class="nav-btn" data-section="sensor-readings">Letture Sensori</button>
+      <button class="nav-btn" data-section="command-logs">Comandi</button>
+      <button class="nav-btn" data-section="locks">Locks</button>
+      <button class="nav-btn" data-section="audit-logs">Audit Logs</button>
+    </nav>
+  </header>
+
+  <main>
+    <div id="message"></div>
+
+    <!-- SEZIONE DISPOSITIVI -->
+    <section id="section-devices" class="section active">
+      <div class="toolbar">
+        <h1>Dispositivi</h1>
+        <div>
+          <button id="btnReloadDevices" class="btn-secondary">Ricarica</button>
+          <button id="btnAddDevice" class="btn-primary">＋ Nuovo dispositivo</button>
+        </div>
+      </div>
+      <div class="card">
+        <table>
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Tipo</th>
+            <th>IP</th>
+            <th>Canale</th>
+            <th>Ruolo</th>
+            <th>Abilitato</th>
+            <th>Azioni</th>
+          </tr>
+          </thead>
+          <tbody id="devicesTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SEZIONE STANZE -->
+    <section id="section-rooms" class="section">
+      <div class="toolbar">
+        <h1>Stanze</h1>
+        <div>
+          <button id="btnReloadRooms" class="btn-secondary">Ricarica</button>
+          <button id="btnAddRoom" class="btn-primary">＋ Nuova stanza</button>
+        </div>
+      </div>
+      <div class="card">
+        <table>
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th>Codice</th>
+            <th>Nome</th>
+            <th>Tipo</th>
+            <th>Piano</th>
+            <th>Calendario</th>
+            <th>Abilitata</th>
+            <th>Azioni</th>
+          </tr>
+          </thead>
+          <tbody id="roomsTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SEZIONE ZONE -->
+    <section id="section-zones" class="section">
+      <div class="toolbar">
+        <h1>Zone</h1>
+        <div>
+          <button id="btnReloadZones" class="btn-secondary">Ricarica</button>
+          <button id="btnAddZone" class="btn-primary">＋ Nuova zona</button>
+        </div>
+      </div>
+      <div class="card">
+        <table>
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th>Codice</th>
+            <th>Nome</th>
+            <th>Descrizione</th>
+            <th>Abilitata</th>
+            <th>Azioni</th>
+          </tr>
+          </thead>
+          <tbody id="zonesTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SEZIONE IMPOSTAZIONI -->
+    <section id="section-settings" class="section">
+      <div class="toolbar">
+        <h1>Impostazioni</h1>
+        <div>
+          <button id="btnReloadSettings" class="btn-secondary">Ricarica</button>
+          <button id="btnAddSetting" class="btn-primary">＋ Nuova impostazione</button>
+        </div>
+      </div>
+      <div class="card">
+        <table>
+          <thead>
+          <tr>
+            <th>Chiave</th>
+            <th>Valore</th>
+            <th>Azioni</th>
+          </tr>
+          </thead>
+          <tbody id="settingsTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SEZIONE SETPOINT PROFILES -->
+    <section id="section-setpoint-profiles" class="section">
+      <div class="toolbar">
+        <h1>Profili Setpoint</h1>
+        <div>
+          <button id="btnReloadSetpointProfiles" class="btn-secondary">Ricarica</button>
+          <button id="btnAddSetpointProfile" class="btn-primary">＋ Nuovo profilo</button>
+        </div>
+      </div>
+      <div class="card">
+        <table>
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th>Codice</th>
+            <th>Nome</th>
+            <th>Temp evento</th>
+            <th>Temp eco</th>
+            <th>Azioni</th>
+          </tr>
+          </thead>
+          <tbody id="setpointProfilesTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SEZIONE OVERRIDES -->
+    <section id="section-overrides" class="section">
+      <div class="toolbar">
+        <h1>Overrides</h1>
+        <div>
+          <button id="btnReloadOverrides" class="btn-secondary">Ricarica</button>
+          <button id="btnAddOverride" class="btn-primary">＋ Nuovo override</button>
+        </div>
+      </div>
+      <div class="card">
+        <table>
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th>Room ID</th>
+            <th>Scope</th>
+            <th>Tipo</th>
+            <th>Target Temp</th>
+            <th>Inizio</th>
+            <th>Fine</th>
+            <th>Creato da</th>
+            <th>Azioni</th>
+          </tr>
+          </thead>
+          <tbody id="overridesTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SEZIONE EVENT WINDOWS -->
+    <section id="section-event-windows" class="section">
+      <div class="toolbar">
+        <h1>Finestre Evento</h1>
+        <div>
+          <button id="btnReloadEventWindows" class="btn-secondary">Ricarica</button>
+          <button id="btnAddEventWindow" class="btn-primary">＋ Nuova finestra</button>
+        </div>
+      </div>
+      <div class="card">
+        <table>
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th>Room ID</th>
+            <th>Calendario</th>
+            <th>Titolo</th>
+            <th>Inizio</th>
+            <th>Fine</th>
+            <th>Azioni</th>
+          </tr>
+          </thead>
+          <tbody id="eventWindowsTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SEZIONE SENSOR READINGS -->
+    <section id="section-sensor-readings" class="section">
+      <div class="toolbar">
+        <h1>Letture Sensori</h1>
+        <div>
+          <button id="btnReloadSensorReadings" class="btn-secondary">Ricarica</button>
+          <button id="btnAddSensorReading" class="btn-primary">＋ Nuova lettura (debug)</button>
+        </div>
+      </div>
+      <div class="card">
+        <table>
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th>Device ID</th>
+            <th>Tipo</th>
+            <th>Valore</th>
+            <th>Timestamp</th>
+          </tr>
+          </thead>
+          <tbody id="sensorReadingsTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SEZIONE COMMAND LOGS -->
+    <section id="section-command-logs" class="section">
+      <div class="toolbar">
+        <h1>Comandi</h1>
+        <div>
+          <button id="btnReloadCommandLogs" class="btn-secondary">Ricarica</button>
+          <button id="btnAddCommandLog" class="btn-primary">＋ Nuovo comando (debug)</button>
+        </div>
+      </div>
+      <div class="card">
+        <table>
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th>Device ID</th>
+            <th>RoomContext ID</th>
+            <th>Comando</th>
+            <th>Result</th>
+            <th>Timestamp</th>
+          </tr>
+          </thead>
+          <tbody id="commandLogsTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SEZIONE LOCKS -->
+    <section id="section-locks" class="section">
+      <div class="toolbar">
+        <h1>Locks</h1>
+        <div>
+          <button id="btnReloadLocks" class="btn-secondary">Ricarica</button>
+          <button id="btnAddLock" class="btn-primary">＋ Nuovo lock</button>
+        </div>
+      </div>
+      <div class="card">
+        <table>
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th>Risorsa</th>
+            <th>Holder</th>
+            <th>Note</th>
+            <th>Inizio</th>
+            <th>Fine</th>
+            <th>Azioni</th>
+          </tr>
+          </thead>
+          <tbody id="locksTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SEZIONE AUDIT LOGS -->
+    <section id="section-audit-logs" class="section">
+      <div class="toolbar">
+        <h1>Audit Logs</h1>
+        <div>
+          <button id="btnReloadAuditLogs" class="btn-secondary">Ricarica</button>
+          <button id="btnAddAuditLog" class="btn-primary">＋ Nuovo evento (debug)</button>
+        </div>
+      </div>
+      <div class="card">
+        <table>
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th>Timestamp</th>
+            <th>Attore</th>
+            <th>IP</th>
+            <th>Azione</th>
+            <th>Payload</th>
+          </tr>
+          </thead>
+          <tbody id="auditLogsTbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL DISPOSITIVI -->
+  <div id="deviceModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div id="deviceModalTitle" class="modal-title">Nuovo dispositivo</div>
+        <button type="button" id="deviceModalClose" class="btn-ghost modal-close">&times;</button>
+      </div>
+      <div id="deviceModalError" class="modal-error"></div>
+      <form id="deviceForm">
+        <input type="hidden" id="deviceId" />
+        <div class="form-grid">
+          <div class="form-row">
+            <label for="deviceName">Nome *</label>
+            <input type="text" id="deviceName" required />
+          </div>
+          <div class="form-row">
+            <label for="deviceType">Tipo *</label>
+            <input type="text" id="deviceType" required placeholder="es. SHELLY_HT" />
+          </div>
+          <div class="form-row">
+            <label for="deviceIp">IP</label>
+            <input type="text" id="deviceIp" placeholder="192.168.30.50" />
+          </div>
+          <div class="form-row">
+            <label for="deviceChannel">Canale</label>
+            <input type="number" id="deviceChannel" min="0" step="1" />
+          </div>
+          <div class="form-row">
+            <label for="deviceRole">Ruolo</label>
+            <input type="text" id="deviceRole" placeholder="SENSOR_TEMP" />
+          </div>
+          <div class="form-row">
+            <label for="deviceEnabled">Abilitato</label>
+            <select id="deviceEnabled">
+              <option value="true">Sì</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+          <div class="form-row full-row">
+            <label for="deviceConfig">Config (JSON serializzato)</label>
+            <textarea id="deviceConfig" placeholder='{"shellyId":"..."}'></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="deviceModalCancel" class="btn-secondary">Annulla</button>
+          <button type="submit" class="btn-primary">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL STANZE -->
+  <div id="roomModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div id="roomModalTitle" class="modal-title">Nuova stanza</div>
+        <button type="button" id="roomModalClose" class="btn-ghost modal-close">&times;</button>
+      </div>
+      <div id="roomModalError" class="modal-error"></div>
+      <form id="roomForm">
+        <input type="hidden" id="roomId" />
+        <div class="form-grid">
+          <div class="form-row">
+            <label for="roomCode">Codice *</label>
+            <input type="text" id="roomCode" required placeholder="es. ingresso" />
+          </div>
+          <div class="form-row">
+            <label for="roomName">Nome</label>
+            <input type="text" id="roomName" placeholder="Ingresso" />
+          </div>
+          <div class="form-row">
+            <label for="roomKind">Tipo</label>
+            <input type="text" id="roomKind" placeholder="INGRESSO" />
+          </div>
+          <div class="form-row">
+            <label for="roomFloor">Piano</label>
+            <input type="text" id="roomFloor" placeholder="PIANO_STRADALE" />
+          </div>
+          <div class="form-row full-row">
+            <label for="roomCalendarId">Calendar ID</label>
+            <input type="text" id="roomCalendarId" placeholder="calendar@group.calendar.google.com" />
+          </div>
+          <div class="form-row">
+            <label for="roomDistributionZoneCode">Zona distribuzione</label>
+            <input type="text" id="roomDistributionZoneCode" placeholder="Z1_SUP_INGR_SALETTE" />
+          </div>
+          <div class="form-row">
+            <label for="roomSetpointProfileCode">Profilo setpoint</label>
+            <input type="text" id="roomSetpointProfileCode" placeholder="SALETTA_STD" />
+          </div>
+          <div class="form-row">
+            <label for="roomTempSensorDeviceId">ID sensore temp</label>
+            <input type="number" id="roomTempSensorDeviceId" min="0" step="1" />
+          </div>
+          <div class="form-row">
+            <label for="roomEnabled">Abilitata</label>
+            <select id="roomEnabled">
+              <option value="true">Sì</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="roomModalCancel" class="btn-secondary">Annulla</button>
+          <button type="submit" class="btn-primary">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL ZONE -->
+  <div id="zoneModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div id="zoneModalTitle" class="modal-title">Nuova zona</div>
+        <button type="button" id="zoneModalClose" class="btn-ghost modal-close">&times;</button>
+      </div>
+      <div id="zoneModalError" class="modal-error"></div>
+      <form id="zoneForm">
+        <input type="hidden" id="zoneId" />
+        <div class="form-grid">
+          <div class="form-row">
+            <label for="zoneCode">Codice *</label>
+            <input type="text" id="zoneCode" required placeholder="Z1_SUP_INGR_SALETTE" />
+          </div>
+          <div class="form-row">
+            <label for="zoneName">Nome</label>
+            <input type="text" id="zoneName" />
+          </div>
+          <div class="form-row full-row">
+            <label for="zoneDescription">Descrizione</label>
+            <textarea id="zoneDescription"></textarea>
+          </div>
+          <div class="form-row">
+            <label for="zoneEnabled">Abilitata</label>
+            <select id="zoneEnabled">
+              <option value="true">Sì</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="zoneModalCancel" class="btn-secondary">Annulla</button>
+          <button type="submit" class="btn-primary">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL SETTINGS -->
+  <div id="settingModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div id="settingModalTitle" class="modal-title">Impostazione</div>
+        <button type="button" id="settingModalClose" class="btn-ghost modal-close">&times;</button>
+      </div>
+      <div id="settingModalError" class="modal-error"></div>
+      <form id="settingForm">
+        <div class="form-grid">
+          <div class="form-row full-row">
+            <label for="settingKey">Chiave *</label>
+            <input type="text" id="settingKey" required />
+          </div>
+          <div class="form-row full-row">
+            <label for="settingValue">Valore *</label>
+            <input type="text" id="settingValue" required />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="settingModalCancel" class="btn-secondary">Annulla</button>
+          <button type="submit" class="btn-primary">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL SETPOINT PROFILE -->
+  <div id="setpointProfileModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div id="setpointProfileModalTitle" class="modal-title">Profilo setpoint</div>
+        <button type="button" id="setpointProfileModalClose" class="btn-ghost modal-close">&times;</button>
+      </div>
+      <div id="setpointProfileModalError" class="modal-error"></div>
+      <form id="setpointProfileForm">
+        <input type="hidden" id="setpointProfileId" />
+        <div class="form-grid">
+          <div class="form-row">
+            <label for="setpointProfileCode">Codice *</label>
+            <input type="text" id="setpointProfileCode" required />
+          </div>
+          <div class="form-row">
+            <label for="setpointProfileName">Nome</label>
+            <input type="text" id="setpointProfileName" />
+          </div>
+          <div class="form-row full-row">
+            <label for="setpointProfileDescription">Descrizione</label>
+            <textarea id="setpointProfileDescription"></textarea>
+          </div>
+          <div class="form-row">
+            <label for="setpointProfileEventTemp">Temp evento</label>
+            <input type="number" id="setpointProfileEventTemp" step="0.1" />
+          </div>
+          <div class="form-row">
+            <label for="setpointProfileEcoTemp">Temp eco</label>
+            <input type="number" id="setpointProfileEcoTemp" step="0.1" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="setpointProfileModalCancel" class="btn-secondary">Annulla</button>
+          <button type="submit" class="btn-primary">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL OVERRIDE -->
+  <div id="overrideModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div id="overrideModalTitle" class="modal-title">Override</div>
+        <button type="button" id="overrideModalClose" class="btn-ghost modal-close">&times;</button>
+      </div>
+      <div id="overrideModalError" class="modal-error"></div>
+      <form id="overrideForm">
+        <input type="hidden" id="overrideId" />
+        <div class="form-grid">
+          <div class="form-row">
+            <label for="overrideRoomId">Room ID *</label>
+            <input type="number" id="overrideRoomId" required />
+          </div>
+          <div class="form-row">
+            <label for="overrideScope">Scope</label>
+            <input type="text" id="overrideScope" placeholder="ROOM" />
+          </div>
+          <div class="form-row">
+            <label for="overrideKind">Tipo</label>
+            <input type="text" id="overrideKind" placeholder="SETPOINT" />
+          </div>
+          <div class="form-row">
+            <label for="overrideTargetTemp">Target temp</label>
+            <input type="number" id="overrideTargetTemp" step="0.1" />
+          </div>
+          <div class="form-row">
+            <label for="overrideStartsAt">Inizio</label>
+            <input type="datetime-local" id="overrideStartsAt" />
+          </div>
+          <div class="form-row">
+            <label for="overrideExpiresAt">Fine</label>
+            <input type="datetime-local" id="overrideExpiresAt" />
+          </div>
+          <div class="form-row full-row">
+            <label for="overrideCreatedBy">Creato da</label>
+            <input type="text" id="overrideCreatedBy" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="overrideModalCancel" class="btn-secondary">Annulla</button>
+          <button type="submit" class="btn-primary">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL EVENT WINDOW -->
+  <div id="eventWindowModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div id="eventWindowModalTitle" class="modal-title">Finestra evento</div>
+        <button type="button" id="eventWindowModalClose" class="btn-ghost modal-close">&times;</button>
+      </div>
+      <div id="eventWindowModalError" class="modal-error"></div>
+      <form id="eventWindowForm">
+        <input type="hidden" id="eventWindowId" />
+        <div class="form-grid">
+          <div class="form-row">
+            <label for="eventWindowRoomId">Room ID *</label>
+            <input type="number" id="eventWindowRoomId" required />
+          </div>
+          <div class="form-row">
+            <label for="eventWindowCalendarId">Calendar ID</label>
+            <input type="text" id="eventWindowCalendarId" />
+          </div>
+          <div class="form-row full-row">
+            <label for="eventWindowTitle">Titolo</label>
+            <input type="text" id="eventWindowTitle" />
+          </div>
+          <div class="form-row">
+            <label for="eventWindowStart">Inizio</label>
+            <input type="datetime-local" id="eventWindowStart" />
+          </div>
+          <div class="form-row">
+            <label for="eventWindowEnd">Fine</label>
+            <input type="datetime-local" id="eventWindowEnd" />
+          </div>
+          <div class="form-row full-row">
+            <label for="eventWindowKind">Tipo</label>
+            <input type="text" id="eventWindowKind" placeholder="EVENT" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="eventWindowModalCancel" class="btn-secondary">Annulla</button>
+          <button type="submit" class="btn-primary">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL SENSOR READING (solo create) -->
+  <div id="sensorReadingModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div id="sensorReadingModalTitle" class="modal-title">Nuova lettura sensore</div>
+        <button type="button" id="sensorReadingModalClose" class="btn-ghost modal-close">&times;</button>
+      </div>
+      <div id="sensorReadingModalError" class="modal-error"></div>
+      <form id="sensorReadingForm">
+        <div class="form-grid">
+          <div class="form-row">
+            <label for="sensorReadingDeviceId">Device ID *</label>
+            <input type="number" id="sensorReadingDeviceId" required />
+          </div>
+          <div class="form-row">
+            <label for="sensorReadingKind">Tipo *</label>
+            <input type="text" id="sensorReadingKind" required placeholder="TEMP" />
+          </div>
+          <div class="form-row">
+            <label for="sensorReadingValue">Valore *</label>
+            <input type="number" id="sensorReadingValue" required step="0.1" />
+          </div>
+          <div class="form-row">
+            <label for="sensorReadingTs">Timestamp</label>
+            <input type="datetime-local" id="sensorReadingTs" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="sensorReadingModalCancel" class="btn-secondary">Annulla</button>
+          <button type="submit" class="btn-primary">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL COMMAND LOG (solo create) -->
+  <div id="commandLogModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div id="commandLogModalTitle" class="modal-title">Nuovo comando (log)</div>
+        <button type="button" id="commandLogModalClose" class="btn-ghost modal-close">&times;</button>
+      </div>
+      <div id="commandLogModalError" class="modal-error"></div>
+      <form id="commandLogForm">
+        <div class="form-grid">
+          <div class="form-row">
+            <label for="commandLogDeviceId">Device ID *</label>
+            <input type="number" id="commandLogDeviceId" required />
+          </div>
+          <div class="form-row">
+            <label for="commandLogRoomContextId">RoomContext ID</label>
+            <input type="number" id="commandLogRoomContextId" />
+          </div>
+          <div class="form-row full-row">
+            <label for="commandLogCommand">Comando *</label>
+            <input type="text" id="commandLogCommand" required />
+          </div>
+          <div class="form-row full-row">
+            <label for="commandLogPayload">Payload</label>
+            <textarea id="commandLogPayload"></textarea>
+          </div>
+          <div class="form-row">
+            <label for="commandLogResult">Result</label>
+            <input type="text" id="commandLogResult" />
+          </div>
+          <div class="form-row">
+            <label for="commandLogTs">Timestamp</label>
+            <input type="datetime-local" id="commandLogTs" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="commandLogModalCancel" class="btn-secondary">Annulla</button>
+          <button type="submit" class="btn-primary">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL LOCK -->
+  <div id="lockModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div id="lockModalTitle" class="modal-title">Nuovo lock</div>
+        <button type="button" id="lockModalClose" class="btn-ghost modal-close">&times;</button>
+      </div>
+      <div id="lockModalError" class="modal-error"></div>
+      <form id="lockForm">
+        <input type="hidden" id="lockId" />
+        <div class="form-grid">
+          <div class="form-row">
+            <label for="lockResource">Risorsa *</label>
+            <input type="text" id="lockResource" required />
+          </div>
+          <div class="form-row">
+            <label for="lockRoomContextId">RoomContext ID</label>
+            <input type="number" id="lockRoomContextId" />
+          </div>
+          <div class="form-row">
+            <label for="lockHolder">Holder</label>
+            <input type="text" id="lockHolder" />
+          </div>
+          <div class="form-row full-row">
+            <label for="lockNote">Note</label>
+            <textarea id="lockNote"></textarea>
+          </div>
+          <div class="form-row">
+            <label for="lockCreatedAt">Inizio</label>
+            <input type="datetime-local" id="lockCreatedAt" />
+          </div>
+          <div class="form-row">
+            <label for="lockExpiresAt">Fine</label>
+            <input type="datetime-local" id="lockExpiresAt" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="lockModalCancel" class="btn-secondary">Annulla</button>
+          <button type="submit" class="btn-primary">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL AUDIT LOG (solo create) -->
+  <div id="auditLogModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div id="auditLogModalTitle" class="modal-title">Nuovo audit log</div>
+        <button type="button" id="auditLogModalClose" class="btn-ghost modal-close">&times;</button>
+      </div>
+      <div id="auditLogModalError" class="modal-error"></div>
+      <form id="auditLogForm">
+        <div class="form-grid">
+          <div class="form-row">
+            <label for="auditLogTs">Timestamp</label>
+            <input type="datetime-local" id="auditLogTs" />
+          </div>
+          <div class="form-row">
+            <label for="auditLogActor">Attore</label>
+            <input type="text" id="auditLogActor" />
+          </div>
+          <div class="form-row">
+            <label for="auditLogIp">IP</label>
+            <input type="text" id="auditLogIp" />
+          </div>
+          <div class="form-row">
+            <label for="auditLogSsid">SSID</label>
+            <input type="text" id="auditLogSsid" />
+          </div>
+          <div class="form-row">
+            <label for="auditLogAp">AP</label>
+            <input type="text" id="auditLogAp" />
+          </div>
+          <div class="form-row">
+            <label for="auditLogOrigin">Origin</label>
+            <input type="text" id="auditLogOrigin" />
+          </div>
+          <div class="form-row">
+            <label for="auditLogRoomContextId">RoomContext ID</label>
+            <input type="number" id="auditLogRoomContextId" />
+          </div>
+          <div class="form-row">
+            <label for="auditLogAction">Azione</label>
+            <input type="text" id="auditLogAction" />
+          </div>
+          <div class="form-row full-row">
+            <label for="auditLogPayload">Payload</label>
+            <textarea id="auditLogPayload"></textarea>
+          </div>
+          <div class="form-row">
+            <label for="auditLogResult">Result</label>
+            <input type="text" id="auditLogResult" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="auditLogModalCancel" class="btn-secondary">Annulla</button>
+          <button type="submit" class="btn-primary">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

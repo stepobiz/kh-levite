@@ -1,0 +1,11 @@
+import { IotProtocolDriver } from './iot-protocol-driver';
+import { ShellyHttpDriver } from './shelly-http.driver';
+import { ShellyMqttDriver } from './shelly-mqtt.driver';
+
+const shellyHttp = new ShellyHttpDriver();
+const shellyMqtt = new ShellyMqttDriver();
+
+export const driverRegistry: Record<string, IotProtocolDriver> = {
+  [shellyHttp.protocol]: shellyHttp,
+  [shellyMqtt.protocol]: shellyMqtt,
+};
