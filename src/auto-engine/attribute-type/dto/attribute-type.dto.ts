@@ -15,7 +15,7 @@ export class AttributeTypeDto {
   @IsString()
   description?: string;
 
-  @ApiProperty({ description: 'Value type: string | number | boolean' })
+  @ApiProperty({ description: 'Value type: string | number | boolean | auen_node' })
   @IsOptional()
   @IsString()
   dataType?: string;

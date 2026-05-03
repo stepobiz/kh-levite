@@ -55,6 +55,7 @@ enum AuenNodeCategory {
   in_sensor
   in_manual_target
   in_manual_value_by_url
+  node_mirror
   out_logic_or
   out_logic_and
   out_thermostat

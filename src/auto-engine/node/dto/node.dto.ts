@@ -27,7 +27,7 @@ export class NodeDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  description?: string;
+  description?: string | null;
 
   @ApiProperty({ description: 'FK → auen_node_type' })
   @IsOptional()

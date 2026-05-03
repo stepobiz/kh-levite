@@ -260,6 +260,7 @@
               <option value="in_sensor">in_sensor</option>
               <option value="in_manual_target">in_manual_target</option>
               <option value="in_manual_value_by_url">in_manual_value_by_url</option>
+              <option value="node_mirror">node_mirror</option>
               <option value="out_logic_or">out_logic_or</option>
               <option value="out_logic_and">out_logic_and</option>
               <option value="out_thermostat">out_thermostat</option>
@@ -295,6 +296,7 @@
               <option value="string">string</option>
               <option value="number">number</option>
               <option value="boolean">boolean</option>
+              <option value="auen_node">auen_node</option>
             </select>
           </div>
           <div class="form-row" style="grid-column: 1 / -1">
@@ -345,10 +347,13 @@
           <div class="attr-section-header">Attributi</div>
           <div id="node-attributes-list"></div>
           <div class="attr-add-row">
-            <select id="attr-type-select">
+            <select id="attr-type-select" onchange="onAttrTypeChange()">
               <option value="">— seleziona attributo —</option>
             </select>
             <input id="attr-value-input" placeholder="valore" />
+            <select id="attr-node-select" class="hidden">
+              <option value="">— seleziona nodo —</option>
+            </select>
             <button type="button" class="btn-secondary btn-sm" onclick="addNodeAttribute()">＋ Aggiungi</button>
           </div>
         </div>

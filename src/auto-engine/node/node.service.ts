@@ -72,4 +72,9 @@ export class NodeService {
     await this.findById(nodeId);
     return this.repository.deleteAttribute(nodeId, attributeId);
   }
+
+  async clone(id: number, override: NodeDto) {
+    await this.findById(id);
+    return this.repository.cloneSubtree(id, override);
+  }
 }

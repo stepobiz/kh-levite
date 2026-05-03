@@ -583,6 +583,15 @@ tbody tr:hover td {
   font-style: italic;
 }
 
+.attr-inline-input {
+  width: 100%;
+  padding: 3px 6px;
+  border: 1px solid #3b82f6;
+  border-radius: 4px;
+  font-size: 12px;
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.15);
+}
+
 .attr-add-row {
   display: flex;
   gap: 8px;

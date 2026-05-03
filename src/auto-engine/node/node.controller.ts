@@ -95,4 +95,13 @@ export class NodeController {
   ) {
     return this.service.setManualValue(id, dto.value);
   }
+
+  @Post(':id/clone')
+  @ApiCreatedResponse({ type: NodeDto })
+  clone(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() override: NodeDto,
+  ) {
+    return this.service.clone(id, override);
+  }
 }

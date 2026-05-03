@@ -15,6 +15,7 @@ let auenNodeTypes = [];
 let auenAttributeTypes = [];
 let auenNodes = [];
 let auenLoaded = false;
+let cloningFromNodeId = null;
 
 // --- XSS-safe escape ---
 function esc(val) {
@@ -555,6 +556,7 @@ async function reloadAllStatuses() {
 // --- Modals ---
 function closeModal(id) {
   document.getElementById(id).classList.remove('show');
+  if (id === 'node-modal') cloningFromNodeId = null;
 }
 
 // ============================================================
@@ -792,6 +794,7 @@ function renderAuenNodes() {
       <td class="mono-val">${esc(n.desiredValue)}</td>
       <td class="mono-val">${esc(n.actualValue)}</td>
       <td class="actions">
+        <button title="Clona sottoalbero" onclick="cloneAuenNode(${n.id})">⎘</button>
         <button title="Modifica" onclick="openNodeModal(${n.id})">✏️</button>
         <button title="Elimina" onclick="deleteNode(${n.id})">🗑️</button>
       </td>
@@ -834,8 +837,12 @@ function openNodeModal(id = null) {
     attrHint.classList.add('hidden');
     renderNodeAttributesList(node.id, node.attributes || []);
     populateAttrTypeSelect();
-    document.getElementById('attr-value-input').value = '';
     document.getElementById('attr-type-select').value = '';
+    document.getElementById('attr-value-input').value = '';
+    document.getElementById('attr-value-input').classList.remove('hidden');
+    const attrNodeSel = document.getElementById('attr-node-select');
+    attrNodeSel.classList.add('hidden');
+    attrNodeSel.value = '';
   } else {
     attrSection.classList.add('hidden');
     attrHint.classList.remove('hidden');
@@ -852,6 +859,35 @@ function populateAttrTypeSelect() {
     ).join('');
 }
 
+function onAttrTypeChange() {
+  const attrTypeId = Number(document.getElementById('attr-type-select').value);
+  const at = auenAttributeTypes.find(x => x.id === attrTypeId);
+  const isNodeType = at?.dataType === 'auen_node';
+  const input = document.getElementById('attr-value-input');
+  const nodeSelect = document.getElementById('attr-node-select');
+  if (isNodeType) {
+    input.classList.add('hidden');
+    nodeSelect.classList.remove('hidden');
+    populateAttrNodeSelect();
+  } else {
+    nodeSelect.classList.add('hidden');
+    nodeSelect.value = '';
+    input.classList.remove('hidden');
+    input.value = '';
+  }
+}
+
+function populateAttrNodeSelect() {
+  const currentNodeId = Number(document.getElementById('node-form').recordId.value);
+  const select = document.getElementById('attr-node-select');
+  select.innerHTML = '<option value="">— seleziona nodo —</option>' +
+    auenNodes
+      .filter(n => n.id !== currentNodeId)
+      .sort((a, b) => a.id - b.id)
+      .map(n => `<option value="${n.id}">${esc(n.code)}</option>`)
+      .join('');
+}
+
 function renderNodeAttributesList(nodeId, attributes) {
   const container = document.getElementById('node-attributes-list');
   if (!container) return;
@@ -863,24 +899,83 @@ function renderNodeAttributesList(nodeId, attributes) {
     <table class="attr-table">
       <thead><tr><th>Attributo</th><th>Valore</th><th></th></tr></thead>
       <tbody>
-        ${attributes.map(a => `
+        ${attributes.map(a => {
+          const displayValue = a.attribute?.dataType === 'auen_node'
+            ? esc(auenNodes.find(n => n.id === Number(a.value))?.code ?? a.value)
+            : esc(a.value);
+          return `
           <tr>
             <td>${esc(a.attribute?.code ?? `#${a.attributeId}`)}</td>
-            <td><code>${esc(a.value)}</code></td>
+            <td id="aval-${a.attributeId}"
+                data-raw="${esc(a.value)}"
+                data-dtype="${esc(a.attribute?.dataType ?? '')}">
+              <code>${displayValue}</code>
+            </td>
             <td class="actions">
+              <button type="button" id="aedit-${a.attributeId}" title="Modifica"
+                onclick="editNodeAttr(${nodeId}, ${a.attributeId})">✏️</button>
+              <button type="button" id="asave-${a.attributeId}" title="Salva" class="hidden"
+                onclick="saveNodeAttr(${nodeId}, ${a.attributeId})">💾</button>
               <button type="button" title="Rimuovi"
                 onclick="removeNodeAttribute(${nodeId}, ${a.attributeId})">🗑️</button>
             </td>
-          </tr>`).join('')}
+          </tr>`;
+        }).join('')}
       </tbody>
     </table>`;
+}
+
+function editNodeAttr(nodeId, attrId) {
+  const valCell = document.getElementById(`aval-${attrId}`);
+  const rawValue = valCell.dataset.raw;
+  const dataType = valCell.dataset.dtype;
+
+  if (dataType === 'auen_node') {
+    const opts = auenNodes
+      .filter(n => n.id !== nodeId)
+      .sort((a, b) => a.id - b.id)
+      .map(n => `<option value="${n.id}"${Number(rawValue) === n.id ? ' selected' : ''}>${esc(n.code)}</option>`)
+      .join('');
+    valCell.innerHTML =
+      `<select id="aval-input-${attrId}" class="attr-inline-input">` +
+      `<option value="">— seleziona —</option>${opts}</select>`;
+  } else {
+    valCell.innerHTML =
+      `<input id="aval-input-${attrId}" class="attr-inline-input" value="${esc(rawValue)}" />`;
+  }
+
+  document.getElementById(`aedit-${attrId}`).classList.add('hidden');
+  document.getElementById(`asave-${attrId}`).classList.remove('hidden');
+}
+
+async function saveNodeAttr(nodeId, attrId) {
+  const value = document.getElementById(`aval-input-${attrId}`)?.value ?? '';
+  if (!value) { showToast('Inserisci un valore', true); return; }
+  try {
+    const res = await fetch(`/api/auen/nodes/${nodeId}/attributes/${attrId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ value }),
+    });
+    if (res.ok) {
+      await refreshNodeAttributes(nodeId);
+    } else {
+      showToast('Errore salvataggio attributo', true);
+    }
+  } catch {
+    showToast('Errore di rete', true);
+  }
 }
 
 async function addNodeAttribute() {
   const form = document.getElementById('node-form');
   const nodeId = form.recordId.value;
   const attributeId = document.getElementById('attr-type-select').value;
-  const value = document.getElementById('attr-value-input').value;
+  const nodeSelect = document.getElementById('attr-node-select');
+  const isNodeType = !nodeSelect.classList.contains('hidden');
+  const value = isNodeType
+    ? nodeSelect.value
+    : document.getElementById('attr-value-input').value;
   if (!attributeId) { showToast('Seleziona un attributo', true); return; }
   if (!value) { showToast('Inserisci un valore', true); return; }
   try {
@@ -890,8 +985,11 @@ async function addNodeAttribute() {
       body: JSON.stringify({ value }),
     });
     if (res.ok) {
-      document.getElementById('attr-value-input').value = '';
       document.getElementById('attr-type-select').value = '';
+      document.getElementById('attr-value-input').value = '';
+      document.getElementById('attr-value-input').classList.remove('hidden');
+      nodeSelect.classList.add('hidden');
+      nodeSelect.value = '';
       await refreshNodeAttributes(Number(nodeId));
     } else {
       showToast('Errore aggiunta attributo', true);
@@ -931,21 +1029,34 @@ async function handleNodeSubmit(e) {
   e.preventDefault();
   const form = e.target;
   const id = form.recordId.value;
-  const parentIdVal = form.parentId.value;
+  const cloneFromId = cloningFromNodeId;
+  cloningFromNodeId = null;
+  const parentIdVal = form.elements['parentId'].value;
   const dto = {
-    code: form.code.value,
-    description: form.description.value || undefined,
-    typeId: Number(form.typeId.value),
+    code: form.elements['code'].value,
+    description: form.elements['description'].value || null,
+    typeId: Number(form.elements['typeId'].value),
     parentId: parentIdVal ? Number(parentIdVal) : null,
   };
+  let url, method;
+  if (cloneFromId != null) {
+    url = `/api/auen/nodes/${cloneFromId}/clone`;
+    method = 'POST';
+  } else if (id) {
+    url = `/api/auen/nodes/${id}`;
+    method = 'PATCH';
+  } else {
+    url = '/api/auen/nodes';
+    method = 'POST';
+  }
   try {
-    const res = await fetch(id ? `/api/auen/nodes/${id}` : '/api/auen/nodes', {
-      method: id ? 'PATCH' : 'POST',
+    const res = await fetch(url, {
+      method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dto),
     });
     if (res.ok) {
-      showToast(id ? 'Nodo aggiornato' : 'Nodo creato');
+      showToast(cloneFromId != null ? 'Nodo clonato' : (id ? 'Nodo aggiornato' : 'Nodo creato'));
       closeModal('node-modal');
       await fetchAuenNodes();
     } else {
@@ -965,4 +1076,27 @@ async function deleteNode(id) {
   } catch {
     showToast('Errore di rete', true);
   }
+}
+
+function cloneAuenNode(id) {
+  const node = auenNodes.find(n => n.id === id);
+  if (!node) { showToast('Nodo non trovato', true); return; }
+
+  openNodeModal(null);
+  cloningFromNodeId = id;
+
+  const form = document.getElementById('node-form');
+  form.elements['code'].value = proposeCloneCode(node.code);
+  form.elements['description'].value = node.description ?? '';
+  form.elements['typeId'].value = String(node.typeId);
+  form.elements['parentId'].value = node.parentId != null ? String(node.parentId) : '';
+  document.getElementById('node-modal-title').textContent = `Clone di ${esc(node.code)}`;
+}
+
+function proposeCloneCode(base) {
+  const existing = new Set(auenNodes.map(n => n.code));
+  let candidate = `${base}_copy`;
+  let i = 2;
+  while (existing.has(candidate)) candidate = `${base}_copy_${i++}`;
+  return candidate;
 }
