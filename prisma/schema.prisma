@@ -13,21 +13,27 @@ model IotDevice {
   macAddress String?             @unique @map("mac_address")
   ipAddress  String             @map("ip_address")
   driver   String?
+  createdAt  DateTime            @default(now()) @map("created_at")
+  updatedAt  DateTime            @updatedAt @map("updated_at")
   components IotDeviceComponent[]
 
   @@map("iot_device")
 }
 
 model IotDeviceComponent {
-  id              Int               @id @default(autoincrement())
-  deviceId        Int              @map("device_id")
-  componentName   String?           @map("component_name")
-  hardwareIndex   Int              @map("hardware_index")
-  hardwareAddress String?           @map("hardware_address")
-  nextValue       String?          @map("next_value")
-  device          IotDevice        @relation(fields: [deviceId], references: [id])
-  telemetryLogs   IotTelemetryLog[]
+  id                  Int               @id @default(autoincrement())
+  deviceId            Int               @map("device_id")
+  componentName       String?           @map("component_name")
+  hardwareIndex       Int               @map("hardware_index")
+  hardwareAddress     String?           @map("hardware_address")
+  nextValue           String?           @map("next_value")
+  nextValueUpdatedAt  DateTime?         @map("next_value_updated_at")
+  createdAt           DateTime          @default(now()) @map("created_at")
+  updatedAt           DateTime          @updatedAt @map("updated_at")
+  device              IotDevice         @relation(fields: [deviceId], references: [id])
+  telemetryLogs       IotTelemetryLog[]
 
+  @@index([deviceId])
   @@map("iot_device_component")
 }
 
@@ -41,4 +47,67 @@ model IotTelemetryLog {
 
   @@index([componentId, createdAt])
   @@map("iot_telemetry_log")
+}
+
+// --- AutoEngine ---
+
+enum AuenNodeCategory {
+  in_sensor
+  in_manual_target
+  in_manual_value_by_url
+  out_logic_or
+  out_logic_and
+  out_thermostat
+}
+
+model AuenNodeType {
+  id       Int              @id @default(autoincrement())
+  name     String
+  iconSlug String?          @map("icon_slug")
+  category AuenNodeCategory
+  nodes    AuenNode[]
+
+  @@map("auen_node_type")
+}
+
+model AuenNode {
+  id                    Int       @id @default(autoincrement())
+  code                  String    @unique
+  description           String?
+  typeId                Int       @map("type_id")
+  parentId              Int?      @map("parent_id")
+  desiredValue          String    @default("0") @map("desired_value")
+  desiredValueUpdatedAt DateTime? @map("desired_value_updated_at")
+  actualValue           String    @default("0") @map("actual_value")
+  actualValueUpdatedAt  DateTime? @map("actual_value_updated_at")
+
+  type       AuenNodeType        @relation(fields: [typeId], references: [id])
+  parent     AuenNode?           @relation("AuenNodeChildren", fields: [parentId], references: [id])
+  children   AuenNode[]          @relation("AuenNodeChildren")
+  attributes AuenNodeAttribute[]
+
+  @@index([parentId])
+  @@map("auen_node")
+}
+
+model AuenAttributeType {
+  id             Int                 @id @default(autoincrement())
+  code           String              @unique
+  description    String?
+  dataType       String              @map("data_type")
+  nodeAttributes AuenNodeAttribute[]
+
+  @@map("auen_attribute_type")
+}
+
+model AuenNodeAttribute {
+  nodeId      Int    @map("node_id")
+  attributeId Int    @map("attribute_id")
+  value       String
+
+  node      AuenNode          @relation(fields: [nodeId], references: [id])
+  attribute AuenAttributeType @relation(fields: [attributeId], references: [id])
+
+  @@id([nodeId, attributeId])
+  @@map("auen_node_attribute")
 }

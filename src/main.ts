@@ -8,6 +8,9 @@ async function bootstrap() {
 	// Serve API from /api
 	app.setGlobalPrefix('api');
 
+	// Enable CORS for all origins
+	app.enableCors({ origin: '*' });
+
 	// Swagger at /api-docs
 	const config = new DocumentBuilder()
 		.setTitle('KH Levite API')
@@ -18,7 +21,6 @@ async function bootstrap() {
 	SwaggerModule.setup('api-docs', app, document, {
 		swaggerOptions: { persistAuthorization: true },
 	});
-
 
 	await app.listen(3000);
 }

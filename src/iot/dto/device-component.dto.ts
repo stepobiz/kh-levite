@@ -1,20 +1,17 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsString, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
+import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsInt, IsOptional, IsString } from 'class-validator';
 import { DeviceDto } from './device.dto';
 
 export class DeviceComponentDto {
 	@ApiPropertyOptional({ description: 'Unique identifier of the component' })
 	id?: number;
 
-	@ApiProperty({ description: 'ID of the related device' })
-	@IsInt()
-	deviceId!: number;
-
-	@ApiPropertyOptional({ type: () => DeviceDto, description: 'Parent device object (if loaded)' })
+	@ApiPropertyOptional({ description: 'ID of the related device' })
 	@IsOptional()
-	@ValidateNested()
-	@Type(() => DeviceDto)
+	@IsInt()
+	deviceId?: number;
+
+	@ApiHideProperty()
 	device?: DeviceDto;
 
 	@ApiPropertyOptional({ description: 'Component name' })
@@ -30,4 +27,8 @@ export class DeviceComponentDto {
 	@IsOptional()
 	@IsString()
 	hardwareAddress?: string;
+
+	@ApiPropertyOptional()
+	@IsOptional()
+	createdAt?: Date;
 }

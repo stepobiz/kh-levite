@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
 import { DeviceBusiness } from 'src/iot/business/device.business';
 import { DeviceDto } from 'src/iot/dto/device.dto';
@@ -25,7 +25,7 @@ export class DeviceController {
     return this.business.findById(Number(id));
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ApiOkResponse({ type: DeviceDto })
   update(@Param('id') id: number, @Body() dto: DeviceDto) {
     return this.business.update(Number(id), dto);

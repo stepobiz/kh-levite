@@ -49,23 +49,23 @@ export class TelemetryProcessor {
 				});
 			}
 
-			if (component['nextValue'] !== null && component['nextValue'] !== undefined) {
-				const cooldownOk = !component['nextValueUpdatedAt'] ||
-					(new Date().getTime() - new Date(component['nextValueUpdatedAt']).getTime()) / 1000 >= COOLDOWN_SECONDS;
+			if (component.nextValue !== null && component.nextValue !== undefined) {
+				const cooldownOk = !component.nextValueUpdatedAt ||
+					(new Date().getTime() - new Date(component.nextValueUpdatedAt).getTime()) / 1000 >= COOLDOWN_SECONDS;
 
 				if (!cooldownOk) continue;
 
-				if (hwValue === component['nextValue']) {
-					await this.componentRepo.update(component.id!, { nextValue: null });
+				if (hwValue === component.nextValue) {
+					await this.componentRepo.setNextValue(component.id!, null);
 				} else {
 					try {
-						await driver.write(DeviceComponentMapper.toDto(component), component['nextValue']);
+						await driver.write(DeviceComponentMapper.toDto(component), component.nextValue);
 						await this.logRepo.create({
 							component: { connect: { id: component.id } },
-							value: component['nextValue'],
+							value: component.nextValue,
 							direction: 'WRITE',
 						});
-						await this.componentRepo.update(component.id!, { nextValue: null });
+						await this.componentRepo.setNextValue(component.id!, null);
 					} catch (err) {
 						logger.error(`Write error for component ${component.id}:`, err);
 					}

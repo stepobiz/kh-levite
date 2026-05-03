@@ -11,20 +11,6 @@ export class DeviceMapper {
     if (dto.macAddress !== undefined) data.macAddress = dto.macAddress;
     if (dto.driver !== undefined) data.driver = dto.driver;
 
-    if (dto.components && dto.components.length > 0) {
-      const newComponents = dto.components
-        .filter(c => c.id === undefined)
-        .map(c => ({
-          componentName: c.componentName,
-          hardwareIndex: c.hardwareIndex,
-          hardwareAddress: c.hardwareAddress,
-        }));
-
-      if (newComponents.length > 0) {
-        data.components = { create: newComponents };
-      }
-    }
-
     return data;
   }
 

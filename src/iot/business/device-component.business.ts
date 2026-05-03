@@ -7,8 +7,8 @@ import { DeviceComponentMapper } from 'src/iot/mapper/device-component.mapper';
 export class DeviceComponentBusiness {
   constructor(private readonly repository: DeviceComponentRepository) {}
 
-  async create(dto: DeviceComponentDto): Promise<DeviceComponentDto> {
-    const entity = await this.repository.create(DeviceComponentMapper.toCreateInput(dto));
+  async create(deviceId: number, dto: DeviceComponentDto): Promise<DeviceComponentDto> {
+    const entity = await this.repository.create(DeviceComponentMapper.toCreateInput(deviceId, dto));
     return DeviceComponentMapper.toDto(entity);
   }
 
@@ -29,6 +29,11 @@ export class DeviceComponentBusiness {
 
   async update(id: number, dto: DeviceComponentDto): Promise<DeviceComponentDto> {
     const entity = await this.repository.update(id, DeviceComponentMapper.toUpdateInput(dto));
+    return DeviceComponentMapper.toDto(entity);
+  }
+
+  async setNextValue(id: number, value: string | null): Promise<DeviceComponentDto> {
+    const entity = await this.repository.setNextValue(id, value);
     return DeviceComponentMapper.toDto(entity);
   }
 

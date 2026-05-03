@@ -10,13 +10,6 @@ export class TelemetryLogMapper {
     };
   }
 
-  static toUpdateInput(dto: Partial<TelemetryLogDto>): Prisma.IotTelemetryLogUpdateInput {
-    const data: Prisma.IotTelemetryLogUpdateInput = {};
-    if (dto.value !== undefined) data.value = dto.value;
-    if (dto.direction !== undefined) data.direction = dto.direction;
-    return data;
-  }
-
   static toDto(entity: any): TelemetryLogDto {
     return {
       id: entity.id,

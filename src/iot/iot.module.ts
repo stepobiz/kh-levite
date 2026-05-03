@@ -2,8 +2,7 @@ import { Module } from '@nestjs/common';
 import { DeviceController } from 'src/iot/web/rest/device.controller';
 import { DeviceBusiness } from 'src/iot/business/device.business';
 import { DeviceRepository } from 'src/iot/repository/device.repository';
-import { DeviceComponentController } from 'src/iot/web/rest/device-component.controller';
-import { DeviceComponentItemController } from 'src/iot/web/rest/device-component-item.controller';
+import { ComponentController } from 'src/iot/web/rest/component.controller';
 import { DeviceComponentBusiness } from 'src/iot/business/device-component.business';
 import { DeviceComponentRepository } from 'src/iot/repository/device-component.repository';
 import { TelemetryLogController } from 'src/iot/web/rest/telemetry-log.controller';
@@ -15,14 +14,11 @@ import { TelemetryCronService } from './process/telemetry-cron.service';
 @Module({
 	imports: [
 		ScheduleModule.forRoot(),
-
 	],
 	controllers: [
 		DeviceController,
-		DeviceComponentController,
-		DeviceComponentItemController,
+		ComponentController,
 		TelemetryLogController,
-
 	],
 	providers: [
 		DeviceBusiness,
@@ -32,7 +28,6 @@ import { TelemetryCronService } from './process/telemetry-cron.service';
 		TelemetryLogBusiness,
 		TelemetryLogRepository,
 		TelemetryCronService,
-
 	],
 })
 export class IotModule { }

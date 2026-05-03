@@ -34,6 +34,16 @@ export class DeviceComponentRepository {
     return this.prisma.iotDeviceComponent.update({ where: { id }, data });
   }
 
+  setNextValue(id: number, value: string | null) {
+    return this.prisma.iotDeviceComponent.update({
+      where: { id },
+      data: {
+        nextValue: value,
+        nextValueUpdatedAt: value !== null ? new Date() : null,
+      },
+    });
+  }
+
   delete(id: number) {
     return this.prisma.iotDeviceComponent.delete({ where: { id } });
   }

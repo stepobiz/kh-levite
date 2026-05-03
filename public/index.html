@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,75 +8,140 @@
 </head>
 <body>
   <nav class="topbar">
-    <div class="brand">KH Levite UI</div>
+    <div class="brand">KH Levite</div>
     <div class="nav">
       <button class="nav-btn active" data-section="devices">Dispositivi</button>
-      <button class="nav-btn" data-section="components">Componenti</button>
       <button class="nav-btn" data-section="logs">Log</button>
+      <button class="nav-btn" data-section="auen-node-types">Node Types</button>
+      <button class="nav-btn" data-section="auen-nodes">Nodi</button>
+      <button class="nav-btn" data-section="auen-attribute-types">Attr Types</button>
     </div>
   </nav>
 
-  <div id="message" class="message-success" style="opacity: 0"></div>
+  <div id="message" style="opacity: 0"></div>
 
   <main>
+
+    <!-- DISPOSITIVI -->
     <section id="devices" class="section active">
       <div class="toolbar">
         <h1>Dispositivi</h1>
-        <button class="btn-primary" onclick="openDeviceModal()">＋ Nuovo</button>
+        <div class="toolbar-actions">
+          <button id="reload-statuses-btn" class="btn-secondary" onclick="reloadAllStatuses()">↻ Ricarica stati</button>
+          <button class="btn-primary" onclick="openDeviceModal()">＋ Nuovo</button>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <input id="device-search" type="text" placeholder="Cerca per nome, IP o MAC..." />
       </div>
       <div class="card" id="device-table-container">
         <table id="device-table">
           <thead>
-            <tr><th>ID</th><th>Nome</th><th>MAC</th><th>IP</th><th>Driver</th><th>Azioni</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <div class="card hidden" id="device-detail-panel">
-        <div class="toolbar">
-          <h2 id="detail-title"></h2>
-          <button class="btn-secondary" onclick="closeDeviceDetail()">Chiudi</button>
-        </div>
-        <table id="device-components-table">
-          <thead>
-            <tr><th>ID</th><th>Nome</th><th>HW Index</th><th>HW Addr</th></tr>
+            <tr>
+              <th>ID</th><th>Nome</th><th>MAC</th><th>IP</th><th>Driver</th><th>Stato</th><th>Azioni</th>
+            </tr>
           </thead>
           <tbody></tbody>
         </table>
       </div>
     </section>
 
-    <section id="components" class="section">
-      <div class="toolbar">
-        <h1>Componenti</h1>
-        <button class="btn-primary" onclick="openComponentModal()">＋ Nuovo</button>
-      </div>
-      <div class="card">
-        <table id="component-table">
-          <thead>
-            <tr><th>ID</th><th>IP Dispositivo</th><th>Nome</th><th>HW Index</th><th>HW Addr</th><th>Azioni</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-
+    <!-- LOG -->
     <section id="logs" class="section">
       <div class="toolbar">
         <h1>Log Telemetria</h1>
+        <div class="toolbar-actions">
+          <span id="log-last-refresh" class="muted-text"></span>
+          <button class="btn-secondary" onclick="fetchLogs()">↻ Aggiorna</button>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <select id="log-filter-component">
+          <option value="">Tutti i componenti</option>
+        </select>
+        <select id="log-filter-direction">
+          <option value="">Tutte le direzioni</option>
+          <option value="READ">READ</option>
+          <option value="WRITE">WRITE</option>
+        </select>
       </div>
       <div class="card">
         <table id="log-table">
           <thead>
-            <tr><th>ID</th><th>ID Componente</th><th>Valore</th><th>Direzione</th><th>Creato</th></tr>
+            <tr>
+              <th>ID</th><th>Componente</th><th>Dispositivo</th><th>Valore</th><th>Direzione</th><th>Creato</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div class="pagination">
+          <button id="log-prev" onclick="logPrevPage()" disabled>← Prec</button>
+          <span id="log-page-info"></span>
+          <button id="log-next" onclick="logNextPage()" disabled>Succ →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- AUTO ENGINE — NODE TYPES -->
+    <section id="auen-node-types" class="section">
+      <div class="toolbar">
+        <h1>Node Types</h1>
+        <div class="toolbar-actions">
+          <button class="btn-secondary" onclick="fetchNodeTypes()">↻ Aggiorna</button>
+          <button class="btn-primary" onclick="openNodeTypeModal()">＋ Nuovo</button>
+        </div>
+      </div>
+      <div class="card">
+        <table id="node-type-table">
+          <thead>
+            <tr><th>ID</th><th>Nome</th><th>Icon Slug</th><th>Category</th><th>Azioni</th></tr>
           </thead>
           <tbody></tbody>
         </table>
       </div>
     </section>
+
+    <!-- AUTO ENGINE — NODI -->
+    <section id="auen-nodes" class="section">
+      <div class="toolbar">
+        <h1>Nodi</h1>
+        <div class="toolbar-actions">
+          <button class="btn-secondary" onclick="fetchAuenNodes()">↻ Aggiorna</button>
+          <button class="btn-primary" onclick="openNodeModal()">＋ Nuovo</button>
+        </div>
+      </div>
+      <div class="card">
+        <table id="auen-node-table">
+          <thead>
+            <tr><th>Code</th><th>Descrizione</th><th>Tipo</th><th>Category</th><th>Desired</th><th>Actual</th><th>Azioni</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- AUTO ENGINE — ATTRIBUTE TYPES -->
+    <section id="auen-attribute-types" class="section">
+      <div class="toolbar">
+        <h1>Attribute Types</h1>
+        <div class="toolbar-actions">
+          <button class="btn-secondary" onclick="fetchAttributeTypes()">↻ Aggiorna</button>
+          <button class="btn-primary" onclick="openAttributeTypeModal()">＋ Nuovo</button>
+        </div>
+      </div>
+      <div class="card">
+        <table id="attribute-type-table">
+          <thead>
+            <tr><th>ID</th><th>Code</th><th>Descrizione</th><th>Data Type</th><th>Azioni</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
   </main>
 
-  <!-- MODALI -->
+  <!-- MODAL DISPOSITIVO -->
   <div id="device-modal" class="modal-backdrop">
     <div class="modal">
       <div class="modal-header">
@@ -84,7 +149,7 @@
         <button class="btn-ghost" onclick="closeModal('device-modal')">✖</button>
       </div>
       <form id="device-form">
-        <input type="hidden" name="id" />
+        <input type="hidden" name="recordId" />
         <div class="form-grid">
           <div class="form-row">
             <label>Nome</label>
@@ -92,15 +157,19 @@
           </div>
           <div class="form-row">
             <label>MAC</label>
-            <input name="macAddress" />
+            <input name="macAddress" placeholder="AA:BB:CC:DD:EE:FF" />
           </div>
           <div class="form-row">
-            <label>IP</label>
-            <input name="ipAddress" required />
+            <label>IP <span class="required">*</span></label>
+            <input name="ipAddress" required placeholder="192.168.1.100" />
           </div>
           <div class="form-row">
             <label>Driver</label>
-            <input name="protocol" />
+            <select name="protocol">
+              <option value="">— nessuno —</option>
+              <option value="shelly-http">Shelly HTTP</option>
+              <option value="shelly-mqtt">Shelly MQTT</option>
+            </select>
           </div>
         </div>
         <div class="modal-footer">
@@ -111,6 +180,7 @@
     </div>
   </div>
 
+  <!-- MODAL COMPONENTE -->
   <div id="component-modal" class="modal-backdrop">
     <div class="modal">
       <div class="modal-header">
@@ -118,18 +188,15 @@
         <button class="btn-ghost" onclick="closeModal('component-modal')">✖</button>
       </div>
       <form id="component-form">
-        <input type="hidden" name="id" />
+        <input type="hidden" name="recordId" />
+        <input type="hidden" name="deviceId" />
         <div class="form-grid">
-          <div class="form-row">
-            <label>Dispositivo</label>
-            <select name="deviceId" required></select>
-          </div>
           <div class="form-row">
             <label>Nome</label>
             <input name="componentName" />
           </div>
           <div class="form-row">
-            <label>Indice HW</label>
+            <label>Indice HW <span class="required">*</span></label>
             <input name="hardwareIndex" type="number" required />
           </div>
           <div class="form-row">
@@ -139,6 +206,157 @@
         </div>
         <div class="modal-footer">
           <button class="btn-secondary" type="button" onclick="closeModal('component-modal')">Annulla</button>
+          <button class="btn-primary" type="submit">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL COMANDO -->
+  <div id="command-modal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="command-modal-title">Comando</span>
+        <button class="btn-ghost" onclick="closeModal('command-modal')">✖</button>
+      </div>
+      <form id="command-form">
+        <input type="hidden" name="componentId" />
+        <input type="hidden" name="deviceId" />
+        <div class="form-row">
+          <label>Valore <span class="required">*</span></label>
+          <input name="commandValue" required placeholder="es. true, false, 50" autocomplete="off" />
+        </div>
+        <p id="command-modal-error" class="command-error hidden"></p>
+        <div class="modal-footer">
+          <button class="btn-secondary" type="button" onclick="closeModal('command-modal')">Annulla</button>
+          <button class="btn-primary" type="submit">Invia</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL NODE TYPE -->
+  <div id="node-type-modal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Node Type</span>
+        <button class="btn-ghost" onclick="closeModal('node-type-modal')">✖</button>
+      </div>
+      <form id="node-type-form">
+        <input type="hidden" name="recordId" />
+        <div class="form-grid">
+          <div class="form-row">
+            <label>Nome <span class="required">*</span></label>
+            <input name="name" required />
+          </div>
+          <div class="form-row">
+            <label>Icon Slug</label>
+            <input name="iconSlug" placeholder="es. thermometer" />
+          </div>
+          <div class="form-row" style="grid-column: 1 / -1">
+            <label>Category <span class="required">*</span></label>
+            <select name="category" required>
+              <option value="">— seleziona —</option>
+              <option value="in_sensor">in_sensor</option>
+              <option value="in_manual_target">in_manual_target</option>
+              <option value="in_manual_value_by_url">in_manual_value_by_url</option>
+              <option value="out_logic_or">out_logic_or</option>
+              <option value="out_logic_and">out_logic_and</option>
+              <option value="out_thermostat">out_thermostat</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" type="button" onclick="closeModal('node-type-modal')">Annulla</button>
+          <button class="btn-primary" type="submit">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL ATTRIBUTE TYPE -->
+  <div id="attribute-type-modal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Attribute Type</span>
+        <button class="btn-ghost" onclick="closeModal('attribute-type-modal')">✖</button>
+      </div>
+      <form id="attribute-type-form">
+        <input type="hidden" name="recordId" />
+        <div class="form-grid">
+          <div class="form-row">
+            <label>Code <span class="required">*</span></label>
+            <input name="code" required placeholder="es. delay_from_child" />
+          </div>
+          <div class="form-row">
+            <label>Data Type <span class="required">*</span></label>
+            <select name="dataType" required>
+              <option value="">— seleziona —</option>
+              <option value="string">string</option>
+              <option value="number">number</option>
+              <option value="boolean">boolean</option>
+            </select>
+          </div>
+          <div class="form-row" style="grid-column: 1 / -1">
+            <label>Descrizione</label>
+            <input name="description" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" type="button" onclick="closeModal('attribute-type-modal')">Annulla</button>
+          <button class="btn-primary" type="submit">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL NODO -->
+  <div id="node-modal" class="modal-backdrop">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <span class="modal-title" id="node-modal-title">Nodo</span>
+        <button class="btn-ghost" onclick="closeModal('node-modal')">✖</button>
+      </div>
+      <form id="node-form">
+        <input type="hidden" name="recordId" />
+        <div class="form-grid">
+          <div class="form-row">
+            <label>Code <span class="required">*</span></label>
+            <input name="code" required placeholder="es. caldaia" />
+          </div>
+          <div class="form-row">
+            <label>Descrizione</label>
+            <input name="description" />
+          </div>
+          <div class="form-row">
+            <label>Tipo <span class="required">*</span></label>
+            <select name="typeId" id="node-type-select" required>
+              <option value="">— seleziona —</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Parent</label>
+            <select name="parentId" id="node-parent-select">
+              <option value="">— nessuno (radice) —</option>
+            </select>
+          </div>
+        </div>
+        <div id="node-attributes-section" class="hidden">
+          <div class="attr-section-header">Attributi</div>
+          <div id="node-attributes-list"></div>
+          <div class="attr-add-row">
+            <select id="attr-type-select">
+              <option value="">— seleziona attributo —</option>
+            </select>
+            <input id="attr-value-input" placeholder="valore" />
+            <button type="button" class="btn-secondary btn-sm" onclick="addNodeAttribute()">＋ Aggiungi</button>
+          </div>
+        </div>
+        <p id="node-attributes-hint" class="muted-text hidden" style="margin: 16px 0 0">
+          Salva prima il nodo per gestire gli attributi.
+        </p>
+        <div class="modal-footer">
+          <button class="btn-secondary" type="button" onclick="closeModal('node-modal')">Annulla</button>
           <button class="btn-primary" type="submit">Salva</button>
         </div>
       </form>

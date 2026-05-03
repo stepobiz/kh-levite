@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 
 import { PrismaModule } from './prisma/prisma.module';
 import { IotModule } from './iot/iot.module';
+import { AutoEngineModule } from './auto-engine/auto-engine.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { IotModule } from './iot/iot.module';
 
     PrismaModule,
     IotModule,
+    AutoEngineModule,
   ],
 })
 export class AppModule {}

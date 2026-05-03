@@ -3,9 +3,9 @@ import { DeviceMapper } from 'src/iot/mapper/device.mapper';
 import type { Prisma } from '@prisma/client';
 
 export class DeviceComponentMapper {
-  static toCreateInput(dto: DeviceComponentDto): Prisma.IotDeviceComponentCreateInput {
+  static toCreateInput(deviceId: number, dto: DeviceComponentDto): Prisma.IotDeviceComponentCreateInput {
     const data: Prisma.IotDeviceComponentCreateInput = {
-      device: { connect: { id: dto.deviceId } },
+      device: { connect: { id: deviceId } },
       hardwareIndex: dto.hardwareIndex,
     };
 
@@ -30,6 +30,7 @@ export class DeviceComponentMapper {
       componentName: entity.componentName,
       hardwareIndex: entity.hardwareIndex,
       hardwareAddress: entity.hardwareAddress,
+      createdAt: entity.createdAt,
       device: entity.device ? DeviceMapper.toDto(entity.device) : undefined,
     };
   }

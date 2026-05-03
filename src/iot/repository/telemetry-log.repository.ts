@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, IotTelemetryLog } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -11,19 +11,19 @@ export class TelemetryLogRepository {
 	}
 
 	findAll() {
-		return this.prisma.iotTelemetryLog.findMany();
+		return this.prisma.iotTelemetryLog.findMany({ orderBy: { createdAt: 'desc' } });
 	}
 
 	findById(id: number) {
 		return this.prisma.iotTelemetryLog.findUnique({ where: { id } });
 	}
 
-	update(id: number, data: Prisma.IotTelemetryLogUpdateInput) {
-		return this.prisma.iotTelemetryLog.update({ where: { id }, data });
-	}
-
-	delete(id: number) {
-		return this.prisma.iotTelemetryLog.delete({ where: { id } });
+	findByComponentId(componentId: number, limit: number) {
+		return this.prisma.iotTelemetryLog.findMany({
+			where: { componentId },
+			orderBy: { createdAt: 'desc' },
+			take: limit,
+		});
 	}
 
 	findLastByComponentId(componentId: number) {
@@ -32,5 +32,4 @@ export class TelemetryLogRepository {
 			orderBy: { createdAt: 'desc' },
 		});
 	}
-
 }

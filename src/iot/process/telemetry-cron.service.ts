@@ -17,6 +17,10 @@ export class TelemetryCronService {
 
   @Cron('*/20 * * * * *') // ogni 20 secondi
   async handleTelemetryPolling() {
-    await this.processor.process();
+	try {
+		await this.processor.process();
+	} catch (e: any) {
+		console.log("errore nell'esecuzione del processo")
+	}
   }
 }

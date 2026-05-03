@@ -4,7 +4,7 @@ import { IsInt, IsOptional, IsString, IsIn } from 'class-validator';
 export class TelemetryLogDto {
   @ApiPropertyOptional()
   @IsOptional()
-  id?: bigint;
+  id?: number;
 
   @ApiProperty({ description: 'ID of the related device component' })
   @IsInt()

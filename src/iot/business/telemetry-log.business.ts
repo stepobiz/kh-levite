@@ -22,12 +22,13 @@ export class TelemetryLogBusiness {
     return entity ? TelemetryLogMapper.toDto(entity) : null;
   }
 
-  async update(id: number, dto: TelemetryLogDto): Promise<TelemetryLogDto> {
-    const entity = await this.repository.update(id, TelemetryLogMapper.toUpdateInput(dto));
-    return TelemetryLogMapper.toDto(entity);
+  async findByComponentId(componentId: number, limit: number): Promise<TelemetryLogDto[]> {
+    const list = await this.repository.findByComponentId(componentId, limit);
+    return list.map(TelemetryLogMapper.toDto);
   }
 
-  async delete(id: number): Promise<void> {
-    await this.repository.delete(id);
+  async findLatestByComponentId(componentId: number): Promise<TelemetryLogDto | null> {
+    const entity = await this.repository.findLastByComponentId(componentId);
+    return entity ? TelemetryLogMapper.toDto(entity) : null;
   }
 }
