@@ -2,10 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { DeviceDto } from 'src/iot/dto/device.dto';
 import { DeviceRepository } from 'src/iot/repository/device.repository';
 import { DeviceMapper } from 'src/iot/mapper/device.mapper';
+import { DeviceComponentBusiness } from './device-component.business';
 
 @Injectable()
 export class DeviceBusiness {
-  constructor(private readonly repository: DeviceRepository) {}
+  constructor(
+    private readonly repository: DeviceRepository,
+    private readonly componentBusiness: DeviceComponentBusiness,
+  ) {}
 
   async create(dto: DeviceDto): Promise<DeviceDto> {
     const entity = await this.repository.create(DeviceMapper.toCreateInput(dto));
@@ -28,6 +32,10 @@ export class DeviceBusiness {
   }
 
   async delete(id: number): Promise<void> {
+    const components = await this.componentBusiness.findAllByDevice(id);
+    for (const component of components) {
+      await this.componentBusiness.delete(component.id!);
+    }
     await this.repository.delete(id);
   }
 }

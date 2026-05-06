@@ -1,8 +1,6 @@
 import { forwardRef, Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TelemetryProcessor } from './telemetry-processor';
-import { DeviceComponentRepository } from '../repository/device-component.repository';
-import { TelemetryLogRepository } from '../repository/telemetry-log.repository';
 import { RealtimeGateway } from 'src/realtime/realtime.gateway';
 import { ProcessLogService } from 'src/infra/process-log/process-log.service';
 
@@ -13,17 +11,13 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 @Injectable()
 export class TelemetryCronService implements OnModuleInit {
   private readonly logger = new Logger(TelemetryCronService.name);
-  private processor: TelemetryProcessor;
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly componentRepo: DeviceComponentRepository,
-    private readonly logRepo: TelemetryLogRepository,
+    private readonly processor: TelemetryProcessor,
     private readonly realtimeGateway: RealtimeGateway,
     @Inject(forwardRef(() => ProcessLogService)) private readonly processLogService: ProcessLogService,
-  ) {
-    this.processor = new TelemetryProcessor(this.componentRepo, this.logRepo, this.realtimeGateway);
-  }
+  ) {}
 
   onModuleInit() {
     this.start().catch(err => this.logger.error('TelemetryProcessor loop crashed', err));
