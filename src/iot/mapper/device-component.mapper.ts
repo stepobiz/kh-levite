@@ -32,6 +32,7 @@ export class DeviceComponentMapper {
       hardwareAddress: entity.hardwareAddress,
       createdAt: entity.createdAt,
       device: entity.device ? DeviceMapper.toDto(entity.device) : undefined,
+      linkedNode: entity.auenNode ? { id: entity.auenNode.id, code: entity.auenNode.code } : undefined,
     };
   }
 }

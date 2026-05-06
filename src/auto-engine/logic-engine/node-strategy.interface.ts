@@ -1,18 +1,16 @@
-import { AuenNode, AuenNodeAttribute, AuenAttributeType } from '@prisma/client';
+import { AuenNode, AuenNodeAttribute, AuenAttributeType, AuenNodeType } from '@prisma/client';
 
 export type AuenNodeWithAttributes = AuenNode & {
+  type: AuenNodeType;
   attributes: Array<AuenNodeAttribute & { attribute: AuenAttributeType }>;
 };
 
-// Context passed by the Logic Engine to each strategy during an execution cycle.
-// The Logic Engine loads all nodes once per cycle and passes them here so
-// strategies like InMirrorStrategy can look up sibling nodes without extra queries.
 export interface LogicEngineContext {
   allNodes: AuenNodeWithAttributes[];
 }
 
 export interface NodeStrategy {
-  calculateDesired(node: AuenNodeWithAttributes, context: LogicEngineContext): string;
+  calculateDesired(node: AuenNodeWithAttributes, context: LogicEngineContext): Promise<string>;
   updateActual(node: AuenNodeWithAttributes): string | undefined;
-  syncHardware(): 'READ' | 'WRITE' | 'NONE';
+  syncHardware(node?: AuenNodeWithAttributes, allNodes?: AuenNodeWithAttributes[]): 'READ' | 'WRITE' | 'NONE';
 }

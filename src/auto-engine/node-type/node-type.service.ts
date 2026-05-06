@@ -21,6 +21,7 @@ export class NodeTypeService {
       name: dto.name!,
       iconSlug: dto.iconSlug,
       category: dto.category! as string,
+      valueType: dto.valueType,
     });
   }
 
@@ -30,6 +31,7 @@ export class NodeTypeService {
     if (dto.name !== undefined) data.name = dto.name;
     if (dto.iconSlug !== undefined) data.iconSlug = dto.iconSlug;
     if (dto.category !== undefined) data.category = dto.category;
+    if (dto.valueType !== undefined) data.valueType = dto.valueType;
     return this.repository.update(id, data);
   }
 

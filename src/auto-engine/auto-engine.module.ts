@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { NodeTypeController } from './node-type/node-type.controller';
 import { NodeTypeService } from './node-type/node-type.service';
 import { NodeTypeRepository } from './node-type/node-type.repository';
@@ -8,13 +8,23 @@ import { AttributeTypeRepository } from './attribute-type/attribute-type.reposit
 import { NodeController } from './node/node.controller';
 import { NodeService } from './node/node.service';
 import { NodeRepository } from './node/node.repository';
+import { TagController } from './tag/tag.controller';
+import { TagService } from './tag/tag.service';
+import { TagRepository } from './tag/tag.repository';
+import { LogicEngineService } from './logic-engine/logic-engine.service';
+import { RealtimeModule } from 'src/realtime/realtime.module';
+import { InfraModule } from 'src/infra/infra.module';
 
 @Module({
-  controllers: [NodeTypeController, AttributeTypeController, NodeController],
+  imports: [RealtimeModule, forwardRef(() => InfraModule)],
+  controllers: [NodeTypeController, AttributeTypeController, NodeController, TagController],
   providers: [
     NodeTypeService, NodeTypeRepository,
     AttributeTypeService, AttributeTypeRepository,
     NodeService, NodeRepository,
+    TagService, TagRepository,
+    LogicEngineService,
   ],
+  exports: [NodeRepository, NodeService],
 })
 export class AutoEngineModule {}

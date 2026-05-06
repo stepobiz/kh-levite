@@ -1,6 +1,6 @@
 import {
   Controller, Get, Post, Patch, Put, Delete,
-  Param, Body, ParseIntPipe,
+  Param, Query, Body, ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { NodeService } from './node.service';
@@ -10,6 +10,7 @@ import {
   NodeAttributeDto,
   NodeAttributeResponseDto,
   NodeValueDto,
+  NodeReorderDto,
 } from './dto/node.dto';
 
 @ApiTags('AutoEngine — Nodes')
@@ -19,8 +20,8 @@ export class NodeController {
 
   @Get()
   @ApiOkResponse({ type: [NodeDto] })
-  findAll() {
-    return this.service.findAll();
+  findAll(@Query('tagId', new ParseIntPipe({ optional: true })) tagId?: number) {
+    return this.service.findAll(tagId);
   }
 
   @Get(':id')
@@ -96,6 +97,15 @@ export class NodeController {
     return this.service.setManualValue(id, dto.value);
   }
 
+  @Patch(':id/order')
+  @ApiOkResponse({ type: NodeDto })
+  reorder(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: NodeReorderDto,
+  ) {
+    return this.service.reorder(id, dto.direction);
+  }
+
   @Post(':id/clone')
   @ApiCreatedResponse({ type: NodeDto })
   clone(
@@ -103,5 +113,23 @@ export class NodeController {
     @Body() override: NodeDto,
   ) {
     return this.service.clone(id, override);
+  }
+
+  @Put(':id/tags/:tagId')
+  @ApiOkResponse({ description: 'Tag added' })
+  addTag(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('tagId', ParseIntPipe) tagId: number,
+  ) {
+    return this.service.addTag(id, tagId);
+  }
+
+  @Delete(':id/tags/:tagId')
+  @ApiOkResponse({ description: 'Tag removed' })
+  removeTag(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('tagId', ParseIntPipe) tagId: number,
+  ) {
+    return this.service.removeTag(id, tagId);
   }
 }

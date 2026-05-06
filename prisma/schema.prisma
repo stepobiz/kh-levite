@@ -32,6 +32,7 @@ model IotDeviceComponent {
   updatedAt           DateTime          @updatedAt @map("updated_at")
   device              IotDevice         @relation(fields: [deviceId], references: [id])
   telemetryLogs       IotTelemetryLog[]
+  auenNode            AuenNode?
 
   @@index([deviceId])
   @@map("iot_device_component")
@@ -53,42 +54,68 @@ model IotTelemetryLog {
 
 enum AuenNodeCategory {
   in_sensor
-  in_manual_target
-  in_manual_value_by_url
-  node_mirror
+  node_manual_target
+  node_manual_value_by_url
+  proxy_mirror
+  proxy_inverter
+  fake
   out_logic_or
   out_logic_and
   out_thermostat
 }
 
 model AuenNodeType {
-  id       Int              @id @default(autoincrement())
-  name     String
-  iconSlug String?          @map("icon_slug")
-  category AuenNodeCategory
-  nodes    AuenNode[]
+  id        Int              @id @default(autoincrement())
+  name      String
+  iconSlug  String?          @map("icon_slug")
+  category  AuenNodeCategory
+  valueType String           @default("boolean") @map("value_type")
+  nodes     AuenNode[]
 
   @@map("auen_node_type")
 }
 
 model AuenNode {
   id                    Int       @id @default(autoincrement())
-  code                  String    @unique
+  code                  String?
   description           String?
   typeId                Int       @map("type_id")
   parentId              Int?      @map("parent_id")
+  iotComponentId        Int?      @unique @map("iot_component_id")
+  isLogical             Boolean   @default(false) @map("is_logical")
+  order                 Int       @default(0) @map("node_order")
   desiredValue          String    @default("0") @map("desired_value")
   desiredValueUpdatedAt DateTime? @map("desired_value_updated_at")
   actualValue           String    @default("0") @map("actual_value")
   actualValueUpdatedAt  DateTime? @map("actual_value_updated_at")
 
-  type       AuenNodeType        @relation(fields: [typeId], references: [id])
-  parent     AuenNode?           @relation("AuenNodeChildren", fields: [parentId], references: [id])
-  children   AuenNode[]          @relation("AuenNodeChildren")
-  attributes AuenNodeAttribute[]
+  type         AuenNodeType        @relation(fields: [typeId], references: [id])
+  parent       AuenNode?           @relation("AuenNodeChildren", fields: [parentId], references: [id])
+  children     AuenNode[]          @relation("AuenNodeChildren")
+  attributes   AuenNodeAttribute[]
+  tags         AuenNodeTag[]
+  iotComponent IotDeviceComponent? @relation(fields: [iotComponentId], references: [id])
 
   @@index([parentId])
   @@map("auen_node")
+}
+
+model AuenTag {
+  id    Int           @id @default(autoincrement())
+  name  String        @unique
+  nodes AuenNodeTag[]
+
+  @@map("auen_tag")
+}
+
+model AuenNodeTag {
+  nodeId Int      @map("node_id")
+  tagId  Int      @map("tag_id")
+  node   AuenNode @relation(fields: [nodeId], references: [id])
+  tag    AuenTag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([nodeId, tagId])
+  @@map("auen_node_tag")
 }
 
 model AuenAttributeType {
@@ -111,4 +138,54 @@ model AuenNodeAttribute {
 
   @@id([nodeId, attributeId])
   @@map("auen_node_attribute")
+}
+
+// --- Infrastructure ---
+
+model SysProcessLog {
+  id          Int      @id @default(autoincrement())
+  processName String   @map("process_name")
+  startedAt   DateTime @map("started_at")
+  endedAt     DateTime @map("ended_at")
+  durationMs  Int      @map("duration_ms")
+  itemCount   Int      @map("item_count")
+  status      String
+  errorMsg    String?  @map("error_msg")
+
+  @@index([processName])
+  @@index([startedAt])
+  @@map("sys_process_log")
+}
+
+// --- Configuration ---
+
+enum CfgValueType {
+  integer
+  float
+  boolean
+  text
+}
+
+model CfgSection {
+  id             Int                @id @default(autoincrement())
+  code           String             @unique
+  name           String
+  configurations CfgConfiguration[]
+
+  @@map("cfg_section")
+}
+
+model CfgConfiguration {
+  code        String       @id
+  name        String
+  description String?
+  sectionId   Int?         @map("section_id")
+  section     CfgSection?  @relation(fields: [sectionId], references: [id])
+  dataType    CfgValueType @map("data_type")
+  valInt      Int?         @map("val_int")
+  valFloat    Float?       @map("val_float")
+  valBool     Boolean?     @map("val_bool")
+  valText     String?      @map("val_text")
+
+  @@map("cfg_configuration")
 }

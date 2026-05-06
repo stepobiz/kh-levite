@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsString } from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString } from 'class-validator';
 
 export class NodeAttributeTypeDto {
   @ApiPropertyOptional() id?: number;
@@ -39,6 +39,20 @@ export class NodeDto {
   @IsInt()
   parentId?: number | null;
 
+  @ApiPropertyOptional({ description: 'FK → iot_device_component. Only allowed for in_*, out_*, proxy_* categories (and only if isLogical=false).' })
+  @IsOptional()
+  @IsInt()
+  iotComponentId?: number | null;
+
+  @ApiPropertyOptional({ description: 'If true, the node has no hardware counterpart — iotComponentId cannot be set.' })
+  @IsOptional()
+  isLogical?: boolean;
+
+  @ApiPropertyOptional({ description: 'Ordering among siblings (nodes with same parent_id). Managed by PATCH /order.' })
+  @IsOptional()
+  @IsInt()
+  order?: number;
+
   // output only — managed by Logic Engine / Sync
   @ApiPropertyOptional() desiredValue?: string;
   @ApiPropertyOptional() desiredValueUpdatedAt?: Date | null;
@@ -68,4 +82,10 @@ export class NodeValueDto {
   @ApiProperty()
   @IsString()
   value!: string;
+}
+
+export class NodeReorderDto {
+  @ApiProperty({ enum: ['up', 'down'], description: '"up" moves left (lower order), "down" moves right (higher order)' })
+  @IsIn(['up', 'down'])
+  direction!: 'up' | 'down';
 }

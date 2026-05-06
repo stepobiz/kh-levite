@@ -14,6 +14,9 @@ export class DeviceComponentDto {
 	@ApiHideProperty()
 	device?: DeviceDto;
 
+	@ApiPropertyOptional({ description: 'Linked AutoEngine node (at most one)' })
+	linkedNode?: { id: number; code?: string | null };
+
 	@ApiPropertyOptional({ description: 'Component name' })
 	@IsOptional()
 	@IsString()

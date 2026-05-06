@@ -20,4 +20,9 @@ export class NodeTypeDto {
   @IsOptional()
   @IsEnum(AuenNodeCategory)
   category?: AuenNodeCategory;
+
+  @ApiPropertyOptional({ description: 'Value type: boolean | number | string' })
+  @IsOptional()
+  @IsString()
+  valueType?: string;
 }

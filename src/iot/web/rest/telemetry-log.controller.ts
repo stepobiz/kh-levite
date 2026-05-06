@@ -1,5 +1,5 @@
-import { Controller, Get, Param } from '@nestjs/common';
-import { ApiOkResponse } from '@nestjs/swagger';
+import { Controller, Get, Param, Query } from '@nestjs/common';
+import { ApiOkResponse, ApiQuery } from '@nestjs/swagger';
 import { TelemetryLogBusiness } from 'src/iot/business/telemetry-log.business';
 import { TelemetryLogDto } from 'src/iot/dto/telemetry-log.dto';
 
@@ -9,8 +9,9 @@ export class TelemetryLogController {
 
   @Get()
   @ApiOkResponse({ type: [TelemetryLogDto] })
-  findAll() {
-    return this.business.findAll();
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  findAll(@Query('limit') limit?: string) {
+    return this.business.findAll(limit ? parseInt(limit, 10) : undefined);
   }
 
   @Get(':id')

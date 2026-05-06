@@ -4,6 +4,7 @@ import { TelemetryLogRepository } from '../repository/telemetry-log.repository';
 import { IotProtocolDriver } from '../device-driver/iot-protocol-driver';
 import { DeviceComponentMapper } from '../mapper/device-component.mapper';
 import { driverRegistry } from '../device-driver/driver-registry';
+import { RealtimeGateway } from 'src/realtime/realtime.gateway';
 
 const logger = new Logger('TelemetryProcessor');
 const COOLDOWN_SECONDS = 5;
@@ -12,10 +13,12 @@ export class TelemetryProcessor {
 	constructor(
 		private readonly componentRepo: DeviceComponentRepository,
 		private readonly logRepo: TelemetryLogRepository,
+		private readonly realtimeGateway?: RealtimeGateway,
 	) { }
 
-	async process() {
+	async process(): Promise<number> {
 		const components = await this.componentRepo.findAll();
+		let processed = 0;
 
 		for (const component of components) {
 			const device = component.device;
@@ -34,6 +37,7 @@ export class TelemetryProcessor {
 			let hwValue: string;
 			try {
 				hwValue = await driver.read(DeviceComponentMapper.toDto(component));
+				processed++;
 			} catch (err) {
 				logger.error(`Read error for component ${component.id}:`, err);
 				continue;
@@ -42,10 +46,17 @@ export class TelemetryProcessor {
 			const lastLog = await this.logRepo.findLastByComponentId(component.id!);
 
 			if (!lastLog || lastLog.value !== hwValue) {
-				await this.logRepo.create({
+				const log = await this.logRepo.create({
 					component: { connect: { id: component.id } },
 					value: hwValue,
 					direction: 'READ',
+				});
+				this.realtimeGateway?.emitTelemetryUpdate({
+					id: log.id,
+					componentId: component.id!,
+					value: hwValue,
+					direction: 'READ',
+					createdAt: log.createdAt,
 				});
 			}
 
@@ -60,10 +71,17 @@ export class TelemetryProcessor {
 				} else {
 					try {
 						await driver.write(DeviceComponentMapper.toDto(component), component.nextValue);
-						await this.logRepo.create({
+						const writeLog = await this.logRepo.create({
 							component: { connect: { id: component.id } },
 							value: component.nextValue,
 							direction: 'WRITE',
+						});
+						this.realtimeGateway?.emitTelemetryUpdate({
+							id: writeLog.id,
+							componentId: component.id!,
+							value: component.nextValue,
+							direction: 'WRITE',
+							createdAt: writeLog.createdAt,
 						});
 						await this.componentRepo.setNextValue(component.id!, null);
 					} catch (err) {
@@ -72,5 +90,7 @@ export class TelemetryProcessor {
 				}
 			}
 		}
+
+		return processed;
 	}
 }

@@ -4,17 +4,31 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>KH Levite UI</title>
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="/kh-levite.css" />
 </head>
 <body>
   <nav class="topbar">
     <div class="brand">KH Levite</div>
     <div class="nav">
-      <button class="nav-btn active" data-section="devices">Dispositivi</button>
-      <button class="nav-btn" data-section="logs">Log</button>
-      <button class="nav-btn" data-section="auen-node-types">Node Types</button>
-      <button class="nav-btn" data-section="auen-nodes">Nodi</button>
-      <button class="nav-btn" data-section="auen-attribute-types">Attr Types</button>
+      <button class="nav-btn" data-section="dashboard">Dashboard</button>
+      <div class="nav-group">
+        <button class="nav-group-label">Anagrafica</button>
+        <div class="nav-group-items">
+          <button class="nav-btn" data-section="devices">Dispositivi</button>
+          <button class="nav-btn" data-section="auen-nodes">Nodi</button>
+          <button class="nav-btn" data-section="topology">Topologia</button>
+        </div>
+      </div>
+      <div class="nav-group">
+        <button class="nav-group-label">Config</button>
+        <div class="nav-group-items">
+          <button class="nav-btn" data-section="cfg">Configurazioni</button>
+          <button class="nav-btn" data-section="auen-node-types">Node Types</button>
+          <button class="nav-btn" data-section="auen-attribute-types">Attr Types</button>
+          <button class="nav-btn" data-section="auen-tags">Tag</button>
+        </div>
+      </div>
     </div>
   </nav>
 
@@ -23,12 +37,12 @@
   <main>
 
     <!-- DISPOSITIVI -->
-    <section id="devices" class="section active">
+    <section id="devices" class="section">
       <div class="toolbar">
         <h1>Dispositivi</h1>
         <div class="toolbar-actions">
-          <button id="reload-statuses-btn" class="btn-secondary" onclick="reloadAllStatuses()">↻ Ricarica stati</button>
-          <button class="btn-primary" onclick="openDeviceModal()">＋ Nuovo</button>
+          <button id="reload-statuses-btn" class="btn-secondary" onclick="reloadAllStatuses()">&#x21BB; Ricarica stati</button>
+          <button class="btn-primary" onclick="openDeviceModal()">&#xFF0B; Nuovo</button>
         </div>
       </div>
       <div class="filter-bar">
@@ -46,38 +60,125 @@
       </div>
     </section>
 
-    <!-- LOG -->
-    <section id="logs" class="section">
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="section">
       <div class="toolbar">
-        <h1>Log Telemetria</h1>
-        <div class="toolbar-actions">
-          <span id="log-last-refresh" class="muted-text"></span>
-          <button class="btn-secondary" onclick="fetchLogs()">↻ Aggiorna</button>
+        <h1>Dashboard</h1>
+      </div>
+
+      <!-- Prima riga: 3 box processi -->
+      <div class="dashboard-processes">
+        <div class="process-box" id="pbox-logic_engine">
+          <div class="process-box-title">Logic Engine</div>
+          <div class="process-box-body">
+            <div class="process-stat-row">
+              <span class="process-stat-label">Status</span>
+              <span class="process-box-badge" id="pb-logic_engine-status">—</span>
+            </div>
+            <div class="process-stat-row">
+              <span class="process-stat-label">Durata ciclo</span>
+              <span class="process-stat-value" id="pb-logic_engine-duration">—</span>
+            </div>
+            <div class="process-stat-row">
+              <span class="process-stat-label">Avviato alle</span>
+              <span class="process-stat-value" id="pb-logic_engine-started">—</span>
+            </div>
+            <div class="process-stat-row">
+              <span class="process-stat-label">Tempo fa</span>
+              <span class="process-stat-value" id="pb-logic_engine-ago">—</span>
+            </div>
+            <div class="process-stat-row">
+              <span class="process-stat-label">Item elaborati</span>
+              <span class="process-stat-value" id="pb-logic_engine-items">—</span>
+            </div>
+            <div class="process-stat-row">
+              <span class="process-stat-label">Media 100 cicli</span>
+              <span class="process-stat-value" id="pb-logic_engine-avg">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="process-box" id="pbox-sync_engine">
+          <div class="process-box-title">Sync Engine</div>
+          <div class="process-box-body">
+            <div class="process-stat-row">
+              <span class="process-stat-label">Status</span>
+              <span class="process-box-badge" id="pb-sync_engine-status">—</span>
+            </div>
+            <div class="process-stat-row">
+              <span class="process-stat-label">Durata ciclo</span>
+              <span class="process-stat-value" id="pb-sync_engine-duration">—</span>
+            </div>
+            <div class="process-stat-row">
+              <span class="process-stat-label">Avviato alle</span>
+              <span class="process-stat-value" id="pb-sync_engine-started">—</span>
+            </div>
+            <div class="process-stat-row">
+              <span class="process-stat-label">Tempo fa</span>
+              <span class="process-stat-value" id="pb-sync_engine-ago">—</span>
+            </div>
+            <div class="process-stat-row">
+              <span class="process-stat-label">Item elaborati</span>
+              <span class="process-stat-value" id="pb-sync_engine-items">—</span>
+            </div>
+            <div class="process-stat-row">
+              <span class="process-stat-label">Media 100 cicli</span>
+              <span class="process-stat-value" id="pb-sync_engine-avg">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="process-box" id="pbox-telemetry_processor">
+          <div class="process-box-title">Telemetry Processor</div>
+          <div class="process-box-body">
+            <div class="process-stat-row">
+              <span class="process-stat-label">Status</span>
+              <span class="process-box-badge" id="pb-telemetry_processor-status">—</span>
+            </div>
+            <div class="process-stat-row">
+              <span class="process-stat-label">Durata ciclo</span>
+              <span class="process-stat-value" id="pb-telemetry_processor-duration">—</span>
+            </div>
+            <div class="process-stat-row">
+              <span class="process-stat-label">Avviato alle</span>
+              <span class="process-stat-value" id="pb-telemetry_processor-started">—</span>
+            </div>
+            <div class="process-stat-row">
+              <span class="process-stat-label">Tempo fa</span>
+              <span class="process-stat-value" id="pb-telemetry_processor-ago">—</span>
+            </div>
+            <div class="process-stat-row">
+              <span class="process-stat-label">Item elaborati</span>
+              <span class="process-stat-value" id="pb-telemetry_processor-items">—</span>
+            </div>
+            <div class="process-stat-row">
+              <span class="process-stat-label">Media 100 cicli</span>
+              <span class="process-stat-value" id="pb-telemetry_processor-avg">—</span>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="filter-bar">
-        <select id="log-filter-component">
-          <option value="">Tutti i componenti</option>
-        </select>
-        <select id="log-filter-direction">
-          <option value="">Tutte le direzioni</option>
-          <option value="READ">READ</option>
-          <option value="WRITE">WRITE</option>
-        </select>
-      </div>
-      <div class="card">
-        <table id="log-table">
-          <thead>
-            <tr>
-              <th>ID</th><th>Componente</th><th>Dispositivo</th><th>Valore</th><th>Direzione</th><th>Creato</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-        <div class="pagination">
-          <button id="log-prev" onclick="logPrevPage()" disabled>← Prec</button>
-          <span id="log-page-info"></span>
-          <button id="log-next" onclick="logNextPage()" disabled>Succ →</button>
+
+      <!-- Seconda riga: 2 colonne feed -->
+      <div class="dashboard-feeds">
+        <div class="dashboard-feed-col">
+          <div class="feed-header">
+            <span>Aggiornamenti Nodi</span>
+            <span class="realtime-badge" id="db-node-badge" style="display:none"></span>
+          </div>
+          <ul class="feed-list" id="db-node-list">
+            <li class="feed-empty">Nessun aggiornamento ancora</li>
+          </ul>
+        </div>
+
+        <div class="dashboard-feed-col">
+          <div class="feed-header">
+            <span>Log Telemetria</span>
+            <span class="realtime-badge" id="db-telemetry-badge" style="display:none"></span>
+          </div>
+          <ul class="feed-list" id="db-telemetry-list">
+            <li class="feed-empty">Nessun log ancora</li>
+          </ul>
         </div>
       </div>
     </section>
@@ -87,14 +188,14 @@
       <div class="toolbar">
         <h1>Node Types</h1>
         <div class="toolbar-actions">
-          <button class="btn-secondary" onclick="fetchNodeTypes()">↻ Aggiorna</button>
-          <button class="btn-primary" onclick="openNodeTypeModal()">＋ Nuovo</button>
+          <button class="btn-secondary" onclick="fetchNodeTypes()">&#x21BB; Aggiorna</button>
+          <button class="btn-primary" onclick="openNodeTypeModal()">&#xFF0B; Nuovo</button>
         </div>
       </div>
       <div class="card">
         <table id="node-type-table">
           <thead>
-            <tr><th>ID</th><th>Nome</th><th>Icon Slug</th><th>Category</th><th>Azioni</th></tr>
+            <tr><th>ID</th><th>Nome</th><th>Icon Slug</th><th>Category</th><th>Value Type</th><th>Azioni</th></tr>
           </thead>
           <tbody></tbody>
         </table>
@@ -106,9 +207,17 @@
       <div class="toolbar">
         <h1>Nodi</h1>
         <div class="toolbar-actions">
-          <button class="btn-secondary" onclick="fetchAuenNodes()">↻ Aggiorna</button>
-          <button class="btn-primary" onclick="openNodeModal()">＋ Nuovo</button>
+          <button class="btn-secondary" onclick="expandAllNodes()">&#x229E; Espandi</button>
+          <button class="btn-secondary" onclick="collapseAllNodes()">&#x229F; Comprimi</button>
+          <button id="node-reload-btn" class="btn-secondary" onclick="fetchAuenNodes()">&#x21BB; Aggiorna</button>
+          <button class="btn-primary" onclick="openNodeModal()">&#xFF0B; Nuovo</button>
         </div>
+      </div>
+
+      <div class="filter-bar">
+        <select id="node-filter-tag" onchange="onNodeTagFilterChange()">
+          <option value="">Tutti i tag</option>
+        </select>
       </div>
       <div class="card">
         <table id="auen-node-table">
@@ -120,13 +229,76 @@
       </div>
     </section>
 
+    <!-- TOPOLOGY -->
+    <section id="topology" class="section">
+      <div class="toolbar">
+        <h1>Topologia</h1>
+        <div class="toolbar-actions">
+          <select id="topology-root-select" onchange="renderTopology()" style="padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+            <option value="">— seleziona root —</option>
+          </select>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:#1e293b">
+            <input type="checkbox" id="topology-follow-connected" onchange="renderTopology()">
+            Segui nodi collegati
+          </label>
+          <button class="btn-secondary" onclick="expandAllTopoNodes()">&#x25BC; Espandi tutti</button>
+          <button class="btn-secondary" onclick="collapseAllTopoNodes()">&#x25B6; Comprimi tutti</button>
+          <button class="btn-secondary" onclick="renderTopology()">&#x21BB; Aggiorna</button>
+          <button class="btn-primary" onclick="openNodeModal()">&#xFF0B; Nuovo nodo</button>
+        </div>
+      </div>
+      <div id="topology-canvas" style="padding-bottom:20px"></div>
+    </section>
+
+    <!-- CONFIGURAZIONI -->
+    <section id="cfg" class="section">
+      <div class="toolbar">
+        <h1>Configurazioni</h1>
+        <div class="toolbar-actions">
+          <button class="btn-secondary" onclick="openCfgSectionModal()">&#xFF0B; Sezione</button>
+          <button class="btn-primary" onclick="openCfgConfigModal()">&#xFF0B; Configurazione</button>
+        </div>
+      </div>
+
+      <!-- Sections -->
+      <div class="card" style="margin-bottom:16px">
+        <div style="padding:12px 16px 8px;font-weight:600;color:#475569;font-size:13px;border-bottom:1px solid #f1f5f9">Sezioni</div>
+        <table id="cfg-section-table" class="data-table">
+          <thead><tr><th>Codice</th><th>Nome</th><th></th></tr></thead>
+          <tbody><tr><td colspan="3" class="empty-cell">Caricamento...</td></tr></tbody>
+        </table>
+      </div>
+
+      <!-- Configurations grouped by section -->
+      <div id="cfg-config-list"></div>
+    </section>
+
+    <!-- AUTO ENGINE — TAGS -->
+    <section id="auen-tags" class="section">
+      <div class="toolbar">
+        <h1>Tag</h1>
+        <div class="toolbar-actions">
+          <button class="btn-secondary" onclick="fetchTags()">&#x21BB; Aggiorna</button>
+          <button class="btn-primary" onclick="openTagModal()">&#xFF0B; Nuovo</button>
+        </div>
+      </div>
+      <div class="card">
+        <table id="tag-table">
+          <thead>
+            <tr><th>ID</th><th>Nome</th><th>Azioni</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
     <!-- AUTO ENGINE — ATTRIBUTE TYPES -->
     <section id="auen-attribute-types" class="section">
       <div class="toolbar">
         <h1>Attribute Types</h1>
         <div class="toolbar-actions">
-          <button class="btn-secondary" onclick="fetchAttributeTypes()">↻ Aggiorna</button>
-          <button class="btn-primary" onclick="openAttributeTypeModal()">＋ Nuovo</button>
+          <button class="btn-secondary" onclick="fetchAttributeTypes()">&#x21BB; Aggiorna</button>
+          <button class="btn-primary" onclick="openAttributeTypeModal()">&#xFF0B; Nuovo</button>
         </div>
       </div>
       <div class="card">
@@ -146,7 +318,7 @@
     <div class="modal">
       <div class="modal-header">
         <span class="modal-title">Dispositivo</span>
-        <button class="btn-ghost" onclick="closeModal('device-modal')">✖</button>
+        <button class="btn-ghost" onclick="closeModal('device-modal')">&#x2716;</button>
       </div>
       <form id="device-form">
         <input type="hidden" name="recordId" />
@@ -185,7 +357,7 @@
     <div class="modal">
       <div class="modal-header">
         <span class="modal-title">Componente</span>
-        <button class="btn-ghost" onclick="closeModal('component-modal')">✖</button>
+        <button class="btn-ghost" onclick="closeModal('component-modal')">&#x2716;</button>
       </div>
       <form id="component-form">
         <input type="hidden" name="recordId" />
@@ -217,7 +389,7 @@
     <div class="modal">
       <div class="modal-header">
         <span class="modal-title" id="command-modal-title">Comando</span>
-        <button class="btn-ghost" onclick="closeModal('command-modal')">✖</button>
+        <button class="btn-ghost" onclick="closeModal('command-modal')">&#x2716;</button>
       </div>
       <form id="command-form">
         <input type="hidden" name="componentId" />
@@ -235,12 +407,33 @@
     </div>
   </div>
 
+  <!-- MODAL TAG -->
+  <div id="tag-modal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Tag</span>
+        <button class="btn-ghost" onclick="closeModal('tag-modal')">&#x2716;</button>
+      </div>
+      <form id="tag-form">
+        <input type="hidden" name="recordId" />
+        <div class="form-row">
+          <label>Nome <span class="required">*</span></label>
+          <input name="tagName" required placeholder="es. riscaldamento" />
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" type="button" onclick="closeModal('tag-modal')">Annulla</button>
+          <button class="btn-primary" type="submit">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- MODAL NODE TYPE -->
   <div id="node-type-modal" class="modal-backdrop">
     <div class="modal">
       <div class="modal-header">
         <span class="modal-title">Node Type</span>
-        <button class="btn-ghost" onclick="closeModal('node-type-modal')">✖</button>
+        <button class="btn-ghost" onclick="closeModal('node-type-modal')">&#x2716;</button>
       </div>
       <form id="node-type-form">
         <input type="hidden" name="recordId" />
@@ -253,17 +446,27 @@
             <label>Icon Slug</label>
             <input name="iconSlug" placeholder="es. thermometer" />
           </div>
-          <div class="form-row" style="grid-column: 1 / -1">
+          <div class="form-row">
             <label>Category <span class="required">*</span></label>
             <select name="category" required>
               <option value="">— seleziona —</option>
               <option value="in_sensor">in_sensor</option>
-              <option value="in_manual_target">in_manual_target</option>
-              <option value="in_manual_value_by_url">in_manual_value_by_url</option>
-              <option value="node_mirror">node_mirror</option>
+              <option value="node_manual_target">node_manual_target</option>
+              <option value="node_manual_value_by_url">node_manual_value_by_url</option>
+              <option value="proxy_mirror">proxy_mirror</option>
+              <option value="proxy_inverter">proxy_inverter</option>
+              <option value="fake">fake</option>
               <option value="out_logic_or">out_logic_or</option>
               <option value="out_logic_and">out_logic_and</option>
               <option value="out_thermostat">out_thermostat</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Value Type <span class="required">*</span></label>
+            <select name="valueType" required>
+              <option value="boolean">boolean</option>
+              <option value="number">number</option>
+              <option value="string">string</option>
             </select>
           </div>
         </div>
@@ -280,7 +483,7 @@
     <div class="modal">
       <div class="modal-header">
         <span class="modal-title">Attribute Type</span>
-        <button class="btn-ghost" onclick="closeModal('attribute-type-modal')">✖</button>
+        <button class="btn-ghost" onclick="closeModal('attribute-type-modal')">&#x2716;</button>
       </div>
       <form id="attribute-type-form">
         <input type="hidden" name="recordId" />
@@ -317,22 +520,14 @@
     <div class="modal modal-lg">
       <div class="modal-header">
         <span class="modal-title" id="node-modal-title">Nodo</span>
-        <button class="btn-ghost" onclick="closeModal('node-modal')">✖</button>
+        <button class="btn-ghost" onclick="closeModal('node-modal')">&#x2716;</button>
       </div>
       <form id="node-form">
         <input type="hidden" name="recordId" />
         <div class="form-grid">
           <div class="form-row">
-            <label>Code <span class="required">*</span></label>
-            <input name="code" required placeholder="es. caldaia" />
-          </div>
-          <div class="form-row">
-            <label>Descrizione</label>
-            <input name="description" />
-          </div>
-          <div class="form-row">
             <label>Tipo <span class="required">*</span></label>
-            <select name="typeId" id="node-type-select" required>
+            <select name="typeId" id="node-type-select" required onchange="onNodeTypeSelectChange()">
               <option value="">— seleziona —</option>
             </select>
           </div>
@@ -341,6 +536,32 @@
             <select name="parentId" id="node-parent-select">
               <option value="">— nessuno (radice) —</option>
             </select>
+          </div>
+          <div class="form-row">
+            <label>Code</label>
+            <input name="code" placeholder="es. caldaia" />
+          </div>
+          <div class="form-row">
+            <label>Descrizione</label>
+            <input name="description" />
+          </div>
+          <div class="form-row" style="align-items:center;gap:8px;display:flex">
+            <label style="margin:0;display:flex;align-items:center;gap:6px;font-weight:500;cursor:pointer">
+              <input type="checkbox" name="isLogical" id="node-is-logical" onchange="onIsLogicalChange()" />
+              Nodo logico
+            </label>
+          </div>
+        </div>
+        <!-- Componente IoT (per categorie in_*, out_*, proxy_*; nascosto se nodo logico) -->
+        <div id="node-iot-component-section" class="hidden">
+          <div class="attr-section-header">Componente IoT</div>
+          <div class="iot-search-wrap">
+            <input type="text" id="node-iot-component-search"
+              placeholder="Cerca per nome o dispositivo…" autocomplete="off"
+              oninput="onIotComponentSearch()" onfocus="onIotComponentSearchFocus()"
+              onblur="setTimeout(()=>document.getElementById('node-iot-component-dropdown')?.classList.add('hidden'),160)" />
+            <input type="hidden" id="node-iot-component-id" />
+            <ul id="node-iot-component-dropdown" class="iot-search-dropdown hidden"></ul>
           </div>
         </div>
         <div id="node-attributes-section" class="hidden">
@@ -354,13 +575,26 @@
             <select id="attr-node-select" class="hidden">
               <option value="">— seleziona nodo —</option>
             </select>
-            <button type="button" class="btn-secondary btn-sm" onclick="addNodeAttribute()">＋ Aggiungi</button>
+            <button type="button" class="btn-secondary btn-sm" onclick="addNodeAttribute()">&#xFF0B; Aggiungi</button>
           </div>
         </div>
         <p id="node-attributes-hint" class="muted-text hidden" style="margin: 16px 0 0">
-          Salva prima il nodo per gestire gli attributi.
+          Salva prima il nodo per gestire attributi e tag.
         </p>
+        <div id="node-tags-section" class="hidden">
+          <div class="attr-section-header">Tag</div>
+          <div id="node-tags-list"></div>
+          <div class="attr-add-row" style="margin-top:4px">
+            <select id="tag-node-select">
+              <option value="">— seleziona tag —</option>
+            </select>
+            <button type="button" class="btn-secondary btn-sm" onclick="addNodeTagFromModal()">&#xFF0B; Aggiungi</button>
+          </div>
+        </div>
         <div class="modal-footer">
+          <div class="modal-footer-left">
+            <button id="node-delete-btn" class="btn-danger hidden" type="button" onclick="deleteNodeFromModal()">&#x1F5D1; Elimina</button>
+          </div>
           <button class="btn-secondary" type="button" onclick="closeModal('node-modal')">Annulla</button>
           <button class="btn-primary" type="submit">Salva</button>
         </div>
@@ -368,6 +602,150 @@
     </div>
   </div>
 
-  <script src="/kh-levite.js"></script>
+  <!-- MODAL SET VALUE (KL-39) -->
+  <div id="set-value-modal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="set-value-modal-title">Imposta valore</span>
+        <button class="btn-ghost" onclick="closeModal('set-value-modal')">&#x2716;</button>
+      </div>
+      <form id="set-value-form">
+        <input type="hidden" name="nodeId" />
+        <div class="form-row" id="set-value-field-container">
+          <!-- populated dynamically -->
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" type="button" onclick="closeModal('set-value-modal')">Annulla</button>
+          <button class="btn-primary" type="submit">Imposta</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL CFG SECTION -->
+  <div id="cfg-section-modal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="cfg-section-modal-title">Sezione</span>
+        <button class="btn-ghost" onclick="closeModal('cfg-section-modal')">&#x2716;</button>
+      </div>
+      <form id="cfg-section-form">
+        <input type="hidden" name="recordId"/>
+        <div class="form-row">
+          <label>Codice</label>
+          <input name="code" type="text" required placeholder="es. MQTT"/>
+        </div>
+        <div class="form-row">
+          <label>Nome</label>
+          <input name="name" type="text" required placeholder="es. MQTT Broker"/>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" type="button" onclick="closeModal('cfg-section-modal')">Annulla</button>
+          <button class="btn-primary" type="submit">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL CFG CONFIGURATION (full create) -->
+  <div id="cfg-config-modal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="cfg-config-modal-title">Nuova Configurazione</span>
+        <button class="btn-ghost" onclick="closeModal('cfg-config-modal')">&#x2716;</button>
+      </div>
+      <form id="cfg-config-form">
+        <input type="hidden" name="recordCode"/>
+        <div class="form-row">
+          <label>Codice</label>
+          <input id="cfg-config-code" name="code" type="text" required placeholder="es. MQTT_BROKER_URL"/>
+        </div>
+        <div class="form-row">
+          <label>Nome</label>
+          <input name="name" type="text" required/>
+        </div>
+        <div class="form-row">
+          <label>Descrizione</label>
+          <input name="description" type="text"/>
+        </div>
+        <div class="form-row">
+          <label>Sezione</label>
+          <select id="cfg-config-section-select" name="sectionId">
+            <option value="">— Nessuna —</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Tipo dato</label>
+          <select id="cfg-config-data-type" name="dataType" onchange="onCfgDataTypeChange()" required>
+            <option value="">— seleziona —</option>
+            <option value="integer">integer</option>
+            <option value="float">float</option>
+            <option value="boolean">boolean</option>
+            <option value="text">text</option>
+          </select>
+        </div>
+        <div id="cfg-val-int" class="form-row hidden"><label>Valore (intero)</label><input name="valInt" type="number" step="1"/></div>
+        <div id="cfg-val-float" class="form-row hidden"><label>Valore (decimale)</label><input name="valFloat" type="number" step="any"/></div>
+        <div id="cfg-val-bool" class="form-row hidden">
+          <label>Valore</label>
+          <select name="valBool"><option value="true">ON</option><option value="false">OFF</option></select>
+        </div>
+        <div id="cfg-val-text" class="form-row hidden"><label>Valore (testo)</label><input name="valText" type="text"/></div>
+        <div class="modal-footer">
+          <button class="btn-secondary" type="button" onclick="closeModal('cfg-config-modal')">Annulla</button>
+          <button class="btn-primary" type="submit">Crea</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL CFG EDIT VALUE -->
+  <div id="cfg-edit-value-modal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="cfg-edit-value-modal-title">Modifica valore</span>
+        <button class="btn-ghost" onclick="closeModal('cfg-edit-value-modal')">&#x2716;</button>
+      </div>
+      <form id="cfg-edit-value-form">
+        <input type="hidden" name="code"/>
+        <p id="cfg-edit-value-name" style="margin:0 0 12px;color:#64748b;font-size:13px"></p>
+        <div id="cfg-edit-value-field" class="form-row"><!-- populated dynamically --></div>
+        <div class="modal-footer">
+          <button class="btn-secondary" type="button" onclick="closeModal('cfg-edit-value-modal')">Annulla</button>
+          <button class="btn-primary" type="submit">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Live panel button -->
+  <div id="realtime-fab" onclick="toggleRealtimePanel()" title="Pannello live">
+    <span id="realtime-dot" class="realtime-dot" title="Live: disconnesso"></span>
+    &#x26A1;
+    <span id="realtime-badge" class="realtime-badge" style="display:none">0</span>
+  </div>
+
+  <!-- Live panel drawer -->
+  <div id="realtime-panel">
+    <div class="realtime-panel-header">
+      <span>&#x26A1; Aggiornamenti live</span>
+      <button class="btn-icon" onclick="toggleRealtimePanel()">&#x2715;</button>
+    </div>
+    <ul id="realtime-event-list"></ul>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/kh-state.js"></script>
+  <script src="/js/kh-utils.js"></script>
+  <script src="/js/kh-iot.js"></script>
+  <script src="/js/kh-auen-config.js"></script>
+  <script src="/js/kh-auen-nodes.js"></script>
+  <script src="/js/kh-auen-tags.js"></script>
+  <script src="/js/kh-topology.js"></script>
+  <script src="/js/kh-cfg.js"></script>
+  <script src="/js/kh-realtime.js"></script>
+  <script src="/js/kh-cycle-stats.js"></script>
+  <script src="/js/kh-dashboard.js"></script>
+  <script src="/js/kh-main.js"></script>
 </body>
 </html>

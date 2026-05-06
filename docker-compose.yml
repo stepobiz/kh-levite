@@ -1,0 +1,11 @@
+services:
+  kh-levite:
+    image: stepobiz/kh-levite:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      DATABASE_URL: file:/app/data/kh-levite.db
+      NODE_ENV: production
+    restart: unless-stopped

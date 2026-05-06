@@ -12,8 +12,8 @@ export class TelemetryLogBusiness {
     return TelemetryLogMapper.toDto(entity);
   }
 
-  async findAll(): Promise<TelemetryLogDto[]> {
-    const list = await this.repository.findAll();
+  async findAll(limit?: number): Promise<TelemetryLogDto[]> {
+    const list = await this.repository.findAll(limit);
     return list.map(TelemetryLogMapper.toDto);
   }
 

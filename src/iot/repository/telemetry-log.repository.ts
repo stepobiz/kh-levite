@@ -10,8 +10,11 @@ export class TelemetryLogRepository {
 		return this.prisma.iotTelemetryLog.create({ data });
 	}
 
-	findAll() {
-		return this.prisma.iotTelemetryLog.findMany({ orderBy: { createdAt: 'desc' } });
+	findAll(limit?: number) {
+		return this.prisma.iotTelemetryLog.findMany({
+			orderBy: { createdAt: 'desc' },
+			...(limit ? { take: limit } : {}),
+		});
 	}
 
 	findById(id: number) {

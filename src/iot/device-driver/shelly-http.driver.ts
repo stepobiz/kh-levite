@@ -42,7 +42,8 @@ export class ShellyHttpDriver implements IotProtocolDriver {
     const result = await this.rpc<{ output: boolean }>(component, 'Switch.GetStatus', {
       id: Number(component.hardwareAddress),
     });
-    return result?.output?.toString() ?? '';
+    const raw = result?.output?.toString() ?? '';
+    return raw === 'true' || raw === '1' || raw === 'on' ? '1' : '0';
   }
 
   async write(component: DeviceComponentDto, value: string): Promise<void> {

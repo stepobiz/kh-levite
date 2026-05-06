@@ -13,7 +13,7 @@ export class NodeTypeRepository {
     return this.prisma.auenNodeType.findUnique({ where: { id } });
   }
 
-  create(data: { name: string; iconSlug?: string | null; category: string }) {
+  create(data: { name: string; iconSlug?: string | null; category: string; valueType?: string }) {
     return this.prisma.auenNodeType.create({ data: data as any });
   }
 
