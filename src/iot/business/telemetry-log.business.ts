@@ -31,4 +31,8 @@ export class TelemetryLogBusiness {
     const entity = await this.repository.findLastByComponentId(componentId);
     return entity ? TelemetryLogMapper.toDto(entity) : null;
   }
+
+  async deleteByComponentId(componentId: number): Promise<void> {
+    await this.repository.deleteByComponentId(componentId);
+  }
 }

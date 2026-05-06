@@ -10,6 +10,7 @@ import { TelemetryLogController } from 'src/iot/web/rest/telemetry-log.controlle
 import { TelemetryLogBusiness } from 'src/iot/business/telemetry-log.business';
 import { TelemetryLogRepository } from 'src/iot/repository/telemetry-log.repository';
 import { TelemetryCronService } from './process/telemetry-cron.service';
+import { TelemetryProcessor } from './process/telemetry-processor';
 import { RealtimeModule } from 'src/realtime/realtime.module';
 import { InfraModule } from 'src/infra/infra.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
@@ -33,6 +34,7 @@ import { PrismaModule } from 'src/prisma/prisma.module';
     DeviceComponentRepository,
     TelemetryLogBusiness,
     TelemetryLogRepository,
+    TelemetryProcessor,
     TelemetryCronService,
   ],
   exports: [DeviceComponentRepository, TelemetryLogRepository],
