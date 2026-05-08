@@ -19,6 +19,9 @@ lerna-debug.log*
 /coverage
 /.nyc_output
 
+# Private notes — not for public repo
+docs/private/
+
 # IDEs and editors
 /.idea
 .project
