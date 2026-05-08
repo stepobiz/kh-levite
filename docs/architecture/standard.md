@@ -1,6 +1,6 @@
 # Standard Architetturale — KH Levite
 
-> Autore: Stefano Cavallaro
+> Autore: Catello Stefano Cavallaro
 > Derivato da esperienza Spring Boot / JHipster, adattato a NestJS.
 > Verificato su codice reale nel branch `newstandard`.
 
