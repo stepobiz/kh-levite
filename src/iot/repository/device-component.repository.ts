@@ -47,4 +47,8 @@ export class DeviceComponentRepository {
   delete(id: number) {
     return this.prisma.iotDeviceComponent.delete({ where: { id } });
   }
+
+  deleteByDeviceId(deviceId: number) {
+    return this.prisma.iotDeviceComponent.deleteMany({ where: { deviceId } });
+  }
 }

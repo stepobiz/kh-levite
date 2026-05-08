@@ -3,13 +3,13 @@ import { DeviceComponentDto } from 'src/iot/dto/device-component.dto';
 import { DeviceComponentRepository } from 'src/iot/repository/device-component.repository';
 import { DeviceComponentMapper } from 'src/iot/mapper/device-component.mapper';
 import { ProcessorComponentView } from 'src/iot/process/processor-component-view';
-import { TelemetryLogBusiness } from './telemetry-log.business';
+import { TelemetryLogRepository } from 'src/iot/repository/telemetry-log.repository';
 
 @Injectable()
 export class DeviceComponentBusiness {
   constructor(
     private readonly repository: DeviceComponentRepository,
-    private readonly telemetryLogBusiness: TelemetryLogBusiness,
+    private readonly telemetryLogRepository: TelemetryLogRepository,
   ) {}
 
   async create(deviceId: number, dto: DeviceComponentDto): Promise<DeviceComponentDto> {
@@ -52,7 +52,7 @@ export class DeviceComponentBusiness {
   }
 
   async delete(id: number): Promise<void> {
-    await this.telemetryLogBusiness.deleteByComponentId(id);
+    await this.telemetryLogRepository.deleteByComponentId(id);
     await this.repository.delete(id);
   }
 }

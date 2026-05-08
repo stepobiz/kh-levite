@@ -39,4 +39,8 @@ export class TelemetryLogRepository {
 	deleteByComponentId(componentId: number) {
 		return this.prisma.iotTelemetryLog.deleteMany({ where: { componentId } });
 	}
+
+	deleteByDeviceId(deviceId: number) {
+		return this.prisma.iotTelemetryLog.deleteMany({ where: { component: { deviceId } } });
+	}
 }
