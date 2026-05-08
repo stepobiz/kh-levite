@@ -102,4 +102,4 @@ Stefano Cavallaro — contributi benvenuti tramite Pull Request.
 
 ## Licenza
 
-Da definire.
+[MIT](LICENSE)
