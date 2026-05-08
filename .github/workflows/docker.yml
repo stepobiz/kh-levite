@@ -39,4 +39,5 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: stepobiz/kh-levite
+          short-description: Backend IoT e automazione per ambienti locali. NestJS · Prisma · SQLite · Docker
           readme-filepath: ./docs/docker-hub.md
