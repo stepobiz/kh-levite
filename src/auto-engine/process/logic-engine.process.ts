@@ -1,8 +1,8 @@
-import { forwardRef, Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { LogicEngineBusiness } from '../business/logic-engine/logic-engine.business';
-import { RealtimeGateway } from 'src/realtime/realtime.gateway';
+import { LogicEngineSolverBusiness } from '../business/logic-engine-solver.business';
 import { ProcessLogBusiness } from 'src/infra/business/process-log.business';
+import { RealtimeGateway } from 'src/realtime/realtime.gateway';
 
 const PROCESS_NAME = 'logic_engine';
 
@@ -14,9 +14,9 @@ export class LogicEngineProcess implements OnModuleInit {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly logicEngineBusiness: LogicEngineBusiness,
+    private readonly solverBusiness: LogicEngineSolverBusiness,
+    private readonly processLogBusiness: ProcessLogBusiness,
     private readonly realtimeGateway: RealtimeGateway,
-    @Inject(forwardRef(() => ProcessLogBusiness)) private readonly processLogBusiness: ProcessLogBusiness,
   ) {}
 
   onModuleInit() {
@@ -38,7 +38,7 @@ export class LogicEngineProcess implements OnModuleInit {
       let itemCount = 0;
 
       try {
-        itemCount = await this.logicEngineBusiness.process();
+        itemCount = await this.solverBusiness.process();
       } catch (err: any) {
         status = 'error';
         errorMsg = err?.message ?? String(err);

@@ -1,18 +1,18 @@
-import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
-import { NodeBusiness } from 'src/auto-engine/business/node.business';
-import { AuenNodeWithAttributes } from 'src/auto-engine/business/logic-engine/node-strategy.interface';
-import { StrategyFactory } from 'src/auto-engine/business/logic-engine/strategy.factory';
+import { Injectable, Logger } from '@nestjs/common';
+import { NodeBusiness } from './node.business';
+import { AuenNodeWithAttributes } from './logic-engine/node-strategy.interface';
+import { StrategyFactory } from './logic-engine/strategy.factory';
 import { DeviceComponentBusiness } from 'src/iot/business/device-component.business';
 import { TelemetryLogBusiness } from 'src/iot/business/telemetry-log.business';
 
 @Injectable()
-export class SyncBusiness {
-  private readonly logger = new Logger(SyncBusiness.name);
+export class LogicEngineActuatorBusiness {
+  private readonly logger = new Logger(LogicEngineActuatorBusiness.name);
 
   constructor(
-    @Inject(forwardRef(() => NodeBusiness)) private readonly nodeBusiness: NodeBusiness,
-    @Inject(forwardRef(() => DeviceComponentBusiness)) private readonly componentBusiness: DeviceComponentBusiness,
-    @Inject(forwardRef(() => TelemetryLogBusiness)) private readonly telemetryBusiness: TelemetryLogBusiness,
+    private readonly nodeBusiness: NodeBusiness,
+    private readonly componentBusiness: DeviceComponentBusiness,
+    private readonly telemetryBusiness: TelemetryLogBusiness,
   ) {}
 
   async process(): Promise<number> {
@@ -46,7 +46,7 @@ export class SyncBusiness {
           }
         }
       } catch (err) {
-        this.logger.error(`SyncEngine node ${node.id} (${node.code}) error: ${err}`);
+        this.logger.error(`Node ${node.id} (${node.code}) error: ${err}`);
       }
     }
 

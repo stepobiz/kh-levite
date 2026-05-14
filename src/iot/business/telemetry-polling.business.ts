@@ -8,8 +8,8 @@ import { RealtimeGateway } from 'src/realtime/realtime.gateway';
 const COOLDOWN_SECONDS = 5;
 
 @Injectable()
-export class TelemetryBusiness {
-  private readonly logger = new Logger(TelemetryBusiness.name);
+export class TelemetryPollingBusiness {
+  private readonly logger = new Logger(TelemetryPollingBusiness.name);
 
   constructor(
     private readonly componentBusiness: DeviceComponentBusiness,

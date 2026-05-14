@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { DeviceController } from 'src/iot/web/rest/device.controller';
 import { DeviceBusiness } from 'src/iot/business/device.business';
 import { DeviceRepository } from 'src/iot/repository/device.repository';
@@ -9,7 +9,7 @@ import { DeviceComponentRepository } from 'src/iot/repository/device-component.r
 import { TelemetryLogController } from 'src/iot/web/rest/telemetry-log.controller';
 import { TelemetryLogBusiness } from 'src/iot/business/telemetry-log.business';
 import { TelemetryLogRepository } from 'src/iot/repository/telemetry-log.repository';
-import { TelemetryBusiness } from './business/telemetry.business';
+import { TelemetryPollingBusiness } from './business/telemetry-polling.business';
 import { TelemetryCronService } from './process/telemetry-cron.service';
 import { RealtimeModule } from 'src/realtime/realtime.module';
 import { InfraModule } from 'src/infra/infra.module';
@@ -19,7 +19,7 @@ import { PrismaModule } from 'src/prisma/prisma.module';
   imports: [
     RealtimeModule,
     PrismaModule,
-    forwardRef(() => InfraModule),
+    InfraModule,
   ],
   controllers: [
     DeviceController,
@@ -34,7 +34,7 @@ import { PrismaModule } from 'src/prisma/prisma.module';
     DeviceComponentRepository,
     TelemetryLogBusiness,
     TelemetryLogRepository,
-    TelemetryBusiness,
+    TelemetryPollingBusiness,
     TelemetryCronService,
   ],
   exports: [DeviceComponentBusiness, TelemetryLogBusiness],

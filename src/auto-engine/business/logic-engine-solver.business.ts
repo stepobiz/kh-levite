@@ -1,12 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { NodeRepository } from 'src/auto-engine/repository/node.repository';
+import { NodeRepository } from '../repository/node.repository';
 import { RealtimeGateway } from 'src/realtime/realtime.gateway';
-import { AuenNodeWithAttributes, LogicEngineContext } from './node-strategy.interface';
-import { StrategyFactory } from './strategy.factory';
+import { AuenNodeWithAttributes, LogicEngineContext } from './logic-engine/node-strategy.interface';
+import { StrategyFactory } from './logic-engine/strategy.factory';
 
 @Injectable()
-export class LogicEngineBusiness {
-  private readonly logger = new Logger(LogicEngineBusiness.name);
+export class LogicEngineSolverBusiness {
+  private readonly logger = new Logger(LogicEngineSolverBusiness.name);
 
   constructor(
     private readonly nodeRepository: NodeRepository,

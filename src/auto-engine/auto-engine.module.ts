@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { NodeTypeController } from './web/rest/node-type.controller';
 import { NodeTypeBusiness } from './business/node-type.business';
 import { NodeTypeRepository } from './repository/node-type.repository';
@@ -11,21 +11,26 @@ import { NodeRepository } from './repository/node.repository';
 import { TagController } from './web/rest/tag.controller';
 import { TagBusiness } from './business/tag.business';
 import { TagRepository } from './repository/tag.repository';
-import { LogicEngineBusiness } from './business/logic-engine/logic-engine.business';
+import { LogicEngineSolverBusiness } from './business/logic-engine-solver.business';
+import { LogicEngineActuatorBusiness } from './business/logic-engine-actuator.business';
 import { LogicEngineProcess } from './process/logic-engine.process';
+import { LogicEngineActuatorProcess } from './process/logic-engine-actuator.process';
 import { RealtimeModule } from 'src/realtime/realtime.module';
 import { InfraModule } from 'src/infra/infra.module';
+import { IotModule } from 'src/iot/iot.module';
 
 @Module({
-  imports: [RealtimeModule, forwardRef(() => InfraModule)],
+  imports: [RealtimeModule, InfraModule, IotModule],
   controllers: [NodeTypeController, AttributeTypeController, NodeController, TagController],
   providers: [
     NodeTypeBusiness, NodeTypeRepository,
     AttributeTypeBusiness, AttributeTypeRepository,
     NodeBusiness, NodeRepository,
     TagBusiness, TagRepository,
-    LogicEngineBusiness,
+    LogicEngineSolverBusiness,
+    LogicEngineActuatorBusiness,
     LogicEngineProcess,
+    LogicEngineActuatorProcess,
   ],
   exports: [NodeBusiness],
 })

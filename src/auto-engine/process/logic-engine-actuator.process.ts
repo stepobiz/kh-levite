@@ -1,7 +1,7 @@
-import { forwardRef, Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { SyncBusiness } from '../business/sync.business';
-import { ProcessLogBusiness } from '../business/process-log.business';
+import { LogicEngineActuatorBusiness } from '../business/logic-engine-actuator.business';
+import { ProcessLogBusiness } from 'src/infra/business/process-log.business';
 import { RealtimeGateway } from 'src/realtime/realtime.gateway';
 
 const PROCESS_NAME = 'sync_engine';
@@ -9,18 +9,18 @@ const PROCESS_NAME = 'sync_engine';
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 @Injectable()
-export class SyncProcess implements OnModuleInit {
-  private readonly logger = new Logger(SyncProcess.name);
+export class LogicEngineActuatorProcess implements OnModuleInit {
+  private readonly logger = new Logger(LogicEngineActuatorProcess.name);
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly syncBusiness: SyncBusiness,
-    @Inject(forwardRef(() => ProcessLogBusiness)) private readonly processLogBusiness: ProcessLogBusiness,
+    private readonly actuatorBusiness: LogicEngineActuatorBusiness,
+    private readonly processLogBusiness: ProcessLogBusiness,
     private readonly realtimeGateway: RealtimeGateway,
   ) {}
 
   onModuleInit() {
-    this.start().catch(err => this.logger.error('SyncEngine loop crashed', err));
+    this.start().catch(err => this.logger.error('LogicEngineActuator loop crashed', err));
   }
 
   async start() {
@@ -38,7 +38,7 @@ export class SyncProcess implements OnModuleInit {
       let itemCount = 0;
 
       try {
-        itemCount = await this.syncBusiness.process();
+        itemCount = await this.actuatorBusiness.process();
       } catch (err: any) {
         status = 'error';
         errorMsg = err?.message ?? String(err);
