@@ -1,28 +1,33 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { AutoEngineModule } from 'src/auto-engine/auto-engine.module';
 import { IotModule } from 'src/iot/iot.module';
-import { ConfigurationModule } from './configuration/configuration.module';
 import { RealtimeModule } from 'src/realtime/realtime.module';
-import { ProcessLogRepository } from './process-log/process-log.repository';
-import { ProcessLogService } from './process-log/process-log.service';
-import { ProcessLogController } from './process-log/process-log.controller';
-import { ProcessLogRetentionService } from './process-log/process-log-retention.service';
-import { SyncService } from './sync/sync.service';
+import { ConfigurationController } from './web/rest/configuration.controller';
+import { ConfigurationBusiness } from './business/configuration.business';
+import { ConfigurationRepository } from './repository/configuration.repository';
+import { SectionController } from './web/rest/section.controller';
+import { SectionBusiness } from './business/section.business';
+import { SectionRepository } from './repository/section.repository';
+import { ProcessLogController } from './web/rest/process-log.controller';
+import { ProcessLogBusiness } from './business/process-log.business';
+import { ProcessLogRepository } from './repository/process-log.repository';
+import { ProcessLogRetentionProcess } from './process/process-log-retention.process';
+import { SyncProcess } from './process/sync.process';
 
 @Module({
   imports: [
-    ConfigurationModule,
     RealtimeModule,
     forwardRef(() => AutoEngineModule),
     forwardRef(() => IotModule),
   ],
-  controllers: [ProcessLogController],
+  controllers: [ConfigurationController, SectionController, ProcessLogController],
   providers: [
-    ProcessLogRepository,
-    ProcessLogService,
-    ProcessLogRetentionService,
-    SyncService,
+    ConfigurationBusiness, ConfigurationRepository,
+    SectionBusiness, SectionRepository,
+    ProcessLogBusiness, ProcessLogRepository,
+    ProcessLogRetentionProcess,
+    SyncProcess,
   ],
-  exports: [ProcessLogService],
+  exports: [ProcessLogBusiness, ConfigurationBusiness],
 })
 export class InfraModule {}

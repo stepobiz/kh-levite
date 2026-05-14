@@ -2,7 +2,7 @@ import { forwardRef, Inject, Injectable, Logger, OnModuleInit } from '@nestjs/co
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TelemetryProcessor } from './telemetry-processor';
 import { RealtimeGateway } from 'src/realtime/realtime.gateway';
-import { ProcessLogService } from 'src/infra/process-log/process-log.service';
+import { ProcessLogBusiness } from 'src/infra/business/process-log.business';
 
 const PROCESS_NAME = 'telemetry_processor';
 
@@ -16,7 +16,7 @@ export class TelemetryCronService implements OnModuleInit {
     private readonly prisma: PrismaService,
     private readonly processor: TelemetryProcessor,
     private readonly realtimeGateway: RealtimeGateway,
-    @Inject(forwardRef(() => ProcessLogService)) private readonly processLogService: ProcessLogService,
+    @Inject(forwardRef(() => ProcessLogBusiness)) private readonly processLogService: ProcessLogBusiness,
   ) {}
 
   onModuleInit() {
