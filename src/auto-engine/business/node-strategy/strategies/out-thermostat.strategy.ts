@@ -1,4 +1,4 @@
-import { AuenNodeWithAttributes, LogicEngineContext, NodeStrategy } from '../node-strategy.interface';
+import { AuenNodeWithAttributes, DefaultChildSpec, LogicEngineContext, NodeStrategy } from '../node-strategy.interface';
 
 export class OutThermostatStrategy implements NodeStrategy {
   async calculateDesired(node: AuenNodeWithAttributes, context: LogicEngineContext): Promise<string> {
@@ -32,5 +32,12 @@ export class OutThermostatStrategy implements NodeStrategy {
 
   syncHardware(): 'WRITE' {
     return 'WRITE';
+  }
+
+  getDefaultChildren(): DefaultChildSpec[] {
+    return [
+      { description: 'Setpoint', typeCategory: 'node_manual_target', isLogical: true },
+      { description: 'Sensore temperatura', typeCategory: 'in_sensor', isLogical: true },
+    ];
   }
 }

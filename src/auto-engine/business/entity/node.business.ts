@@ -3,7 +3,8 @@ import { AuenNodeCategory } from '@prisma/client';
 import { NodeRepository } from './node.repository';
 import { NodeDto } from '../../dto/node.dto';
 import { RealtimeGateway } from 'src/realtime/realtime.gateway';
-import { AuenNodeWithAttributes } from '../node-strategy/node-strategy.interface';
+import { AuenNodeWithAttributes, DefaultChildSpec } from '../node-strategy/node-strategy.interface';
+import { StrategyFactory } from '../node-strategy/strategy.factory';
 
 const CAN_HAVE_CHILDREN = new Set<AuenNodeCategory>([
   AuenNodeCategory.out_logic_or,
@@ -62,14 +63,31 @@ export class NodeBusiness {
     if (dto.parentId != null) {
       await this._assertParentCanHaveChildren(dto.parentId);
     }
-    return this.repository.create({
+
+    const inputAttributes = (dto.attributes ?? []).filter(a => a.attributeId != null) as Array<{ attributeId: number; value: string }>;
+    await this._assertRequiredAttributes(dto.typeId!, inputAttributes);
+
+    const node = await this.repository.create({
       code: dto.code ?? null,
       description: dto.description,
       typeId: dto.typeId!,
       parentId: dto.parentId,
       iotComponentId: resolvedIotComponentId,
       isLogical: resolvedIsLogical,
+      attributes: inputAttributes,
     });
+
+    if (nodeType) {
+      const strategy = StrategyFactory.getStrategy(nodeType.category);
+      if (strategy.getDefaultChildren) {
+        const childSpecs = strategy.getDefaultChildren();
+        for (const spec of childSpecs) {
+          await this._createAutoChild(spec, node.id);
+        }
+      }
+    }
+
+    return this.repository.findById(node.id);
   }
 
   async update(id: number, dto: NodeDto) {
@@ -96,6 +114,13 @@ export class NodeBusiness {
     if (dto.parentId != null && dto.parentId !== existing.parentId) {
       await this._assertParentCanHaveChildren(dto.parentId);
     }
+
+    let inputAttributes: Array<{ attributeId: number; value: string }> | undefined;
+    if (dto.attributes !== undefined) {
+      inputAttributes = (dto.attributes).filter(a => a.attributeId != null) as Array<{ attributeId: number; value: string }>;
+      await this._assertRequiredAttributes(typeId, inputAttributes);
+    }
+
     return this.repository.update(id, {
       code: dto.code,
       description: dto.description,
@@ -103,6 +128,7 @@ export class NodeBusiness {
       parentId: dto.parentId,
       iotComponentId: isFake ? null : dto.iotComponentId,
       isLogical: resolvedIsLogical,
+      attributes: inputAttributes,
     });
   }
 
@@ -170,6 +196,28 @@ export class NodeBusiness {
   async removeTag(nodeId: number, tagId: number) {
     await this.findById(nodeId);
     return this.repository.removeTag(nodeId, tagId);
+  }
+
+  private async _assertRequiredAttributes(typeId: number, provided: Array<{ attributeId: number; value: string }>) {
+    const requiredIds = await this.repository.findTypeRequiredAttributeIds(typeId);
+    if (requiredIds.length === 0) return;
+    const providedIds = new Set(provided.map(a => a.attributeId));
+    const missing = requiredIds.filter(id => !providedIds.has(id));
+    if (missing.length > 0) {
+      throw new BadRequestException(`Missing required attributes for this node type: attributeId [${missing.join(', ')}]`);
+    }
+  }
+
+  private async _createAutoChild(spec: DefaultChildSpec, parentId: number) {
+    const childType = await this.repository.findTypeByCategory(spec.typeCategory);
+    if (!childType) return;
+    await this.repository.create({
+      description: spec.description,
+      typeId: childType.id,
+      parentId,
+      isLogical: spec.isLogical ?? true,
+      iotComponentId: null,
+    });
   }
 
   private async _assertComponentNotUsed(componentId: number, excludeNodeId?: number) {

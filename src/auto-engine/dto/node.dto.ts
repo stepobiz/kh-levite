@@ -9,9 +9,9 @@ export class NodeAttributeTypeDto {
 }
 
 export class NodeAttributeResponseDto {
-  @ApiPropertyOptional() nodeId?: number;
-  @ApiPropertyOptional() attributeId?: number;
-  @ApiProperty() value!: string;
+  @ApiPropertyOptional() @IsOptional() @IsInt() nodeId?: number;
+  @ApiPropertyOptional() @IsOptional() @IsInt() attributeId?: number;
+  @ApiProperty() @IsString() value!: string;
   @ApiPropertyOptional({ type: NodeAttributeTypeDto }) attribute?: NodeAttributeTypeDto;
 }
 
@@ -52,6 +52,11 @@ export class NodeDto {
   @IsOptional()
   @IsInt()
   order?: number;
+
+  @ApiPropertyOptional({ description: 'Node category — used internally to resolve typeId for auto-created children.' })
+  @IsOptional()
+  @IsString()
+  typeCategory?: string;
 
   // output only — managed by Logic Engine / Sync
   @ApiPropertyOptional() desiredValue?: string;

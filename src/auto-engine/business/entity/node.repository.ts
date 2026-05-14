@@ -25,7 +25,7 @@ export class NodeRepository {
     return this.prisma.auenNode.findUnique({ where: { id }, include: NODE_INCLUDE });
   }
 
-  create(data: { code?: string | null; description?: string | null; typeId: number; parentId?: number | null; iotComponentId?: number | null; isLogical?: boolean }) {
+  create(data: { code?: string | null; description?: string | null; typeId: number; parentId?: number | null; iotComponentId?: number | null; isLogical?: boolean; attributes?: Array<{ attributeId: number; value: string }> }) {
     return this.prisma.auenNode.create({
       data: {
         code: data.code ?? null,
@@ -34,12 +34,15 @@ export class NodeRepository {
         parentId: data.parentId ?? null,
         iotComponentId: data.iotComponentId ?? null,
         isLogical: data.isLogical ?? false,
+        ...(data.attributes?.length
+          ? { attributes: { create: data.attributes.map(a => ({ attributeId: a.attributeId, value: a.value })) } }
+          : {}),
       },
       include: NODE_INCLUDE,
     });
   }
 
-  update(id: number, data: { code?: string; description?: string | null; typeId?: number; parentId?: number | null; iotComponentId?: number | null; isLogical?: boolean }) {
+  update(id: number, data: { code?: string; description?: string | null; typeId?: number; parentId?: number | null; iotComponentId?: number | null; isLogical?: boolean; attributes?: Array<{ attributeId: number; value: string }> }) {
     const prismaData: Record<string, unknown> = {};
     if (data.code !== undefined) prismaData.code = data.code;
     if (data.description !== undefined) prismaData.description = data.description;
@@ -47,6 +50,12 @@ export class NodeRepository {
     if ('parentId' in data) prismaData.parentId = data.parentId ?? null;
     if ('iotComponentId' in data) prismaData.iotComponentId = data.iotComponentId ?? null;
     if (data.isLogical !== undefined) prismaData.isLogical = data.isLogical;
+    if (data.attributes !== undefined) {
+      prismaData.attributes = {
+        deleteMany: {},
+        create: data.attributes.map(a => ({ attributeId: a.attributeId, value: a.value })),
+      };
+    }
     return this.prisma.auenNode.update({ where: { id }, data: prismaData as any, include: NODE_INCLUDE });
   }
 
@@ -172,6 +181,18 @@ export class NodeRepository {
 
   findTypeById(typeId: number) {
     return this.prisma.auenNodeType.findUnique({ where: { id: typeId } });
+  }
+
+  async findTypeRequiredAttributeIds(typeId: number): Promise<number[]> {
+    const rows = await this.prisma.auenNodeTypeAttribute.findMany({
+      where: { nodeTypeId: typeId, isRequired: true },
+      select: { attributeId: true },
+    });
+    return rows.map(r => r.attributeId);
+  }
+
+  findTypeByCategory(category: string) {
+    return this.prisma.auenNodeType.findFirst({ where: { category: category as any } });
   }
 
   updateDesiredValue(id: number, value: string, updatedAt: Date) {

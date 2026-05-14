@@ -70,7 +70,8 @@ model AuenNodeType {
   iconSlug  String?          @map("icon_slug")
   category  AuenNodeCategory
   valueType String           @default("boolean") @map("value_type")
-  nodes     AuenNode[]
+  nodes              AuenNode[]
+  nodeTypeAttributes AuenNodeTypeAttribute[]
 
   @@map("auen_node_type")
 }
@@ -123,7 +124,8 @@ model AuenAttributeType {
   code           String              @unique
   description    String?
   dataType       String              @map("data_type")
-  nodeAttributes AuenNodeAttribute[]
+  nodeAttributes     AuenNodeAttribute[]
+  nodeTypeAttributes AuenNodeTypeAttribute[]
 
   @@map("auen_attribute_type")
 }
@@ -138,6 +140,18 @@ model AuenNodeAttribute {
 
   @@id([nodeId, attributeId])
   @@map("auen_node_attribute")
+}
+
+model AuenNodeTypeAttribute {
+  nodeTypeId  Int     @map("node_type_id")
+  attributeId Int     @map("attribute_id")
+  isRequired  Boolean @default(false) @map("is_required")
+
+  nodeType  AuenNodeType      @relation(fields: [nodeTypeId], references: [id])
+  attribute AuenAttributeType @relation(fields: [attributeId], references: [id])
+
+  @@id([nodeTypeId, attributeId])
+  @@map("auen_node_type_attribute")
 }
 
 // --- Infrastructure ---

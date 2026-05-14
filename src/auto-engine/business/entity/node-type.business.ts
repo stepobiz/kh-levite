@@ -39,4 +39,19 @@ export class NodeTypeBusiness {
     await this.findById(id);
     return this.repository.delete(id);
   }
+
+  async findAttributes(nodeTypeId: number) {
+    await this.findById(nodeTypeId);
+    return this.repository.findAttributes(nodeTypeId);
+  }
+
+  async upsertAttribute(nodeTypeId: number, attributeId: number, isRequired: boolean) {
+    await this.findById(nodeTypeId);
+    return this.repository.upsertAttribute(nodeTypeId, attributeId, isRequired);
+  }
+
+  async deleteAttribute(nodeTypeId: number, attributeId: number) {
+    await this.findById(nodeTypeId);
+    return this.repository.deleteAttribute(nodeTypeId, attributeId);
+  }
 }

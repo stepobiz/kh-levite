@@ -1,6 +1,17 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
 import { AuenNodeCategory } from '@prisma/client';
+
+export class NodeTypeAttributeDto {
+  @ApiProperty() nodeTypeId!: number;
+  @ApiProperty() attributeId!: number;
+  @ApiProperty() isRequired!: boolean;
+  @ApiPropertyOptional() attribute?: { id: number; code: string; description?: string | null; dataType: string };
+}
+
+export class NodeTypeAttributeInputDto {
+  @ApiProperty() @IsBoolean() isRequired!: boolean;
+}
 
 export class NodeTypeDto {
   @ApiPropertyOptional()
