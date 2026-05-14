@@ -14,8 +14,8 @@ Tutta la documentazione è in `docs/`. Leggila prima di rispondere a domande arc
 | Modulo | Dove |
 | --- | --- |
 | IoT | `docs/iot/` — README, data-model, rest-api, telemetry-process, next-value |
-| AutoEngine | `docs/auto-engine/` — README, data-model, node-graph, strategy-pattern, strategy-catalog, logic-engine, rest-api |
-| InfraModule | `docs/infra/` — README, data-model, sync-engine |
+| AutoEngine | `docs/auto-engine/` — README, data-model, node-graph, strategy-pattern, strategy-catalog, logic-engine, actuator, rest-api |
+| InfraModule | `docs/infra/` — README, data-model |
 | Architettura | `docs/architecture/standard.md` — regole layer, dipendenze |
 | Deploy | `docs/deployment/docker-compose.md` |
 | Contributing | `docs/contributing/` — new-driver, workflow (git-flow), ci-cd |
@@ -34,10 +34,14 @@ Leggi `docs/architecture/standard.md` per il dettaglio completo. Regole da non v
 
 **Layer order:** `web/rest` → `Business` → `Repository` → `Prisma`
 
-**Business:**
-- Inietta solo Repository, MAI altri Business
+**Business (entity):**
+- Inietta solo Repository e Mapper del proprio modulo — MAI Repository di altri moduli
 - Riceve e restituisce solo DTO
 - È l'unico layer che orchestra più repository (es. delete in cascade)
+
+**Business (process):**
+- Può iniettare Business (entity o process) di altri moduli per dipendenze cross-module
+- MAI inietta Repository di altri moduli
 
 **Repository:**
 - Non importa altri Repository
@@ -48,18 +52,19 @@ Leggi `docs/architecture/standard.md` per il dettaglio completo. Regole da non v
 
 **DTO:**
 - `nextValue` e `nextValueUpdatedAt` non compaiono MAI nei DTO pubblici
-- Vedi `docs/iot/next-value.md` e `src/iot/process/processor-component-view.ts`
+- Vedi `docs/iot/next-value.md` e `src/iot/dto/processor-component-view.ts`
 
 ## Struttura di un modulo
 
 ```
 modulo/
   dto/
-  repository/
   business/
-  mapper/
+    entity/         ← business + repository + mapper per entità (co-locati)
+    <dominio>/      ← subfolders tematici (node-strategy/, protocol-driver/)
+    foo-process.business.ts   ← process businesses flat in business/
   web/rest/
-  process/      ← cron, worker
+  process/          ← loop runners (OnModuleInit + while true)
   modulo.module.ts
 ```
 
