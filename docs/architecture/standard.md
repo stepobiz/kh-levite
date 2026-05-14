@@ -2,15 +2,14 @@
 
 > Autore: Catello Stefano Cavallaro
 > Derivato da esperienza Spring Boot / JHipster, adattato a NestJS.
-> Verificato su codice reale nel branch `newstandard`.
 
 ---
 
 ## Filosofia
 
 Ogni modulo NestJS è piccolo, concentrato su un solo dominio, e potenzialmente estraibile
-come microservizio autonomo. La struttura a layer orizzontali rende espliciti i confini
-e le regole di dipendenza — la cartella stessa comunica il contratto.
+come microservizio autonomo. La struttura a layer rende espliciti i confini e le regole di
+dipendenza — la cartella stessa comunica il contratto.
 
 ---
 
@@ -18,67 +17,98 @@ e le regole di dipendenza — la cartella stessa comunica il contratto.
 
 ```
 modulo/
-  dto/              ← contratti pubblici del modulo (input/output verso l'esterno)
-  repository/       ← accesso al dato, solo logiche sul dato (Prisma)
-  business/         ← logica applicativa, orchestrazione, regole di dominio
-  mapper/           ← conversione entity (Prisma) ↔ DTO
+  dto/                    ← contratti pubblici del modulo (input/output)
+  business/
+    entity/               ← per ogni entità: business + repository + mapper (se presente)
+      foo.business.ts
+      foo.repository.ts
+      foo.mapper.ts
+    <dominio>/            ← subfolder per gruppi di file correlati (es. node-strategy/, protocol-driver/)
+    foo-process.business.ts  ← business di processo (flat in business/)
   web/
-    rest/           ← controller HTTP
-    ws/             ← gateway WebSocket (se presente)
-    graphql/        ← resolver GraphQL (se presente)
-  process/          ← cron job, worker, processor background
+    rest/                 ← controller HTTP
+  process/                ← loop runner (OnModuleInit + while true)
   modulo.module.ts
 ```
 
-La cartella `web/` è fissa anche se si implementa solo REST — garantisce uniformità
-tra tutti gli applicativi e lascia spazio a futuri canali senza ristrutturare.
+### Regole sulla struttura
+
+- `business/entity/` raccoglie sempre: il business, il repository e il mapper (se esiste) di ogni entità.
+  Sono co-locati perché il business possiede il proprio repository — separati fisicamente non aggiunge valore.
+- I business di processo (logic engine, polling, attuazione) stanno **flat** in `business/` con nome verboso
+  (es. `logic-engine-solver.business.ts`).
+- Subfolders tematici in `business/` (es. `node-strategy/`, `protocol-driver/`) raccolgono
+  pattern tecnici riutilizzati da più business dello stesso modulo.
+- `web/` è fissa anche se si implementa solo REST — garantisce uniformità e lascia spazio a
+  futuri canali senza ristrutturare.
+- `process/` contiene solo i loop runner — non contengono logica, chiamano sempre Business.
 
 ---
 
-## Regole di dipendenza
+## Layer e dipendenze
 
 ```
-Controller / Process / Altri moduli
-        ↓  (solo DTO)
-    Business
-        ↓  (entity Prisma via Mapper)
-    Repository
-        ↓
-      Prisma
+web/rest (Controller)
+    ↓
+process (Loop Runner)
+    ↓
+Business (entity o processo)
+    ↓
+Repository  +  Mapper
+    ↓
+  Prisma
 ```
 
 ### Repository
 - Conosce solo Prisma. Riceve e restituisce entity Prisma o tipi `Prisma.*Input`.
-- Può contenere validazioni/correzioni sul dato (es. impostare `updatedAt`, normalizzare valori).
-- Non contiene logica applicativa.
+- Nessuna logica applicativa.
 
 ### Mapper
-- Converte entity Prisma → DTO (per restituire dati al business).
-- Converte DTO → `Prisma.*Input` (per passare dati al repository).
-- Non contiene logica applicativa.
-- Il business non conosce la struttura Prisma direttamente — passa sempre dal mapper.
+- Converte entity Prisma ↔ DTO.
+- Nessuna logica applicativa.
 
 ### Business
 - Riceve e restituisce **solo DTO**.
-- Conosce la struttura Prisma **tramite il mapper** — non istanzia mai oggetti Prisma direttamente.
-- Contiene tutta la logica applicativa: orchestrazione, regole di dominio, validazioni di business.
-- È l'unico layer che può chiamare altri moduli (tramite i loro Business, via DTO).
+- Contiene tutta la logica: orchestrazione, regole di dominio, validazioni.
+- Inietta solo Repository e Mapper del proprio modulo (o Business di altri moduli per dipendenze cross-module).
+- **Mai** inietta Repository di altri moduli.
 
-### Controller (web/rest)
+### Controller (`web/rest`)
 - Riceve request HTTP, chiama Business, restituisce DTO.
-- Può contenere logiche di accesso/autenticazione/autorizzazione.
-- Non contiene logica applicativa.
+- Nessuna logica applicativa.
 
-### Process (cron / worker)
-- Chiama **sempre** Business, mai Repository direttamente.
-- Lavora solo con DTO.
+### Process (loop runner)
+- Avvia un loop continuo in `onModuleInit()`.
+- Chiama Business, scrive ProcessLog, emette eventi realtime.
+- **Non contiene logica** — delega tutto al Business corrispondente.
+- Legge configurazioni (intervallo ciclo, enabled) tramite PrismaService direttamente
+  (eccezione documentata — vedi sotto).
 
 ---
 
 ## Comunicazione tra moduli
 
-I moduli comunicano tra loro esclusivamente tramite i rispettivi **Business** e **DTO**.
-Un modulo non importa mai il Repository o il Mapper di un altro modulo.
+I moduli comunicano esclusivamente tramite i rispettivi **Business** esportati e i **DTO**.
+Un modulo non importa mai il Repository, il Mapper o i file interni di un altro modulo.
+
+### Grafo delle dipendenze (attuale)
+
+```
+auto-engine ──→ infra
+auto-engine ──→ iot
+iot         ──→ infra
+infra       ──→ (nessun modulo di dominio)
+```
+
+Nessuna dipendenza circolare. `infra` è pura infrastruttura trasversale.
+
+### Exports dei moduli
+
+| Modulo | Esporta |
+|---|---|
+| `AutoEngineModule` | `NodeBusiness` |
+| `IotModule` | `DeviceComponentBusiness`, `TelemetryLogBusiness` |
+| `InfraModule` | `ProcessLogBusiness`, `ConfigurationBusiness` |
 
 ---
 
@@ -86,7 +116,4 @@ Un modulo non importa mai il Repository o il Mapper di un altro modulo.
 
 | Punto | Eccezione | Motivazione |
 |---|---|---|
-| *(nessuna ancora)* | | |
-
-Le eccezioni vanno aggiunte qui man mano che emergono durante il refactor,
-con motivazione esplicita. Se un'eccezione si ripete diventa regola.
+| Process runner | Inietta `PrismaService` direttamente per leggere `cfg_configuration` | Evita dipendenza circolare infra↔modulo per un'operazione di sola lettura su una tabella di configurazione. Accettabile finché non si crea un servizio di configurazione globale. |
