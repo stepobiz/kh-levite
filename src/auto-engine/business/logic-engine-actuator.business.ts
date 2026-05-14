@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { NodeBusiness } from './node.business';
-import { AuenNodeWithAttributes } from './logic-engine/node-strategy.interface';
-import { StrategyFactory } from './logic-engine/strategy.factory';
-import { DeviceComponentBusiness } from 'src/iot/business/device-component.business';
-import { TelemetryLogBusiness } from 'src/iot/business/telemetry-log.business';
+import { NodeBusiness } from './entity/node.business';
+import { AuenNodeWithAttributes } from './node-strategy/node-strategy.interface';
+import { StrategyFactory } from './node-strategy/strategy.factory';
+import { DeviceComponentBusiness } from 'src/iot/business/entity/device-component.business';
+import { TelemetryLogBusiness } from 'src/iot/business/entity/telemetry-log.business';
 
 @Injectable()
 export class LogicEngineActuatorBusiness {

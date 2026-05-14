@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { ConfigurationRepository } from '../repository/configuration.repository';
-import { ConfigurationDto } from '../dto/configuration.dto';
+import { ConfigurationRepository } from './configuration.repository';
+import { ConfigurationDto } from '../../dto/configuration.dto';
 
 @Injectable()
 export class ConfigurationBusiness {

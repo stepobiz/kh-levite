@@ -1,6 +1,6 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { ApiTags, ApiOkResponse } from '@nestjs/swagger';
-import { ProcessLogBusiness } from '../../business/process-log.business';
+import { ProcessLogBusiness } from '../../business/entity/process-log.business';
 
 @ApiTags('Infra — Process Stats')
 @Controller('infra/process-stats')

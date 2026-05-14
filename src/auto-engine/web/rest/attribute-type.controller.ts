@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
-import { AttributeTypeBusiness } from '../../business/attribute-type.business';
+import { AttributeTypeBusiness } from '../../business/entity/attribute-type.business';
 import { AttributeTypeDto } from '../../dto/attribute-type.dto';
 
 @ApiTags('AutoEngine — Attribute Types')

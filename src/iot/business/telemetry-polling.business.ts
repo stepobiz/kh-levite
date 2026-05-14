@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DeviceComponentBusiness } from './device-component.business';
-import { TelemetryLogBusiness } from './telemetry-log.business';
+import { DeviceComponentBusiness } from './entity/device-component.business';
+import { TelemetryLogBusiness } from './entity/telemetry-log.business';
 import { IotProtocolDriver } from '../device-driver/iot-protocol-driver';
 import { driverRegistry } from '../device-driver/driver-registry';
 import { RealtimeGateway } from 'src/realtime/realtime.gateway';

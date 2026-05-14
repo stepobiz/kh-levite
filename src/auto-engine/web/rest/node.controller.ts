@@ -3,7 +3,7 @@ import {
   Param, Query, Body, ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
-import { NodeBusiness } from '../../business/node.business';
+import { NodeBusiness } from '../../business/entity/node.business';
 import {
   NodeDto,
   SetParentDto,

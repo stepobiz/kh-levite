@@ -1,5 +1,5 @@
 import { DeviceComponentDto } from 'src/iot/dto/device-component.dto';
-import { DeviceMapper } from 'src/iot/mapper/device.mapper';
+import { DeviceMapper } from './device.mapper';
 import type { Prisma } from '@prisma/client';
 
 export class DeviceComponentMapper {

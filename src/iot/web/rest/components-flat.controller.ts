@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { DeviceComponentBusiness } from 'src/iot/business/device-component.business';
+import { DeviceComponentBusiness } from 'src/iot/business/entity/device-component.business';
 import { DeviceComponentDto } from 'src/iot/dto/device-component.dto';
 
 @ApiTags('Components')

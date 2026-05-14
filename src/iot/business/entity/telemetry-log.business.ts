@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { TelemetryLogDto } from 'src/iot/dto/telemetry-log.dto';
-import { TelemetryLogRepository } from 'src/iot/repository/telemetry-log.repository';
-import { TelemetryLogMapper } from 'src/iot/mapper/telemetry-log.mapper';
+import { TelemetryLogRepository } from './telemetry-log.repository';
+import { TelemetryLogMapper } from './telemetry-log.mapper';
 
 @Injectable()
 export class TelemetryLogBusiness {

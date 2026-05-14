@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body, Query, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
-import { ConfigurationBusiness } from '../../business/configuration.business';
+import { ConfigurationBusiness } from '../../business/entity/configuration.business';
 import { ConfigurationDto } from '../../dto/configuration.dto';
 
 @ApiTags('Configuration — Configurations')

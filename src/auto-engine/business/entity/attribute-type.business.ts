@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { AttributeTypeRepository } from '../repository/attribute-type.repository';
-import { AttributeTypeDto } from '../dto/attribute-type.dto';
+import { AttributeTypeRepository } from './attribute-type.repository';
+import { AttributeTypeDto } from '../../dto/attribute-type.dto';
 
 @Injectable()
 export class AttributeTypeBusiness {

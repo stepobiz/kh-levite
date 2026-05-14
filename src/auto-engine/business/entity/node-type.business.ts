@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { NodeTypeRepository } from '../repository/node-type.repository';
-import { NodeTypeDto } from '../dto/node-type.dto';
+import { NodeTypeRepository } from './node-type.repository';
+import { NodeTypeDto } from '../../dto/node-type.dto';
 
 @Injectable()
 export class NodeTypeBusiness {

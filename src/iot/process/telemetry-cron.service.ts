@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TelemetryPollingBusiness } from '../business/telemetry-polling.business';
-import { ProcessLogBusiness } from 'src/infra/business/process-log.business';
+import { ProcessLogBusiness } from 'src/infra/business/entity/process-log.business';
 import { RealtimeGateway } from 'src/realtime/realtime.gateway';
 
 const PROCESS_NAME = 'telemetry_processor';

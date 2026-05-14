@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ProcessLogRepository } from '../repository/process-log.repository';
+import { ProcessLogRepository } from '../business/entity/process-log.repository';
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
 const DEFAULT_RETENTION_DAYS = 7;

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { SectionRepository } from '../repository/section.repository';
-import { SectionDto } from '../dto/section.dto';
+import { SectionRepository } from './section.repository';
+import { SectionDto } from '../../dto/section.dto';
 
 @Injectable()
 export class SectionBusiness {

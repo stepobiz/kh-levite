@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ProcessLogRepository } from '../repository/process-log.repository';
+import { ProcessLogRepository } from './process-log.repository';
 
 @Injectable()
 export class ProcessLogBusiness {

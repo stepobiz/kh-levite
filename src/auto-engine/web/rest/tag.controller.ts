@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
-import { TagBusiness } from '../../business/tag.business';
+import { TagBusiness } from '../../business/entity/tag.business';
 import { TagDto } from '../../dto/tag.dto';
 
 @ApiTags('AutoEngine — Tags')

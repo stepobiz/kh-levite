@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { DeviceDto } from 'src/iot/dto/device.dto';
-import { DeviceRepository } from 'src/iot/repository/device.repository';
-import { DeviceMapper } from 'src/iot/mapper/device.mapper';
-import { DeviceComponentRepository } from 'src/iot/repository/device-component.repository';
-import { TelemetryLogRepository } from 'src/iot/repository/telemetry-log.repository';
+import { DeviceRepository } from './device.repository';
+import { DeviceMapper } from './device.mapper';
+import { DeviceComponentRepository } from './device-component.repository';
+import { TelemetryLogRepository } from './telemetry-log.repository';
 
 @Injectable()
 export class DeviceBusiness {
