@@ -11,7 +11,7 @@ registrare il driver, e il ciclo di telemetria lo userà automaticamente.
 ## Interfaccia da implementare
 
 ```typescript
-// src/iot/device-driver/iot-protocol-driver.ts
+// src/iot/business/protocol-driver/iot-protocol-driver.ts
 export interface IotProtocolDriver {
   readonly protocol: string;
   read(component: DeviceComponentDto): Promise<string>;
@@ -45,7 +45,7 @@ Il parametro `component: DeviceComponentDto` contiene tutto il necessario per co
 ### 1. Crea il file del driver
 
 ```
-src/iot/device-driver/{nome-protocollo}.driver.ts
+src/iot/business/protocol-driver/{nome-protocollo}.driver.ts
 ```
 
 Implementa `IotProtocolDriver`. Esempio minimo:
@@ -73,7 +73,7 @@ export class MioDriver implements IotProtocolDriver {
 
 ### 2. Registra il driver
 
-Apri `src/iot/device-driver/driver-registry.ts` e aggiungi il tuo driver:
+Apri `src/iot/business/protocol-driver/driver-registry.ts` e aggiungi il tuo driver:
 
 ```typescript
 import { MioDriver } from './mio.driver';
@@ -98,7 +98,7 @@ Poi aggiungi i componenti con `hardwareIndex` e `hardwareAddress` secondo le spe
 
 ## Esempio reale — Sonoff DIY
 
-Il driver [`sonoff-diy.driver.ts`](../../src/iot/device-driver/sonoff-diy.driver.ts) è un buon esempio:
+Il driver [`sonoff-diy.driver.ts`](../../src/iot/business/protocol-driver/sonoff-diy.driver.ts) è un buon esempio:
 comunica con il Sonoff Basic R2 via HTTP locale (porta 8081, API DIY nativa del firmware stock ≥ 3.3.0).
 
 ---
