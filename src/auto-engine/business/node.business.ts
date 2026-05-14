@@ -3,7 +3,7 @@ import { AuenNodeCategory } from '@prisma/client';
 import { NodeRepository } from '../repository/node.repository';
 import { NodeDto } from '../dto/node.dto';
 import { RealtimeGateway } from 'src/realtime/realtime.gateway';
-import { AuenNodeWithAttributes } from '../process/node-strategy.interface';
+import { AuenNodeWithAttributes } from './logic-engine/node-strategy.interface';
 
 const CAN_HAVE_CHILDREN = new Set<AuenNodeCategory>([
   AuenNodeCategory.out_logic_or,

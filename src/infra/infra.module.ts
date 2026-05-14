@@ -11,6 +11,7 @@ import { SectionRepository } from './repository/section.repository';
 import { ProcessLogController } from './web/rest/process-log.controller';
 import { ProcessLogBusiness } from './business/process-log.business';
 import { ProcessLogRepository } from './repository/process-log.repository';
+import { SyncBusiness } from './business/sync.business';
 import { ProcessLogRetentionProcess } from './process/process-log-retention.process';
 import { SyncProcess } from './process/sync.process';
 
@@ -25,6 +26,7 @@ import { SyncProcess } from './process/sync.process';
     ConfigurationBusiness, ConfigurationRepository,
     SectionBusiness, SectionRepository,
     ProcessLogBusiness, ProcessLogRepository,
+    SyncBusiness,
     ProcessLogRetentionProcess,
     SyncProcess,
   ],

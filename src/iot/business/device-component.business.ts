@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DeviceComponentDto } from 'src/iot/dto/device-component.dto';
 import { DeviceComponentRepository } from 'src/iot/repository/device-component.repository';
 import { DeviceComponentMapper } from 'src/iot/mapper/device-component.mapper';
-import { ProcessorComponentView } from 'src/iot/process/processor-component-view';
+import { ProcessorComponentView } from 'src/iot/dto/processor-component-view';
 import { TelemetryLogRepository } from 'src/iot/repository/telemetry-log.repository';
 
 @Injectable()
@@ -39,6 +39,16 @@ export class DeviceComponentBusiness {
   async findById(id: number): Promise<DeviceComponentDto | null> {
     const entity = await this.repository.findById(id);
     return entity ? DeviceComponentMapper.toDto(entity) : null;
+  }
+
+  async findByIdWithNextValue(id: number): Promise<ProcessorComponentView | null> {
+    const entity = await this.repository.findById(id);
+    if (!entity) return null;
+    return {
+      ...DeviceComponentMapper.toDto(entity),
+      nextValue: entity.nextValue ?? null,
+      nextValueUpdatedAt: entity.nextValueUpdatedAt ?? null,
+    };
   }
 
   async update(id: number, dto: DeviceComponentDto): Promise<DeviceComponentDto> {

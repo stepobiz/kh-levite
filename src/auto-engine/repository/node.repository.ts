@@ -174,6 +174,20 @@ export class NodeRepository {
     return this.prisma.auenNodeType.findUnique({ where: { id: typeId } });
   }
 
+  updateDesiredValue(id: number, value: string, updatedAt: Date) {
+    return this.prisma.auenNode.update({
+      where: { id },
+      data: { desiredValue: value, desiredValueUpdatedAt: updatedAt },
+    });
+  }
+
+  updateActualValue(id: number, value: string, updatedAt: Date) {
+    return this.prisma.auenNode.update({
+      where: { id },
+      data: { actualValue: value, actualValueUpdatedAt: updatedAt },
+    });
+  }
+
   findAllWithAttributes() {
     return this.prisma.auenNode.findMany({
       include: { type: true, attributes: { include: { attribute: true } } },

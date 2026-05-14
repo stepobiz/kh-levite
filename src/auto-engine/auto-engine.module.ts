@@ -11,7 +11,8 @@ import { NodeRepository } from './repository/node.repository';
 import { TagController } from './web/rest/tag.controller';
 import { TagBusiness } from './business/tag.business';
 import { TagRepository } from './repository/tag.repository';
-import { LogicEngineService } from './process/logic-engine.service';
+import { LogicEngineBusiness } from './business/logic-engine/logic-engine.business';
+import { LogicEngineProcess } from './process/logic-engine.process';
 import { RealtimeModule } from 'src/realtime/realtime.module';
 import { InfraModule } from 'src/infra/infra.module';
 
@@ -23,7 +24,8 @@ import { InfraModule } from 'src/infra/infra.module';
     AttributeTypeBusiness, AttributeTypeRepository,
     NodeBusiness, NodeRepository,
     TagBusiness, TagRepository,
-    LogicEngineService,
+    LogicEngineBusiness,
+    LogicEngineProcess,
   ],
   exports: [NodeBusiness],
 })

@@ -1,10 +1,6 @@
 import { forwardRef, Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { NodeBusiness } from 'src/auto-engine/business/node.business';
-import { AuenNodeWithAttributes } from 'src/auto-engine/process/node-strategy.interface';
-import { StrategyFactory } from 'src/auto-engine/process/strategy.factory';
-import { DeviceComponentRepository } from 'src/iot/repository/device-component.repository';
-import { TelemetryLogRepository } from 'src/iot/repository/telemetry-log.repository';
+import { SyncBusiness } from '../business/sync.business';
 import { ProcessLogBusiness } from '../business/process-log.business';
 import { RealtimeGateway } from 'src/realtime/realtime.gateway';
 
@@ -18,9 +14,7 @@ export class SyncProcess implements OnModuleInit {
 
   constructor(
     private readonly prisma: PrismaService,
-    @Inject(forwardRef(() => NodeBusiness)) private readonly nodeBusiness: NodeBusiness,
-    @Inject(forwardRef(() => DeviceComponentRepository)) private readonly componentRepository: DeviceComponentRepository,
-    @Inject(forwardRef(() => TelemetryLogRepository)) private readonly telemetryRepository: TelemetryLogRepository,
+    private readonly syncBusiness: SyncBusiness,
     @Inject(forwardRef(() => ProcessLogBusiness)) private readonly processLogBusiness: ProcessLogBusiness,
     private readonly realtimeGateway: RealtimeGateway,
   ) {}
@@ -39,12 +33,12 @@ export class SyncProcess implements OnModuleInit {
 
       const startTs = Date.now();
       const startedAt = new Date();
-      let status = 'success';
+      let status: 'success' | 'error' = 'success';
       let errorMsg: string | undefined;
       let itemCount = 0;
 
       try {
-        itemCount = await this.process();
+        itemCount = await this.syncBusiness.process();
       } catch (err: any) {
         status = 'error';
         errorMsg = err?.message ?? String(err);
@@ -63,7 +57,7 @@ export class SyncProcess implements OnModuleInit {
         endedAt,
         durationMs,
         itemsProcessed: itemCount,
-        status: status as 'success' | 'error',
+        status,
       });
 
       const minInterval = await this.getCfg('sync.cycle_min_interval_ms') ?? 2000;
@@ -72,44 +66,6 @@ export class SyncProcess implements OnModuleInit {
       const wait = Math.max(0, minInterval - durationMs) + cooldown;
       if (wait > 0) await sleep(wait);
     }
-  }
-
-  async process(): Promise<number> {
-    const allNodes = await this.nodeBusiness.findAllWithAttributes() as unknown as AuenNodeWithAttributes[];
-    const nodes = allNodes.filter(n => n.iotComponentId != null);
-    let count = 0;
-
-    for (const node of nodes) {
-      try {
-        const strategy = StrategyFactory.getStrategy(node.type.category);
-        const direction = strategy.syncHardware(node, allNodes);
-        if (direction === 'NONE') continue;
-
-        const componentId = node.iotComponentId!;
-
-        if (direction === 'WRITE') {
-          const lastLog = await this.telemetryRepository.findLastByComponentId(componentId);
-          const component = await this.componentRepository.findById(componentId);
-          if (
-            lastLog?.value !== node.actualValue &&
-            component?.nextValue !== node.actualValue
-          ) {
-            await this.componentRepository.setNextValue(componentId, node.actualValue);
-            count++;
-          }
-        } else if (direction === 'READ') {
-          const lastLog = await this.telemetryRepository.findLastByComponentId(componentId);
-          if (lastLog && lastLog.value !== node.actualValue) {
-            await this.nodeBusiness.setDesiredFromHardware(node.id, lastLog.value);
-            count++;
-          }
-        }
-      } catch (err) {
-        this.logger.error(`SyncEngine node ${node.id} (${node.code}) error: ${err}`);
-      }
-    }
-
-    return count;
   }
 
   private async getCfg(code: string): Promise<number | null> {
