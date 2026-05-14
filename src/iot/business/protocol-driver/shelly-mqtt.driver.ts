@@ -1,5 +1,5 @@
 import { IotProtocolDriver } from './iot-protocol-driver';
-import { DeviceComponentDto } from '../dto/device-component.dto';
+import { DeviceComponentDto } from '../../dto/device-component.dto';
 
 export class ShellyMqttDriver implements IotProtocolDriver {
   readonly protocol = 'shelly-mqtt';

@@ -1,4 +1,4 @@
-import { DeviceComponentDto } from '../dto/device-component.dto';
+import { DeviceComponentDto } from '../../dto/device-component.dto';
 
 export interface IotProtocolDriver {
   readonly protocol: string;
