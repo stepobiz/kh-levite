@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body, ParseIntPipe, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse, ApiNoContentResponse } from '@nestjs/swagger';
+import { AuenNodeCategory } from '@prisma/client';
 import { NodeTypeBusiness } from '../../business/entity/node-type.business';
 import { NodeTypeDto, NodeTypeAttributeDto, NodeTypeAttributeInputDto } from '../../dto/node-type.dto';
 
@@ -12,6 +13,12 @@ export class NodeTypeController {
   @ApiOkResponse({ type: [NodeTypeDto] })
   findAll() {
     return this.business.findAll();
+  }
+
+  @Get('allowed-value-types/:category')
+  @ApiOkResponse({ description: 'List of allowed valueTypes for the given category', type: [String] })
+  getAllowedValueTypes(@Param('category') category: AuenNodeCategory) {
+    return this.business.getAllowedValueTypes(category);
   }
 
   @Get(':id')

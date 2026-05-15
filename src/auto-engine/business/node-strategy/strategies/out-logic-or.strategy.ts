@@ -19,4 +19,8 @@ export class OutLogicOrStrategy implements NodeStrategy {
   syncHardware(): 'WRITE' {
     return 'WRITE';
   }
+
+  allowedValueTypes(): string[] {
+    return ['boolean'];
+  }
 }

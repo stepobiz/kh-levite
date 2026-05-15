@@ -39,4 +39,8 @@ export class ProxyInverterStrategy implements NodeStrategy {
     const sourceStrategy = StrategyFactory.getStrategy(source.type.category);
     return sourceStrategy.syncHardware();
   }
+
+  allowedValueTypes(): string[] {
+    return ['boolean'];
+  }
 }

@@ -12,4 +12,8 @@ export class InSensorStrategy implements NodeStrategy {
   syncHardware(): 'READ' {
     return 'READ';
   }
+
+  allowedValueTypes(): string[] {
+    return ['number', 'boolean'];
+  }
 }

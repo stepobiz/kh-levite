@@ -10,8 +10,21 @@
 <body>
   <nav class="topbar">
     <div class="brand">KH Levite</div>
-    <div class="nav">
-      <div class="nav-group">
+    <div class="nav">	      
+      <button class="nav-btn" data-section="dashboard">Dashboard</button>
+      <button class="nav-btn" data-section="user-topology">Topologia</button>
+	  <button class="nav-btn" data-section="user-devices">Device</button>
+      <span class="nav-sep"></span>
+	  <div class="nav-group">
+        <button class="nav-group-label">ADMIN</button>
+        <div class="nav-group-items">
+          <button class="nav-btn" data-section="auen-nodes">Nodi</button>
+          <button class="nav-btn" data-section="devices">Dispositivi</button>
+          <button class="nav-btn" data-section="topology">Topologia</button>
+          <button class="nav-btn" data-section="auen-tags">Tag</button>
+        </div>
+      </div>
+	  <div class="nav-group">
         <button class="nav-group-label">DEV</button>
         <div class="nav-group-items">
           <button class="nav-btn" data-section="auen-node-types">Node Types</button>
@@ -19,26 +32,6 @@
           <button class="nav-btn" data-section="cfg">Configurazioni</button>
         </div>
       </div>
-      <div class="nav-group">
-        <button class="nav-group-label">ADMIN</button>
-        <div class="nav-group-items">
-          <button class="nav-btn" data-section="dashboard">Dashboard</button>
-          <button class="nav-btn" data-section="auen-nodes">Nodi</button>
-          <button class="nav-btn" data-section="devices">Dispositivi</button>
-          <button class="nav-btn" data-section="topology">Topologia</button>
-          <button class="nav-btn" data-section="auen-tags">Tag</button>
-        </div>
-      </div>
-      <span class="nav-sep"></span>
-      <div class="nav-group nav-group-user">
-        <button class="nav-group-label">UTENTE</button>
-        <div class="nav-group-items">
-          <button class="nav-btn" data-section="dashboard">Dashboard</button>
-          <button class="nav-btn" data-section="user-topology">Topologia</button>
-          <button class="nav-btn" data-section="user-devices">Device</button>
-        </div>
-      </div>
-    </div>
   </nav>
 
   <div id="message" style="opacity: 0"></div>
@@ -500,7 +493,7 @@
           </div>
           <div class="form-row">
             <label>Category <span class="required">*</span></label>
-            <select name="category" required>
+            <select id="nt-category-select" name="category" required onchange="onNodeTypeCategoryChange()">
               <option value="">— seleziona —</option>
               <option value="in_sensor">in_sensor</option>
               <option value="node_manual_target">node_manual_target</option>
@@ -513,9 +506,9 @@
               <option value="out_thermostat">out_thermostat</option>
             </select>
           </div>
-          <div class="form-row">
+          <div id="nt-value-type-row" class="form-row">
             <label>Value Type <span class="required">*</span></label>
-            <select name="valueType" required>
+            <select id="nt-value-type-select" name="valueType" required>
               <option value="boolean">boolean</option>
               <option value="number">number</option>
               <option value="string">string</option>

@@ -34,6 +34,10 @@ export class OutThermostatStrategy implements NodeStrategy {
     return 'WRITE';
   }
 
+  allowedValueTypes(): string[] {
+    return ['boolean'];
+  }
+
   async onCreate(ctx: NodeCreationContext): Promise<void> {
     // Requires exactly one AuenNodeType per (category, valueType) pair in the DB.
     // The @@unique([category, valueType]) constraint on AuenNodeType enforces this.

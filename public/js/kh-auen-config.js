@@ -50,6 +50,35 @@ function renderNodeTypes() {
     </tr>`).join('');
 }
 
+async function onNodeTypeCategoryChange() {
+  const category = document.getElementById('nt-category-select').value;
+  const row = document.getElementById('nt-value-type-row');
+  const select = document.getElementById('nt-value-type-select');
+  if (!category) {
+    row.classList.remove('hidden');
+    return;
+  }
+  try {
+    const res = await fetch(`/api/auen/node-types/allowed-value-types/${category}`);
+    const allowed = await res.json();
+    if (!Array.isArray(allowed) || allowed.length === 0) {
+      row.classList.add('hidden');
+      select.value = 'boolean';
+      return;
+    }
+    const current = select.value;
+    const allOptions = ['boolean', 'number', 'string'];
+    select.innerHTML = allOptions
+      .filter(v => allowed.includes(v))
+      .map(v => `<option value="${v}">${v}</option>`)
+      .join('');
+    select.value = allowed.includes(current) ? current : allowed[0];
+    row.classList.remove('hidden');
+  } catch {
+    row.classList.remove('hidden');
+  }
+}
+
 async function openNodeTypeModal(id = null) {
   const nt = id != null ? auenNodeTypes.find(x => x.id === id) : null;
   const form = document.getElementById('node-type-form');
@@ -58,6 +87,7 @@ async function openNodeTypeModal(id = null) {
   form.name.value = nt?.name ?? '';
   form.iconSlug.value = nt?.iconSlug ?? '';
   form.category.value = nt?.category ?? '';
+  await onNodeTypeCategoryChange();
   form.valueType.value = nt?.valueType ?? 'boolean';
   document.querySelector('#node-type-modal .modal-title').textContent =
     nt ? 'Modifica Node Type' : 'Nuovo Node Type';

@@ -25,5 +25,7 @@ export interface NodeStrategy {
   calculateDesired(node: AuenNodeWithAttributes, context: LogicEngineContext): Promise<string>;
   updateActual(node: AuenNodeWithAttributes): string | undefined;
   syncHardware(node?: AuenNodeWithAttributes, allNodes?: AuenNodeWithAttributes[]): 'READ' | 'WRITE' | 'NONE';
+  /** Returns allowed valueTypes for this category. Empty array = not applicable (e.g. proxy_mirror). */
+  allowedValueTypes(): string[];
   onCreate?(ctx: NodeCreationContext): Promise<void>;
 }

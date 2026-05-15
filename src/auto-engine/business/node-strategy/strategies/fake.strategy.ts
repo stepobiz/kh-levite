@@ -12,4 +12,8 @@ export class FakeStrategy implements NodeStrategy {
   syncHardware(): 'NONE' {
     return 'NONE';
   }
+
+  allowedValueTypes(): string[] {
+    return ['number', 'boolean', 'string'];
+  }
 }

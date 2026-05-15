@@ -22,4 +22,8 @@ export class NodeManualValueByUrlStrategy implements NodeStrategy {
   syncHardware(): 'NONE' {
     return 'NONE';
   }
+
+  allowedValueTypes(): string[] {
+    return ['number', 'boolean', 'string'];
+  }
 }
