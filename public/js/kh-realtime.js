@@ -71,7 +71,12 @@ function _onNodeUpdate(data) {
     actualValueUpdatedAt: data.actualValueUpdatedAt,
   };
 
-  // Update topology SVG in-place if visible
+  // Re-render user topology if visible
+  if (document.getElementById('user-topology')?.classList.contains('active')) {
+    renderUserTopology();
+  }
+
+  // Update admin topology SVG in-place if visible
   if (document.getElementById('topology')?.classList.contains('active')) {
     const vt = auenNodes[idx].type?.valueType ?? 'boolean';
     const desiredEl = document.getElementById('topo-desired-' + data.nodeId);

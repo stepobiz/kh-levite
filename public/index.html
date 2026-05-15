@@ -11,22 +11,31 @@
   <nav class="topbar">
     <div class="brand">KH Levite</div>
     <div class="nav">
-      <button class="nav-btn" data-section="dashboard">Dashboard</button>
       <div class="nav-group">
-        <button class="nav-group-label">Anagrafica</button>
+        <button class="nav-group-label">DEV</button>
         <div class="nav-group-items">
-          <button class="nav-btn" data-section="devices">Dispositivi</button>
-          <button class="nav-btn" data-section="auen-nodes">Nodi</button>
-          <button class="nav-btn" data-section="topology">Topologia</button>
+          <button class="nav-btn" data-section="auen-node-types">Node Types</button>
+          <button class="nav-btn" data-section="auen-attribute-types">Attr Types</button>
+          <button class="nav-btn" data-section="cfg">Configurazioni</button>
         </div>
       </div>
       <div class="nav-group">
-        <button class="nav-group-label">Config</button>
+        <button class="nav-group-label">ADMIN</button>
         <div class="nav-group-items">
-          <button class="nav-btn" data-section="cfg">Configurazioni</button>
-          <button class="nav-btn" data-section="auen-node-types">Node Types</button>
-          <button class="nav-btn" data-section="auen-attribute-types">Attr Types</button>
+          <button class="nav-btn" data-section="dashboard">Dashboard</button>
+          <button class="nav-btn" data-section="auen-nodes">Nodi</button>
+          <button class="nav-btn" data-section="devices">Dispositivi</button>
+          <button class="nav-btn" data-section="topology">Topologia</button>
           <button class="nav-btn" data-section="auen-tags">Tag</button>
+        </div>
+      </div>
+      <span class="nav-sep"></span>
+      <div class="nav-group nav-group-user">
+        <button class="nav-group-label">UTENTE</button>
+        <div class="nav-group-items">
+          <button class="nav-btn" data-section="dashboard">Dashboard</button>
+          <button class="nav-btn" data-section="user-topology">Topologia</button>
+          <button class="nav-btn" data-section="user-devices">Device</button>
         </div>
       </div>
     </div>
@@ -305,6 +314,49 @@
         <table id="attribute-type-table">
           <thead>
             <tr><th>ID</th><th>Code</th><th>Descrizione</th><th>Data Type</th><th>Azioni</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- UTENTE — TOPOLOGIA -->
+    <section id="user-topology" class="section">
+      <div class="toolbar">
+        <h1>Topologia</h1>
+        <div class="toolbar-actions">
+          <select id="user-topology-root-select" onchange="renderUserTopology()" style="padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+            <option value="">— seleziona root —</option>
+          </select>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:#1e293b">
+            <input type="checkbox" id="user-topology-follow-connected" onchange="renderUserTopology()">
+            Segui nodi collegati
+          </label>
+          <button class="btn-secondary" onclick="expandAllUserTopoNodes()">&#x25BC; Espandi tutti</button>
+          <button class="btn-secondary" onclick="collapseAllUserTopoNodes()">&#x25B6; Comprimi tutti</button>
+          <button class="btn-secondary" onclick="renderUserTopology()">&#x21BB; Aggiorna</button>
+        </div>
+      </div>
+      <div id="user-topology-canvas" style="padding-bottom:20px"></div>
+    </section>
+
+    <!-- UTENTE — DEVICE -->
+    <section id="user-devices" class="section">
+      <div class="toolbar">
+        <h1>Device</h1>
+        <div class="toolbar-actions">
+          <button id="user-reload-statuses-btn" class="btn-secondary" onclick="reloadUserStatuses()">&#x21BB; Ricarica stati</button>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <input id="user-device-search" type="text" placeholder="Cerca per nome, IP o MAC..." />
+      </div>
+      <div class="card" id="user-device-table-container">
+        <table id="user-device-table">
+          <thead>
+            <tr>
+              <th>ID</th><th>Nome</th><th>MAC</th><th>IP</th><th>Driver</th><th>Stato</th><th></th>
+            </tr>
           </thead>
           <tbody></tbody>
         </table>

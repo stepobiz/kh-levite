@@ -897,6 +897,29 @@ body:has(#topology.active) {
   margin-left: 2px;
 }
 
+.nav-sep {
+  width: 1px;
+  height: 22px;
+  background: #334155;
+  align-self: center;
+  margin: 0 8px;
+  flex-shrink: 0;
+}
+
+.nav-group-user .nav-group-label {
+  color: #7dd3fc;
+}
+
+.nav-group-user:hover .nav-group-label,
+.nav-group-user .nav-group-label:focus {
+  background: #1e3a5f;
+  color: #bae6fd;
+}
+
+.nav-group-user:hover .nav-group-items {
+  display: flex;
+}
+
 /* --- Node collapse button (KL-39) --- */
 .btn-collapse-node {
   background: none;
