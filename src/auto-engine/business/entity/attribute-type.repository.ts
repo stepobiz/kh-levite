@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -13,12 +14,12 @@ export class AttributeTypeRepository {
     return this.prisma.auenAttributeType.findUnique({ where: { id } });
   }
 
-  create(data: { code: string; description?: string | null; dataType: string }) {
-    return this.prisma.auenAttributeType.create({ data: data as any });
+  create(data: Prisma.AuenAttributeTypeCreateInput) {
+    return this.prisma.auenAttributeType.create({ data });
   }
 
-  update(id: number, data: Record<string, unknown>) {
-    return this.prisma.auenAttributeType.update({ where: { id }, data: data as any });
+  update(id: number, data: Prisma.AuenAttributeTypeUpdateInput) {
+    return this.prisma.auenAttributeType.update({ where: { id }, data });
   }
 
   delete(id: number) {

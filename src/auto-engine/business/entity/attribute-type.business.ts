@@ -1,40 +1,36 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { AttributeTypeRepository } from './attribute-type.repository';
+import { AttributeTypeMapper } from './attribute-type.mapper';
 import { AttributeTypeDto } from '../../dto/attribute-type.dto';
 
 @Injectable()
 export class AttributeTypeBusiness {
   constructor(private readonly repository: AttributeTypeRepository) {}
 
-  findAll() {
-    return this.repository.findAll();
+  async findAll(): Promise<AttributeTypeDto[]> {
+    const list = await this.repository.findAll();
+    return list.map(AttributeTypeMapper.toDto);
   }
 
-  async findById(id: number) {
+  async findById(id: number): Promise<AttributeTypeDto> {
     const entity = await this.repository.findById(id);
     if (!entity) throw new NotFoundException(`AttributeType ${id} not found`);
-    return entity;
+    return AttributeTypeMapper.toDto(entity);
   }
 
-  create(dto: AttributeTypeDto) {
-    return this.repository.create({
-      code: dto.code!,
-      description: dto.description,
-      dataType: dto.dataType!,
-    });
+  async create(dto: AttributeTypeDto): Promise<AttributeTypeDto> {
+    const entity = await this.repository.create(AttributeTypeMapper.toCreateInput(dto));
+    return AttributeTypeMapper.toDto(entity);
   }
 
-  async update(id: number, dto: AttributeTypeDto) {
+  async update(id: number, dto: AttributeTypeDto): Promise<AttributeTypeDto> {
     await this.findById(id);
-    const data: Record<string, unknown> = {};
-    if (dto.code !== undefined) data.code = dto.code;
-    if (dto.description !== undefined) data.description = dto.description;
-    if (dto.dataType !== undefined) data.dataType = dto.dataType;
-    return this.repository.update(id, data);
+    const entity = await this.repository.update(id, AttributeTypeMapper.toUpdateInput(dto));
+    return AttributeTypeMapper.toDto(entity);
   }
 
-  async delete(id: number) {
+  async delete(id: number): Promise<void> {
     await this.findById(id);
-    return this.repository.delete(id);
+    await this.repository.delete(id);
   }
 }

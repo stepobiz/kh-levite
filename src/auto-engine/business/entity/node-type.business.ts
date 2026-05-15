@@ -1,57 +1,53 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { NodeTypeRepository } from './node-type.repository';
-import { NodeTypeDto } from '../../dto/node-type.dto';
+import { NodeTypeMapper } from './node-type.mapper';
+import { NodeTypeDto, NodeTypeAttributeDto } from '../../dto/node-type.dto';
 
 @Injectable()
 export class NodeTypeBusiness {
   constructor(private readonly repository: NodeTypeRepository) {}
 
-  findAll() {
-    return this.repository.findAll();
+  async findAll(): Promise<NodeTypeDto[]> {
+    const list = await this.repository.findAll();
+    return list.map(NodeTypeMapper.toDto);
   }
 
-  async findById(id: number) {
+  async findById(id: number): Promise<NodeTypeDto> {
     const entity = await this.repository.findById(id);
     if (!entity) throw new NotFoundException(`NodeType ${id} not found`);
-    return entity;
+    return NodeTypeMapper.toDto(entity);
   }
 
-  create(dto: NodeTypeDto) {
-    return this.repository.create({
-      name: dto.name!,
-      iconSlug: dto.iconSlug,
-      category: dto.category! as string,
-      valueType: dto.valueType,
-    });
+  async create(dto: NodeTypeDto): Promise<NodeTypeDto> {
+    const entity = await this.repository.create(NodeTypeMapper.toCreateInput(dto));
+    return NodeTypeMapper.toDto(entity);
   }
 
-  async update(id: number, dto: NodeTypeDto) {
+  async update(id: number, dto: NodeTypeDto): Promise<NodeTypeDto> {
     await this.findById(id);
-    const data: Record<string, unknown> = {};
-    if (dto.name !== undefined) data.name = dto.name;
-    if (dto.iconSlug !== undefined) data.iconSlug = dto.iconSlug;
-    if (dto.category !== undefined) data.category = dto.category;
-    if (dto.valueType !== undefined) data.valueType = dto.valueType;
-    return this.repository.update(id, data);
+    const entity = await this.repository.update(id, NodeTypeMapper.toUpdateInput(dto));
+    return NodeTypeMapper.toDto(entity);
   }
 
-  async delete(id: number) {
+  async delete(id: number): Promise<void> {
     await this.findById(id);
-    return this.repository.delete(id);
+    await this.repository.delete(id);
   }
 
-  async findAttributes(nodeTypeId: number) {
+  async findAttributes(nodeTypeId: number): Promise<NodeTypeAttributeDto[]> {
     await this.findById(nodeTypeId);
-    return this.repository.findAttributes(nodeTypeId);
+    const rows = await this.repository.findAttributes(nodeTypeId);
+    return rows.map(NodeTypeMapper.toAttributeDto);
   }
 
-  async upsertAttribute(nodeTypeId: number, attributeId: number, isRequired: boolean) {
+  async upsertAttribute(nodeTypeId: number, attributeId: number, isRequired: boolean): Promise<NodeTypeAttributeDto> {
     await this.findById(nodeTypeId);
-    return this.repository.upsertAttribute(nodeTypeId, attributeId, isRequired);
+    const row = await this.repository.upsertAttribute(nodeTypeId, attributeId, isRequired);
+    return NodeTypeMapper.toAttributeDto(row);
   }
 
-  async deleteAttribute(nodeTypeId: number, attributeId: number) {
+  async deleteAttribute(nodeTypeId: number, attributeId: number): Promise<void> {
     await this.findById(nodeTypeId);
-    return this.repository.deleteAttribute(nodeTypeId, attributeId);
+    await this.repository.deleteAttribute(nodeTypeId, attributeId);
   }
 }

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -13,12 +14,12 @@ export class TagRepository {
     return this.prisma.auenTag.findUnique({ where: { id } });
   }
 
-  create(name: string) {
-    return this.prisma.auenTag.create({ data: { name } });
+  create(data: Prisma.AuenTagCreateInput) {
+    return this.prisma.auenTag.create({ data });
   }
 
-  update(id: number, name: string) {
-    return this.prisma.auenTag.update({ where: { id }, data: { name } });
+  update(id: number, data: Prisma.AuenTagUpdateInput) {
+    return this.prisma.auenTag.update({ where: { id }, data });
   }
 
   delete(id: number) {

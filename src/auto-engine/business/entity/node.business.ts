@@ -1,7 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { AuenNodeCategory } from '@prisma/client';
 import { NodeRepository } from './node.repository';
-import { NodeDto } from '../../dto/node.dto';
+import { NodeMapper } from './node.mapper';
+import { NodeDto, NodeAttributeResponseDto } from '../../dto/node.dto';
 import { RealtimeGateway } from 'src/realtime/realtime.gateway';
 import { AuenNodeWithAttributes, DefaultChildSpec } from '../node-strategy/node-strategy.interface';
 import { StrategyFactory } from '../node-strategy/strategy.factory';
@@ -29,14 +30,14 @@ export class NodeBusiness {
     private readonly realtimeGateway: RealtimeGateway,
   ) {}
 
-  findAll(tagId?: number) {
-    return this.repository.findAll(tagId);
+  async findAll(tagId?: number): Promise<NodeDto[]> {
+    const list = await this.repository.findAll(tagId);
+    return list.map(NodeMapper.toDto);
   }
 
-  async findById(id: number) {
-    const entity = await this.repository.findById(id);
-    if (!entity) throw new NotFoundException(`Node ${id} not found`);
-    return entity;
+  async findById(id: number): Promise<NodeDto> {
+    const entity = await this._findNodeEntity(id);
+    return NodeMapper.toDto(entity);
   }
 
   findAllWithAttributes(): Promise<AuenNodeWithAttributes[]> {
@@ -47,7 +48,7 @@ export class NodeBusiness {
     return this.repository.setDesiredFromHardware(id, value);
   }
 
-  async create(dto: NodeDto) {
+  async create(dto: NodeDto): Promise<NodeDto> {
     const nodeType = await this.repository.findTypeById(dto.typeId!);
     const isFake = nodeType?.category === AuenNodeCategory.fake;
     const resolvedIsLogical = isFake ? true : (dto.isLogical ?? false);
@@ -87,11 +88,11 @@ export class NodeBusiness {
       }
     }
 
-    return this.repository.findById(node.id);
+    return NodeMapper.toDto((await this.repository.findById(node.id))!);
   }
 
-  async update(id: number, dto: NodeDto) {
-    const existing = await this.findById(id);
+  async update(id: number, dto: NodeDto): Promise<NodeDto> {
+    const existing = await this._findNodeEntity(id);
     const typeId = dto.typeId ?? existing.typeId;
     const nodeType = await this.repository.findTypeById(typeId);
     const isFake = nodeType?.category === AuenNodeCategory.fake;
@@ -121,7 +122,7 @@ export class NodeBusiness {
       await this._assertRequiredAttributes(typeId, inputAttributes);
     }
 
-    return this.repository.update(id, {
+    const entity = await this.repository.update(id, {
       code: dto.code,
       description: dto.description,
       typeId: dto.typeId,
@@ -130,26 +131,29 @@ export class NodeBusiness {
       isLogical: resolvedIsLogical,
       attributes: inputAttributes,
     });
+    return NodeMapper.toDto(entity);
   }
 
-  async delete(id: number) {
-    await this.findById(id);
-    return this.repository.delete(id);
+  async delete(id: number): Promise<void> {
+    await this._findNodeEntity(id);
+    await this.repository.delete(id);
   }
 
-  async setParent(id: number, parentId: number) {
-    await this.findById(id);
+  async setParent(id: number, parentId: number): Promise<NodeDto> {
+    await this._findNodeEntity(id);
     await this._assertParentCanHaveChildren(parentId);
-    return this.repository.setParent(id, parentId);
+    const entity = await this.repository.setParent(id, parentId);
+    return NodeMapper.toDto(entity);
   }
 
-  async removeParent(id: number) {
-    await this.findById(id);
-    return this.repository.removeParent(id);
+  async removeParent(id: number): Promise<NodeDto> {
+    await this._findNodeEntity(id);
+    const entity = await this.repository.removeParent(id);
+    return NodeMapper.toDto(entity);
   }
 
-  async setManualValue(id: number, value: string) {
-    const node = await this.findById(id);
+  async setManualValue(id: number, value: string): Promise<NodeDto> {
+    const node = await this._findNodeEntity(id);
     if (node.type.category !== AuenNodeCategory.node_manual_target) {
       throw new BadRequestException(`Node ${id} is not of category node_manual_target`);
     }
@@ -161,41 +165,51 @@ export class NodeBusiness {
       desiredValueUpdatedAt: updated.desiredValueUpdatedAt,
       actualValueUpdatedAt: updated.actualValueUpdatedAt,
     });
-    return updated;
+    return NodeMapper.toDto(updated);
   }
 
-  findAttributes(nodeId: number) {
-    return this.repository.findAttributes(nodeId);
+  async findAttributes(nodeId: number): Promise<NodeAttributeResponseDto[]> {
+    const rows = await this.repository.findAttributes(nodeId);
+    return rows.map(NodeMapper.toAttributeDto);
   }
 
-  async upsertAttribute(nodeId: number, attributeId: number, value: string) {
-    await this.findById(nodeId);
-    return this.repository.upsertAttribute(nodeId, attributeId, value);
+  async upsertAttribute(nodeId: number, attributeId: number, value: string): Promise<NodeAttributeResponseDto> {
+    await this._findNodeEntity(nodeId);
+    const row = await this.repository.upsertAttribute(nodeId, attributeId, value);
+    return NodeMapper.toAttributeDto(row);
   }
 
-  async deleteAttribute(nodeId: number, attributeId: number) {
-    await this.findById(nodeId);
-    return this.repository.deleteAttribute(nodeId, attributeId);
+  async deleteAttribute(nodeId: number, attributeId: number): Promise<void> {
+    await this._findNodeEntity(nodeId);
+    await this.repository.deleteAttribute(nodeId, attributeId);
   }
 
-  async clone(id: number, override: NodeDto) {
-    await this.findById(id);
-    return this.repository.cloneSubtree(id, override);
+  async clone(id: number, override: NodeDto): Promise<NodeDto> {
+    await this._findNodeEntity(id);
+    const entity = await this.repository.cloneSubtree(id, override);
+    return NodeMapper.toDto(entity);
   }
 
-  async reorder(id: number, direction: 'up' | 'down') {
-    await this.findById(id);
-    return this.repository.reorder(id, direction);
+  async reorder(id: number, direction: 'up' | 'down'): Promise<NodeDto> {
+    await this._findNodeEntity(id);
+    const entity = await this.repository.reorder(id, direction);
+    return NodeMapper.toDto(entity!);
   }
 
   async addTag(nodeId: number, tagId: number) {
-    await this.findById(nodeId);
+    await this._findNodeEntity(nodeId);
     return this.repository.addTag(nodeId, tagId);
   }
 
   async removeTag(nodeId: number, tagId: number) {
-    await this.findById(nodeId);
+    await this._findNodeEntity(nodeId);
     return this.repository.removeTag(nodeId, tagId);
+  }
+
+  private async _findNodeEntity(id: number) {
+    const entity = await this.repository.findById(id);
+    if (!entity) throw new NotFoundException(`Node ${id} not found`);
+    return entity;
   }
 
   private async _assertRequiredAttributes(typeId: number, provided: Array<{ attributeId: number; value: string }>) {

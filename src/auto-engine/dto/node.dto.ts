@@ -69,6 +69,7 @@ export class NodeDto {
   @ApiPropertyOptional({ type: () => NodeDto }) parent?: NodeDto | null;
   @ApiPropertyOptional({ type: () => [NodeDto] }) children?: NodeDto[];
   @ApiPropertyOptional({ type: [NodeAttributeResponseDto] }) attributes?: NodeAttributeResponseDto[];
+  @ApiPropertyOptional() tags?: Array<{ tagId: number; tag?: { id: number; name: string } }>;
 }
 
 export class SetParentDto {
