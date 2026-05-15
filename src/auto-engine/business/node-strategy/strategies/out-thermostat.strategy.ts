@@ -35,6 +35,8 @@ export class OutThermostatStrategy implements NodeStrategy {
   }
 
   getDefaultChildren(): DefaultChildSpec[] {
+    // Requires exactly one AuenNodeType per (category, valueType) pair in the DB.
+    // The @@unique([category, valueType]) constraint on AuenNodeType enforces this.
     return [
       { description: 'Setpoint', typeCategory: 'node_manual_target', valueType: 'number', isLogical: true },
       { description: 'Sensore temperatura', typeCategory: 'in_sensor', valueType: 'number', isLogical: true },
