@@ -16,9 +16,14 @@ export type DefaultChildSpec = {
   isLogical?: boolean;
 };
 
+export type NodeCreationContext = {
+  nodeId: number;
+  createChild: (spec: DefaultChildSpec) => Promise<void>;
+};
+
 export interface NodeStrategy {
   calculateDesired(node: AuenNodeWithAttributes, context: LogicEngineContext): Promise<string>;
   updateActual(node: AuenNodeWithAttributes): string | undefined;
   syncHardware(node?: AuenNodeWithAttributes, allNodes?: AuenNodeWithAttributes[]): 'READ' | 'WRITE' | 'NONE';
-  getDefaultChildren?(): DefaultChildSpec[];
+  onCreate?(ctx: NodeCreationContext): Promise<void>;
 }

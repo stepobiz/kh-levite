@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 const NODE_INCLUDE = {
@@ -13,6 +14,10 @@ const NODE_INCLUDE = {
 export class NodeRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  transaction<T>(fn: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
+    return this.prisma.$transaction(fn);
+  }
+
   findAll(tagId?: number) {
     return this.prisma.auenNode.findMany({
       where: tagId != null ? { tags: { some: { tagId } } } : undefined,
@@ -25,8 +30,12 @@ export class NodeRepository {
     return this.prisma.auenNode.findUnique({ where: { id }, include: NODE_INCLUDE });
   }
 
-  create(data: { code?: string | null; description?: string | null; typeId: number; parentId?: number | null; iotComponentId?: number | null; isLogical?: boolean; attributes?: Array<{ attributeId: number; value: string }> }) {
-    return this.prisma.auenNode.create({
+  create(
+    data: { code?: string | null; description?: string | null; typeId: number; parentId?: number | null; iotComponentId?: number | null; isLogical?: boolean; attributes?: Array<{ attributeId: number; value: string }> },
+    tx?: Prisma.TransactionClient,
+  ) {
+    const client = (tx ?? this.prisma) as Prisma.TransactionClient;
+    return client.auenNode.create({
       data: {
         code: data.code ?? null,
         description: data.description,
@@ -39,6 +48,34 @@ export class NodeRepository {
           : {}),
       },
       include: NODE_INCLUDE,
+    });
+  }
+
+  findAllRaw() {
+    return this.prisma.auenNode.findMany({
+      include: { attributes: true, tags: true },
+      orderBy: { id: 'asc' },
+    });
+  }
+
+  createRaw(
+    data: { code?: string | null; description?: string | null; typeId: number; parentId?: number | null; isLogical?: boolean; iotComponentId?: number | null; attributes: Array<{ attributeId: number; value: string }>; tags: Array<{ tagId: number }> },
+    tx: Prisma.TransactionClient,
+  ) {
+    return tx.auenNode.create({
+      data: {
+        code: data.code ?? null,
+        description: data.description ?? null,
+        typeId: data.typeId,
+        parentId: data.parentId ?? null,
+        isLogical: data.isLogical ?? false,
+        iotComponentId: null,
+        desiredValue: '0',
+        actualValue: '0',
+        ...(data.attributes.length ? { attributes: { create: data.attributes } } : {}),
+        ...(data.tags.length ? { tags: { create: data.tags } } : {}),
+      },
+      select: { id: true },
     });
   }
 
@@ -239,82 +276,4 @@ export class NodeRepository {
     });
   }
 
-  async cloneSubtree(
-    rootId: number,
-    override?: { code?: string; description?: string | null; typeId?: number; parentId?: number | null },
-  ) {
-    const allNodes = await this.prisma.auenNode.findMany({
-      include: { attributes: true, tags: true },
-      orderBy: { id: 'asc' },
-    });
-
-    const rootNode = allNodes.find(n => n.id === rootId);
-    if (!rootNode) return null;
-
-    // Build a parent→children map for efficient DFS
-    const childrenMap = new Map<number, typeof allNodes>();
-    allNodes.forEach(n => {
-      if (n.parentId != null) {
-        if (!childrenMap.has(n.parentId)) childrenMap.set(n.parentId, []);
-        childrenMap.get(n.parentId)!.push(n);
-      }
-    });
-
-    // Collect subtree in DFS order (parent always before its children)
-    const subtree: typeof allNodes = [];
-    const collectDfs = (nodeId: number) => {
-      const node = allNodes.find(n => n.id === nodeId);
-      if (!node) return;
-      subtree.push(node);
-      (childrenMap.get(nodeId) ?? []).forEach(c => collectDfs(c.id));
-    };
-    collectDfs(rootId);
-
-    // Code is no longer unique — clones keep the same code as the original.
-    // Root uses caller-supplied code if provided.
-    const codeMap = new Map<number, string | null>();
-    subtree.forEach(n => {
-      if (n.id === rootId && override?.code) {
-        codeMap.set(n.id, override.code);
-      } else {
-        codeMap.set(n.id, n.code ?? null);
-      }
-    });
-
-    const idMap = new Map<number, number>();
-    await this.prisma.$transaction(async tx => {
-      for (const node of subtree) {
-        const isRoot = node.id === rootId;
-        const newParentId = isRoot
-          ? (override !== undefined && 'parentId' in override ? override.parentId ?? null : rootNode.parentId)
-          : (idMap.get(node.parentId!) ?? null);
-
-        const created = await tx.auenNode.create({
-          data: {
-            code: codeMap.get(node.id) ?? null,
-            description: isRoot && override !== undefined ? override.description ?? node.description : node.description,
-            typeId: isRoot && override?.typeId != null ? override.typeId : node.typeId,
-            parentId: newParentId,
-            desiredValue: '0',
-            actualValue: '0',
-            attributes: {
-              create: node.attributes.map(a => ({
-                attributeId: a.attributeId,
-                value: a.value,
-              })),
-            },
-            tags: {
-              create: node.tags.map(t => ({ tagId: t.tagId })),
-            },
-          },
-        });
-        idMap.set(node.id, created.id);
-      }
-    });
-
-    return this.prisma.auenNode.findUniqueOrThrow({
-      where: { id: idMap.get(rootId)! },
-      include: NODE_INCLUDE,
-    });
-  }
 }

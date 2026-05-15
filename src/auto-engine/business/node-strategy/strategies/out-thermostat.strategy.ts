@@ -1,4 +1,4 @@
-import { AuenNodeWithAttributes, DefaultChildSpec, LogicEngineContext, NodeStrategy } from '../node-strategy.interface';
+import { AuenNodeWithAttributes, LogicEngineContext, NodeCreationContext, NodeStrategy } from '../node-strategy.interface';
 
 export class OutThermostatStrategy implements NodeStrategy {
   async calculateDesired(node: AuenNodeWithAttributes, context: LogicEngineContext): Promise<string> {
@@ -34,12 +34,10 @@ export class OutThermostatStrategy implements NodeStrategy {
     return 'WRITE';
   }
 
-  getDefaultChildren(): DefaultChildSpec[] {
+  async onCreate(ctx: NodeCreationContext): Promise<void> {
     // Requires exactly one AuenNodeType per (category, valueType) pair in the DB.
     // The @@unique([category, valueType]) constraint on AuenNodeType enforces this.
-    return [
-      { description: 'Setpoint', typeCategory: 'node_manual_target', valueType: 'number', isLogical: true },
-      { description: 'Sensore temperatura', typeCategory: 'in_sensor', valueType: 'number', isLogical: true },
-    ];
+    await ctx.createChild({ description: 'Setpoint', typeCategory: 'node_manual_target', valueType: 'number', isLogical: true });
+    await ctx.createChild({ description: 'Sensore temperatura', typeCategory: 'in_sensor', valueType: 'number', isLogical: true });
   }
 }

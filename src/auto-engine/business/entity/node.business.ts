@@ -1,10 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { AuenNodeCategory } from '@prisma/client';
+import { AuenNodeCategory, Prisma } from '@prisma/client';
 import { NodeRepository } from './node.repository';
 import { NodeMapper } from './node.mapper';
 import { NodeDto, NodeAttributeResponseDto } from '../../dto/node.dto';
 import { RealtimeGateway } from 'src/realtime/realtime.gateway';
-import { AuenNodeWithAttributes, DefaultChildSpec } from '../node-strategy/node-strategy.interface';
+import { AuenNodeWithAttributes, DefaultChildSpec, NodeCreationContext } from '../node-strategy/node-strategy.interface';
 import { StrategyFactory } from '../node-strategy/strategy.factory';
 
 const CAN_HAVE_CHILDREN = new Set<AuenNodeCategory>([
@@ -68,27 +68,31 @@ export class NodeBusiness {
     const inputAttributes = (dto.attributes ?? []).filter(a => a.attributeId != null) as Array<{ attributeId: number; value: string }>;
     await this._assertRequiredAttributes(dto.typeId!, inputAttributes);
 
-    const node = await this.repository.create({
-      code: dto.code ?? null,
-      description: dto.description,
-      typeId: dto.typeId!,
-      parentId: dto.parentId,
-      iotComponentId: resolvedIotComponentId,
-      isLogical: resolvedIsLogical,
-      attributes: inputAttributes,
+    const strategy = nodeType ? StrategyFactory.getStrategy(nodeType.category) : null;
+
+    const newNodeId = await this.repository.transaction(async (tx) => {
+      const node = await this.repository.create({
+        code: dto.code ?? null,
+        description: dto.description,
+        typeId: dto.typeId!,
+        parentId: dto.parentId,
+        iotComponentId: resolvedIotComponentId,
+        isLogical: resolvedIsLogical,
+        attributes: inputAttributes,
+      }, tx);
+
+      if (strategy?.onCreate) {
+        const ctx: NodeCreationContext = {
+          nodeId: node.id,
+          createChild: (spec) => this._createAutoChild(spec, node.id, tx),
+        };
+        await strategy.onCreate(ctx);
+      }
+
+      return node.id;
     });
 
-    if (nodeType) {
-      const strategy = StrategyFactory.getStrategy(nodeType.category);
-      if (strategy.getDefaultChildren) {
-        const childSpecs = strategy.getDefaultChildren();
-        for (const spec of childSpecs) {
-          await this._createAutoChild(spec, node.id);
-        }
-      }
-    }
-
-    return NodeMapper.toDto((await this.repository.findById(node.id))!);
+    return NodeMapper.toDto((await this.repository.findById(newNodeId))!);
   }
 
   async update(id: number, dto: NodeDto): Promise<NodeDto> {
@@ -185,9 +189,48 @@ export class NodeBusiness {
   }
 
   async clone(id: number, override: NodeDto): Promise<NodeDto> {
-    await this._findNodeEntity(id);
-    const entity = await this.repository.cloneSubtree(id, override);
-    return NodeMapper.toDto(entity);
+    const allNodes = await this.repository.findAllRaw();
+    const rootNode = allNodes.find(n => n.id === id);
+    if (!rootNode) throw new NotFoundException(`Node ${id} not found`);
+
+    const childrenMap = new Map<number, typeof allNodes>();
+    allNodes.forEach(n => {
+      if (n.parentId != null) {
+        if (!childrenMap.has(n.parentId)) childrenMap.set(n.parentId, []);
+        childrenMap.get(n.parentId)!.push(n);
+      }
+    });
+
+    const subtree: typeof allNodes = [];
+    const collectDfs = (nodeId: number) => {
+      const node = allNodes.find(n => n.id === nodeId);
+      if (!node) return;
+      subtree.push(node);
+      (childrenMap.get(nodeId) ?? []).forEach(c => collectDfs(c.id));
+    };
+    collectDfs(id);
+
+    const idMap = new Map<number, number>();
+    await this.repository.transaction(async (tx) => {
+      for (const node of subtree) {
+        const isRoot = node.id === id;
+        const newParentId = isRoot
+          ? ('parentId' in override ? override.parentId ?? null : rootNode.parentId)
+          : (idMap.get(node.parentId!) ?? null);
+        const created = await this.repository.createRaw({
+          code: isRoot && override.code ? override.code : node.code ?? null,
+          description: isRoot ? override.description ?? node.description : node.description,
+          typeId: isRoot && override.typeId != null ? override.typeId : node.typeId,
+          parentId: newParentId,
+          isLogical: node.isLogical,
+          attributes: node.attributes.map(a => ({ attributeId: a.attributeId, value: a.value })),
+          tags: node.tags.map(t => ({ tagId: t.tagId })),
+        }, tx);
+        idMap.set(node.id, created.id);
+      }
+    });
+
+    return NodeMapper.toDto((await this.repository.findById(idMap.get(id)!))!);
   }
 
   async reorder(id: number, direction: 'up' | 'down'): Promise<NodeDto> {
@@ -222,7 +265,7 @@ export class NodeBusiness {
     }
   }
 
-  private async _createAutoChild(spec: DefaultChildSpec, parentId: number) {
+  private async _createAutoChild(spec: DefaultChildSpec, parentId: number, tx?: Prisma.TransactionClient): Promise<void> {
     const childType = await this.repository.findTypeByCategory(spec.typeCategory, spec.valueType);
     if (!childType) return;
     await this.repository.create({
@@ -231,7 +274,7 @@ export class NodeBusiness {
       parentId,
       isLogical: spec.isLogical ?? true,
       iotComponentId: null,
-    });
+    }, tx);
   }
 
   private async _assertComponentNotUsed(componentId: number, excludeNodeId?: number) {
