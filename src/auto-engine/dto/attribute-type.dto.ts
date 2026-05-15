@@ -19,4 +19,7 @@ export class AttributeTypeDto {
   @IsOptional()
   @IsString()
   dataType?: string;
+
+  @ApiPropertyOptional()
+  isSystem?: boolean;
 }

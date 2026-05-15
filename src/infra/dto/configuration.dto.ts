@@ -18,4 +18,5 @@ export class ConfigurationDto {
   @ApiPropertyOptional() @IsOptional() @IsNumber() valFloat?: number;
   @ApiPropertyOptional() @IsOptional() @IsBoolean() valBool?: boolean;
   @ApiPropertyOptional() @IsOptional() @IsString() valText?: string;
+  @ApiPropertyOptional() isSystem?: boolean;
 }

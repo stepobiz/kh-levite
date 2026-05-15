@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigurationRepository } from './configuration.repository';
 import { ConfigurationDto } from '../../dto/configuration.dto';
 
@@ -32,7 +32,15 @@ export class ConfigurationBusiness {
   }
 
   async update(code: string, dto: ConfigurationDto) {
-    await this.findByCode(code);
+    const entity = await this.findByCode(code);
+    if (entity.isSystem) {
+      return this.repository.update(code, {
+        valInt: dto.valInt,
+        valFloat: dto.valFloat,
+        valBool: dto.valBool,
+        valText: dto.valText,
+      });
+    }
     return this.repository.update(code, {
       name: dto.name,
       description: dto.description,
@@ -46,7 +54,8 @@ export class ConfigurationBusiness {
   }
 
   async delete(code: string) {
-    await this.findByCode(code);
+    const entity = await this.findByCode(code);
+    if (entity.isSystem) throw new ForbiddenException(`Configuration ${code} is a system record and cannot be deleted`);
     return this.repository.delete(code);
   }
 }

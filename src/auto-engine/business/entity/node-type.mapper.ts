@@ -27,6 +27,7 @@ export class NodeTypeMapper {
       iconSlug: entity.iconSlug,
       category: entity.category,
       valueType: entity.valueType,
+      isSystem: entity.isSystem,
     };
   }
 

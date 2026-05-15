@@ -38,12 +38,12 @@ function renderNodeTypes() {
   tbody.innerHTML = auenNodeTypes.map(nt => `
     <tr>
       <td>${esc(nt.id)}</td>
-      <td>${esc(nt.name)}</td>
+      <td>${esc(nt.name)}${nt.isSystem ? ' <span class="badge badge-system">SYS</span>' : ''}</td>
       <td>${esc(nt.iconSlug ?? '—')}</td>
       <td>${categoryBadge(nt.category)}</td>
       <td>${esc(nt.valueType ?? 'boolean')}</td>
       <td class="actions">
-        ${nodeTypeEditAllowed ? `
+        ${nodeTypeEditAllowed && !nt.isSystem ? `
         <button title="Modifica" onclick="openNodeTypeModal(${nt.id})">&#x270F;&#xFE0F;</button>
         <button title="Elimina" onclick="deleteNodeType(${nt.id})">&#x1F5D1;&#xFE0F;</button>` : ''}
       </td>
@@ -232,12 +232,13 @@ function renderAttributeTypes() {
   tbody.innerHTML = auenAttributeTypes.map(at => `
     <tr>
       <td>${esc(at.id)}</td>
-      <td><code>${esc(at.code)}</code></td>
+      <td><code>${esc(at.code)}</code>${at.isSystem ? ' <span class="badge badge-system">SYS</span>' : ''}</td>
       <td>${esc(at.description ?? '—')}</td>
       <td>${esc(at.dataType)}</td>
       <td class="actions">
+        ${!at.isSystem ? `
         <button title="Modifica" onclick="openAttributeTypeModal(${at.id})">&#x270F;&#xFE0F;</button>
-        <button title="Elimina" onclick="deleteAttributeType(${at.id})">&#x1F5D1;&#xFE0F;</button>
+        <button title="Elimina" onclick="deleteAttributeType(${at.id})">&#x1F5D1;&#xFE0F;</button>` : ''}
       </td>
     </tr>`).join('');
 }
