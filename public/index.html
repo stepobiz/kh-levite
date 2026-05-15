@@ -552,17 +552,22 @@
           </div>
           <div class="form-row">
             <label>Data Type <span class="required">*</span></label>
-            <select name="dataType" required>
+            <select name="dataType" required onchange="onAttrTypeDataTypeChange(this)">
               <option value="">— seleziona —</option>
               <option value="string">string</option>
               <option value="number">number</option>
               <option value="boolean">boolean</option>
               <option value="auen_node">auen_node</option>
+              <option value="select">select</option>
             </select>
           </div>
           <div class="form-row" style="grid-column: 1 / -1">
             <label>Descrizione</label>
             <input name="description" />
+          </div>
+          <div id="at-options-row" class="form-row hidden" style="grid-column: 1 / -1">
+            <label>Opzioni (JSON)</label>
+            <textarea name="options" rows="3" placeholder='[{"value":"x","label":"X"}]' style="width:100%;font-family:monospace;font-size:12px"></textarea>
           </div>
         </div>
         <div class="modal-footer">
@@ -635,6 +640,7 @@
               <option value="">— seleziona attributo —</option>
             </select>
             <input id="attr-value-input" placeholder="valore" />
+            <select id="attr-select-input" class="hidden"></select>
             <select id="attr-node-select" class="hidden">
               <option value="">— seleziona nodo —</option>
             </select>
@@ -745,6 +751,7 @@
             <option value="float">float</option>
             <option value="boolean">boolean</option>
             <option value="text">text</option>
+            <option value="select">select</option>
           </select>
         </div>
         <div id="cfg-val-int" class="form-row hidden"><label>Valore (intero)</label><input name="valInt" type="number" step="1"/></div>
@@ -754,6 +761,14 @@
           <select name="valBool"><option value="true">ON</option><option value="false">OFF</option></select>
         </div>
         <div id="cfg-val-text" class="form-row hidden"><label>Valore (testo)</label><input name="valText" type="text"/></div>
+        <div id="cfg-val-options" class="form-row hidden" style="grid-column:1/-1">
+          <label>Opzioni (JSON)</label>
+          <textarea name="options" rows="3" placeholder='[{"value":"x","label":"X"}]' style="width:100%;font-family:monospace;font-size:12px"></textarea>
+        </div>
+        <div id="cfg-val-select" class="form-row hidden">
+          <label>Valore</label>
+          <select id="cfg-select-value" name="valSelect"></select>
+        </div>
         <div class="modal-footer">
           <button class="btn-secondary" type="button" onclick="closeModal('cfg-config-modal')">Annulla</button>
           <button class="btn-primary" type="submit">Crea</button>

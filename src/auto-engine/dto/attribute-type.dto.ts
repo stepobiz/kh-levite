@@ -15,9 +15,13 @@ export class AttributeTypeDto {
   @IsString()
   description?: string;
 
-  @ApiProperty({ description: 'Value type: string | number | boolean | auen_node' })
+  @ApiProperty({ description: 'Value type: string | number | boolean | auen_node | select' })
   @IsOptional()
   @IsString()
   dataType?: string;
 
+  @ApiPropertyOptional({ description: 'JSON array [{value, label}]. Only for dataType=select.' })
+  @IsOptional()
+  @IsString()
+  options?: string;
 }

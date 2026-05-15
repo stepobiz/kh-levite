@@ -3,7 +3,7 @@ import { AuenNodeWithAttributes, LogicEngineContext, NodeStrategy } from '../nod
 export class OutLogicOrStrategy implements NodeStrategy {
   async calculateDesired(node: AuenNodeWithAttributes, context: LogicEngineContext): Promise<string> {
     const children = context.allNodes.filter(n => n.parentId === node.id);
-    return children.some(c => c.actualValue === '1') ? '1' : '0';
+    return children.some(c => _childContributes(c, node)) ? '1' : '0';
   }
 
   updateActual(node: AuenNodeWithAttributes): string | undefined {
@@ -23,4 +23,13 @@ export class OutLogicOrStrategy implements NodeStrategy {
   allowedValueTypes(): string[] {
     return ['boolean'];
   }
+}
+
+function _childContributes(child: AuenNodeWithAttributes, parent: AuenNodeWithAttributes): boolean {
+  if (child.type.valueType === 'thermal') {
+    const trigger = parent.attributes.find(a => a.attribute.code === 'thermal_trigger')?.value;
+    if (!trigger) return false;
+    return child.actualValue === trigger;
+  }
+  return child.actualValue === '1';
 }

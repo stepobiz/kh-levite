@@ -11,7 +11,14 @@ let _lastTopoRootId = null;
 
 // Shared helper — called also from kh-realtime.js for in-place updates
 // Logical nodes: dashed grey. Boolean nodes: green/red border, yellow solid blink when desired≠actual.
+// Thermal nodes: orange(heat)/blue(cool)/grey(off) border.
 function _topoRectAttrs(nodeId, desiredValue, actualValue, vt) {
+  if (vt === 'thermal') {
+    if (desiredValue !== actualValue) return { stroke: '#eab308', dash: '5,3', blink: true };
+    if (actualValue === 'heat') return { stroke: '#f97316', dash: null, blink: false };
+    if (actualValue === 'cool') return { stroke: '#0ea5e9', dash: null, blink: false };
+    return { stroke: '#94a3b8', dash: null, blink: false };
+  }
   const node = auenNodes.find(n => n.id === nodeId);
   if (node?.isLogical) return { stroke: '#94a3b8', dash: '5,3', blink: false };
   const cat = node?.type?.category ?? '';
@@ -29,6 +36,10 @@ function _topoValSvg(val, vt, label) {
   if (vt === 'boolean') {
     const color = val === '1' ? '#16a34a' : '#dc2626';
     return `${esc(label)}<tspan fill="${color}" font-size="14">&#x25CF;</tspan>`;
+  }
+  if (vt === 'thermal') {
+    const color = val === 'heat' ? '#f97316' : val === 'cool' ? '#0ea5e9' : '#94a3b8';
+    return `${esc(label)}<tspan fill="${color}" font-weight="bold">${esc(val ?? '—')}</tspan>`;
   }
   return esc(label + _topoPlainVal(val, vt));
 }
@@ -90,6 +101,11 @@ function _topoPlainVal(value, vt) {
 
 function _topoValColor(value, vt) {
   if (vt === 'boolean') return value === '1' ? '#16a34a' : '#dc2626';
+  if (vt === 'thermal') {
+    if (value === 'heat') return '#f97316';
+    if (value === 'cool') return '#0ea5e9';
+    return '#94a3b8';
+  }
   return '#374151';
 }
 

@@ -168,6 +168,10 @@ export class NodeRepository {
     });
   }
 
+  findAttributeTypeById(id: number) {
+    return this.prisma.auenAttributeType.findUnique({ where: { id } });
+  }
+
   upsertAttribute(nodeId: number, attributeId: number, value: string) {
     return this.prisma.auenNodeAttribute.upsert({
       where: { nodeId_attributeId: { nodeId, attributeId } },
