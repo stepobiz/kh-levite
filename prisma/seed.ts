@@ -14,6 +14,7 @@ async function main() {
     { code: 'sync',        name: 'SyncModule' },
     { code: 'autoengine',  name: 'AutoEngineModule' },
     { code: 'iot',         name: 'IotModule' },
+    { code: 'sistema',     name: 'Sistema' },
   ];
   for (const s of cfgSections) {
     await prisma.cfgSection.upsert({
@@ -123,6 +124,19 @@ async function main() {
       dataType: 'integer',
       valInt: 0,
     },
+    {
+      code: 'sistema.stagione',
+      name: 'Stagione impianto',
+      description: 'Determina il comportamento del termostato. winter = riscaldamento, summer = raffrescamento.',
+      sectionCode: 'sistema',
+      dataType: 'select',
+      options: JSON.stringify([
+        { value: 'winter', label: 'Inverno' },
+        { value: 'summer', label: 'Estate' },
+        { value: 'off',    label: 'Spento'  },
+      ]),
+      valText: 'off',
+    },
   ];
   for (const c of cfgConfigurations) {
     const sectionId = c.sectionCode
@@ -130,7 +144,7 @@ async function main() {
       : null;
     await prisma.cfgConfiguration.upsert({
       where:  { code: c.code },
-      update: { name: c.name, description: c.description ?? null, sectionId, },
+      update: { name: c.name, description: c.description ?? null, sectionId, options: c.options ?? null },
       create: {
         code:        c.code,
         name:        c.name,
@@ -187,9 +201,9 @@ async function main() {
     { category: 'node_manual_value_by_url', name: 'Valore da URL (number)',                           valueType: 'number',  attributes: [{ code: 'setpoint_url', isRequired: true }] },
     { category: 'proxy_mirror',             name: 'Relè copiante',                                    valueType: 'boolean', attributes: [{ code: 'source_node_id',   isRequired: true }, { code: 'delay_from_child', isRequired: false }] },
     { category: 'proxy_inverter',           name: 'Inverso',                                          valueType: 'boolean', attributes: [{ code: 'source_node_id',   isRequired: true }, { code: 'delay_from_child', isRequired: false }] },
-    { category: 'out_logic_or',             name: 'Relè comandato da OR',                             valueType: 'boolean', attributes: [{ code: 'delay_from_child', isRequired: false }] },
-    { category: 'out_logic_and',            name: 'Relè comandato da AND',                            valueType: 'boolean', attributes: [{ code: 'delay_from_child', isRequired: false }] },
-    { category: 'out_thermostat',           name: 'Termostato',                                       valueType: 'boolean', attributes: [{ code: 'hysteresis',        isRequired: false }] },
+    { category: 'out_logic_or',             name: 'Relè comandato da OR',                             valueType: 'boolean', attributes: [{ code: 'delay_from_child', isRequired: false }, { code: 'thermal_trigger', isRequired: false }] },
+    { category: 'out_logic_and',            name: 'Relè comandato da AND',                            valueType: 'boolean', attributes: [{ code: 'delay_from_child', isRequired: false }, { code: 'thermal_trigger', isRequired: false }] },
+    { category: 'out_thermostat',           name: 'Termostato',                                       valueType: 'thermal', attributes: [{ code: 'hysteresis',        isRequired: false }] },
     { category: 'fake',                     name: 'Raggruppatore',                                    valueType: 'boolean', attributes: [] },
   ];
   for (const nt of nodeTypes) {

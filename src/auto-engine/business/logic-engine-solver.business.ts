@@ -3,6 +3,7 @@ import { NodeRepository } from './entity/node.repository';
 import { RealtimeGateway } from 'src/realtime/realtime.gateway';
 import { AuenNodeWithAttributes, LogicEngineContext } from './node-strategy/node-strategy.interface';
 import { StrategyFactory } from './node-strategy/strategy.factory';
+import { ConfigurationBusiness } from 'src/infra/business/entity/configuration.business';
 
 @Injectable()
 export class LogicEngineSolverBusiness {
@@ -11,13 +12,23 @@ export class LogicEngineSolverBusiness {
   constructor(
     private readonly nodeRepository: NodeRepository,
     private readonly realtimeGateway: RealtimeGateway,
+    private readonly configurationBusiness: ConfigurationBusiness,
   ) {}
 
   async process(): Promise<number> {
     const raw = await this.nodeRepository.findAllWithAttributes();
     const nodes = raw as AuenNodeWithAttributes[];
     const sorted = topoSort(nodes);
-    const context: LogicEngineContext = { allNodes: sorted };
+
+    let season: string | undefined;
+    try {
+      const cfg = await this.configurationBusiness.findByCode('sistema.stagione');
+      season = cfg.valText ?? undefined;
+    } catch {
+      // config not found — season remains undefined
+    }
+
+    const context: LogicEngineContext = { allNodes: sorted, season };
 
     for (const node of sorted) {
       try {
