@@ -21,7 +21,7 @@ WORKDIR /app
 RUN apk add --no-cache python3 make g++
 
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm ci
 
 COPY prisma ./prisma/
 COPY prisma.config.ts ./
@@ -36,4 +36,4 @@ RUN mkdir -p /app/data
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma db push && node dist/src/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed && node dist/src/main.js"]

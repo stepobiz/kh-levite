@@ -115,8 +115,10 @@ async function deleteTopoNode(nodeId) {
 
 // In-place value update — called by interval, no layout change
 async function updateTopoValues() {
-  if (!document.getElementById('topology')?.classList.contains('active')) return;
-  if (!document.getElementById('topology-canvas')?.querySelector('svg')) return;
+  const topoActive = document.getElementById('topology')?.classList.contains('active');
+  const userTopoActive = document.getElementById('user-topology')?.classList.contains('active');
+  if (!topoActive && !userTopoActive) return;
+  if (topoActive && !document.getElementById('topology-canvas')?.querySelector('svg')) return;
   try {
     const res = await fetch('/api/auen/nodes');
     if (!res.ok) return;
@@ -154,7 +156,8 @@ async function updateTopoValues() {
     });
 
     if (!needsFull) needsFull = auenNodes.some(n => !fresh.find(f => f.id === n.id));
-    if (needsFull) renderTopology();
+    if (needsFull && topoActive) renderTopology();
+    if (userTopoActive) renderUserTopology();
   } catch {}
 }
 
@@ -343,6 +346,207 @@ function renderTopology() {
 
   const defs = connectedEdges.length > 0 ? `<defs>
     <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6" opacity="0.8"/>
+    </marker>
+  </defs>` : '';
+
+  canvas.innerHTML = `<svg width="${maxX}" height="${maxY}" xmlns="http://www.w3.org/2000/svg">
+    ${defs}
+    ${parentEdgeElems.join('\n')}
+    ${connEdgeElems.join('\n')}
+    ${nodeElems.join('\n')}
+  </svg>`;
+}
+
+// ============================================================
+// UTENTE — User topology (read-only + set-value on node_manual_target)
+// ============================================================
+
+let _lastUserTopoRootId = null;
+
+function initUserTopologyRootSelect() {
+  const sel = document.getElementById('user-topology-root-select');
+  if (!sel) return;
+  const current = sel.value;
+  const roots = auenNodes.filter(n => !n.parentId);
+  sel.innerHTML = '<option value="">— seleziona root —</option>' +
+    roots.map(n => `<option value="${n.id}">${esc(n.code ?? '#' + n.id)}</option>`).join('');
+  if (current) sel.value = current;
+}
+
+function expandAllUserTopoNodes() {
+  collapsedUserTopoNodes.clear();
+  renderUserTopology();
+}
+
+function collapseAllUserTopoNodes() {
+  const followConnected = document.getElementById('user-topology-follow-connected')?.checked ?? false;
+  auenNodes.forEach(n => {
+    if (topoNodeHasChildren(n, followConnected)) collapsedUserTopoNodes.add(n.id);
+  });
+  renderUserTopology();
+}
+
+function toggleUserTopoNode(nodeId) {
+  if (collapsedUserTopoNodes.has(nodeId)) collapsedUserTopoNodes.delete(nodeId);
+  else collapsedUserTopoNodes.add(nodeId);
+  renderUserTopology();
+}
+
+function renderUserTopology() {
+  initUserTopologyRootSelect();
+  const rootId = Number(document.getElementById('user-topology-root-select')?.value);
+  const followConnected = document.getElementById('user-topology-follow-connected')?.checked ?? false;
+  const canvas = document.getElementById('user-topology-canvas');
+  if (!canvas) return;
+  if (!rootId) {
+    canvas.innerHTML = '<p class="muted-text" style="padding:16px">Seleziona un nodo radice.</p>';
+    _lastUserTopoRootId = null;
+    return;
+  }
+
+  if (rootId !== _lastUserTopoRootId) {
+    collapsedUserTopoNodes.clear();
+    auenNodes
+      .filter(n => n.id !== rootId && auenNodes.some(c => c.parentId === n.id))
+      .forEach(n => collapsedUserTopoNodes.add(n.id));
+    _lastUserTopoRootId = rootId;
+  }
+
+  const positions = {};
+  const positionedIds = new Set();
+  const connectedEdges = [];
+  let maxX = 0, maxY = 0;
+
+  function layoutTree(nodeId, depth, xOffset) {
+    if (positionedIds.has(nodeId)) return 0;
+    positionedIds.add(nodeId);
+    const node = auenNodes.find(n => n.id === nodeId);
+    const collapsed = collapsedUserTopoNodes.has(nodeId);
+    const childIds = [];
+
+    if (!collapsed) {
+      auenNodes
+        .filter(n => n.parentId === nodeId)
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id - b.id)
+        .forEach(n => childIds.push(n.id));
+
+      if (followConnected && node) {
+        const cat = node.type?.category ?? '';
+        if (cat.startsWith('proxy_')) {
+          const sourceAttr = (node.attributes || []).find(a => a.attribute?.code === 'source_node_id');
+          const sourceId = sourceAttr ? Number(sourceAttr.value) : null;
+          if (sourceId && !isNaN(sourceId)) {
+            connectedEdges.push({ fromId: nodeId, toId: sourceId });
+            if (!positionedIds.has(sourceId) && !childIds.includes(sourceId)) childIds.push(sourceId);
+          }
+        }
+      }
+    }
+
+    let totalWidth = 0;
+    childIds.forEach(cId => {
+      const w = layoutTree(cId, depth + 1, xOffset + totalWidth);
+      totalWidth += w + H_GAP;
+    });
+    if (totalWidth > 0) totalWidth -= H_GAP;
+
+    const myWidth = Math.max(NODE_W, totalWidth);
+    const x = xOffset + (myWidth - NODE_W) / 2;
+    const y = depth * (NODE_H + V_GAP);
+    positions[nodeId] = { x, y };
+    maxX = Math.max(maxX, x + NODE_W);
+    maxY = Math.max(maxY, y + NODE_H);
+    return myWidth;
+  }
+
+  layoutTree(rootId, 0, 0);
+  const userConnectedSourceIds = new Set(connectedEdges.map(e => e.toId));
+  maxX += 20; maxY += 28;
+
+  const parentEdgeElems = [];
+  const connEdgeElems = [];
+  const nodeElems = [];
+
+  positionedIds.forEach(nId => {
+    const pos = positions[nId];
+    if (!pos) return;
+    auenNodes
+      .filter(c => c.parentId === nId && positions[c.id] && !userConnectedSourceIds.has(c.id))
+      .forEach(c => {
+        const cp = positions[c.id];
+        parentEdgeElems.push(`<line x1="${pos.x + NODE_W / 2}" y1="${pos.y + NODE_H + 8}" x2="${cp.x + NODE_W / 2}" y2="${cp.y}" stroke="#e2e8f0" stroke-width="1.5"/>`);
+      });
+  });
+
+  connectedEdges.forEach(({ fromId, toId }) => {
+    const fp = positions[fromId];
+    const tp = positions[toId];
+    if (!fp || !tp) return;
+    connEdgeElems.push(`<line x1="${fp.x + NODE_W / 2}" y1="${fp.y + NODE_H + 8}" x2="${tp.x + NODE_W / 2}" y2="${tp.y}" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#userArrowBlue)" opacity="0.8"/>`);
+  });
+
+  positionedIds.forEach(nId => {
+    const node = auenNodes.find(n => n.id === nId);
+    if (!node) return;
+    const pos = positions[nId];
+    if (!pos) return;
+
+    const vt = node.type?.valueType ?? 'boolean';
+    const cat = node.type?.category ?? '';
+    const isFake = cat === 'fake';
+    const isOut = cat.startsWith('out_');
+    const isProxy = cat.startsWith('proxy_');
+    let fillColor = '#fff';
+    if (cat.startsWith('in_')) fillColor = '#f0fdf4';
+    else if (isOut) fillColor = '#eff6ff';
+    else if (isProxy) fillColor = '#fff7ed';
+    else if (isFake) fillColor = '#f8fafc';
+    else fillColor = '#f9fafb';
+
+    const ra = _topoRectAttrs(nId, node.desiredValue, node.actualValue, vt);
+    const strokeColor = ra.stroke;
+    const strokeDashAttr = ra.dash ? ` stroke-dasharray="${ra.dash}"` : '';
+    const blinkClass = ra.blink ? ' class="topo-blink"' : '';
+
+    const codeTxt = esc((node.code ?? '').substring(0, 18));
+    const typeTxt = esc((node.type?.name ?? '').substring(0, 24));
+    const showDesired = !isFake && (isOut || isProxy);
+    const showActual  = !isFake;
+    const desiredSvg = showDesired ? _topoValSvg(node.desiredValue, vt, 'D: ') : '';
+    const actualSvg  = showActual  ? _topoValSvg(node.actualValue,  vt, 'A: ') : '';
+    const actualFill = vt === 'boolean' ? '' : ` fill="${_topoValColor(node.actualValue, vt)}"`;
+    const titleTs = `D: ${_fmtTopoTs(node.desiredValueUpdatedAt)}\nA: ${_fmtTopoTs(node.actualValueUpdatedAt)}`;
+
+    const setValueBtn = cat === 'node_manual_target'
+      ? `<text x="${NODE_W - 6}" y="14" text-anchor="end" font-size="13" fill="#3b82f6" style="cursor:pointer" onclick="event.stopPropagation();openSetValueModal(${node.id})" title="Imposta valore">&#x26A1;</text>`
+      : '';
+
+    const hasChildren = topoNodeHasChildren(node, followConnected);
+    const isCollapsed = collapsedUserTopoNodes.has(nId);
+    const collapseBtn = hasChildren ? `
+      <g onclick="event.stopPropagation();toggleUserTopoNode(${nId})" style="cursor:pointer">
+        <circle cx="${NODE_W / 2}" cy="${NODE_H}" r="8" fill="#f8fafc" stroke="${strokeColor}" stroke-width="1.5"/>
+        <text x="${NODE_W / 2}" y="${NODE_H + 4}" text-anchor="middle" font-size="13" font-weight="700" fill="#64748b" pointer-events="none">${isCollapsed ? '+' : '&#x2212;'}</text>
+      </g>` : '';
+
+    nodeElems.push(`
+      <g transform="translate(${pos.x},${pos.y})">
+        <rect${blinkClass} width="${NODE_W}" height="${NODE_H}" rx="6" fill="${fillColor}" stroke="${strokeColor}" stroke-width="2"${strokeDashAttr}/>
+        <text x="${NODE_W / 2}" y="14" text-anchor="middle" font-size="11" font-weight="700" fill="#0f172a"><tspan>${codeTxt}</tspan><tspan fill="#94a3b8" font-size="9" font-weight="400"> #${nId}</tspan></text>
+        <text x="${NODE_W / 2}" y="25" text-anchor="middle" font-size="9" fill="#64748b">${typeTxt}</text>
+        <g>
+          <title>${esc(titleTs)}</title>
+          <text x="${NODE_W / 2}" y="41" text-anchor="middle" font-size="10" fill="#374151"${showDesired ? '' : ' visibility="hidden"'}>${desiredSvg}</text>
+          <text x="${NODE_W / 2}" y="57" text-anchor="middle" font-size="11" font-weight="600"${actualFill}${showActual ? '' : ' visibility="hidden"'}>${actualSvg}</text>
+        </g>
+        ${setValueBtn}
+        ${collapseBtn}
+      </g>`);
+  });
+
+  const defs = connectedEdges.length > 0 ? `<defs>
+    <marker id="userArrowBlue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
       <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6" opacity="0.8"/>
     </marker>
   </defs>` : '';

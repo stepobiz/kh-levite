@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body, ParseIntPipe } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
-import { DeviceBusiness } from 'src/iot/business/device.business';
+import { DeviceBusiness } from 'src/iot/business/entity/device.business';
 import { DeviceDto } from 'src/iot/dto/device.dto';
 
 @Controller('iot/devices')

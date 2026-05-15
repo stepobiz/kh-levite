@@ -2,7 +2,7 @@
 
 ## Ciclo di polling
 
-Un cron job (`TelemetryCronService`) esegue `TelemetryProcessor.process()` in loop continuo.
+Un cron job (`TelemetryCronService`) esegue `TelemetryPollingBusiness.process()` in loop continuo.
 L'intervallo minimo tra i cicli è configurabile tramite `iot.cycle_min_interval_ms` (default: 20000 ms).
 
 Per ogni componente attivo:

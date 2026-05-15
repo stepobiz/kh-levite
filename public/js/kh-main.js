@@ -9,7 +9,7 @@ async function ensureAuenLoaded() {
 
 // --- Section navigation ---
 function activateSection(sectionId) {
-  const valid = ['dashboard', 'devices', 'auen-node-types', 'auen-nodes', 'auen-tags', 'auen-attribute-types', 'topology', 'cfg'];
+  const valid = ['dashboard', 'devices', 'auen-node-types', 'auen-nodes', 'auen-tags', 'auen-attribute-types', 'topology', 'cfg', 'user-topology', 'user-devices'];
   const id = valid.includes(sectionId) ? sectionId : 'dashboard';
   document.querySelectorAll('.nav-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.section === id);
@@ -25,6 +25,16 @@ function activateSection(sectionId) {
       initTopologyRootSelect();
       renderTopology();
     });
+  }
+  if (id === 'user-topology') {
+    ensureAuenLoaded().then(() => {
+      initUserTopologyRootSelect();
+      renderUserTopology();
+    });
+  }
+  if (id === 'user-devices') {
+    renderUserDevices();
+    userDeviceSearch = document.getElementById('user-device-search')?.value.toLowerCase() ?? '';
   }
   if (id === 'cfg') {
     ensureCfgLoaded();
@@ -62,6 +72,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('device-search').addEventListener('input', e => {
     deviceSearch = e.target.value.toLowerCase();
     renderDevices();
+  });
+
+  document.getElementById('user-device-search').addEventListener('input', e => {
+    userDeviceSearch = e.target.value.toLowerCase();
+    renderUserDevices();
   });
 
   fetchDevices();

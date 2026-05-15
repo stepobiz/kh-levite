@@ -1,6 +1,6 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiOkResponse, ApiQuery } from '@nestjs/swagger';
-import { TelemetryLogBusiness } from 'src/iot/business/telemetry-log.business';
+import { TelemetryLogBusiness } from 'src/iot/business/entity/telemetry-log.business';
 import { TelemetryLogDto } from 'src/iot/dto/telemetry-log.dto';
 
 @Controller('iot/telemetry-logs')

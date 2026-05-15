@@ -70,8 +70,11 @@ model AuenNodeType {
   iconSlug  String?          @map("icon_slug")
   category  AuenNodeCategory
   valueType String           @default("boolean") @map("value_type")
-  nodes     AuenNode[]
+  isSystem  Boolean          @default(false) @map("is_system")
+  nodes              AuenNode[]
+  nodeTypeAttributes AuenNodeTypeAttribute[]
 
+  @@unique([category, valueType])
   @@map("auen_node_type")
 }
 
@@ -123,7 +126,9 @@ model AuenAttributeType {
   code           String              @unique
   description    String?
   dataType       String              @map("data_type")
-  nodeAttributes AuenNodeAttribute[]
+  isSystem       Boolean             @default(false) @map("is_system")
+  nodeAttributes     AuenNodeAttribute[]
+  nodeTypeAttributes AuenNodeTypeAttribute[]
 
   @@map("auen_attribute_type")
 }
@@ -138,6 +143,18 @@ model AuenNodeAttribute {
 
   @@id([nodeId, attributeId])
   @@map("auen_node_attribute")
+}
+
+model AuenNodeTypeAttribute {
+  nodeTypeId  Int     @map("node_type_id")
+  attributeId Int     @map("attribute_id")
+  isRequired  Boolean @default(false) @map("is_required")
+
+  nodeType  AuenNodeType      @relation(fields: [nodeTypeId], references: [id])
+  attribute AuenAttributeType @relation(fields: [attributeId], references: [id])
+
+  @@id([nodeTypeId, attributeId])
+  @@map("auen_node_type_attribute")
 }
 
 // --- Infrastructure ---
@@ -182,6 +199,7 @@ model CfgConfiguration {
   sectionId   Int?         @map("section_id")
   section     CfgSection?  @relation(fields: [sectionId], references: [id])
   dataType    CfgValueType @map("data_type")
+  isSystem    Boolean      @default(false) @map("is_system")
   valInt      Int?         @map("val_int")
   valFloat    Float?       @map("val_float")
   valBool     Boolean?     @map("val_bool")

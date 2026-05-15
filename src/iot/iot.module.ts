@@ -1,16 +1,16 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { DeviceController } from 'src/iot/web/rest/device.controller';
-import { DeviceBusiness } from 'src/iot/business/device.business';
-import { DeviceRepository } from 'src/iot/repository/device.repository';
+import { DeviceBusiness } from 'src/iot/business/entity/device.business';
+import { DeviceRepository } from 'src/iot/business/entity/device.repository';
 import { ComponentController } from 'src/iot/web/rest/component.controller';
 import { ComponentsFlatController } from 'src/iot/web/rest/components-flat.controller';
-import { DeviceComponentBusiness } from 'src/iot/business/device-component.business';
-import { DeviceComponentRepository } from 'src/iot/repository/device-component.repository';
+import { DeviceComponentBusiness } from 'src/iot/business/entity/device-component.business';
+import { DeviceComponentRepository } from 'src/iot/business/entity/device-component.repository';
 import { TelemetryLogController } from 'src/iot/web/rest/telemetry-log.controller';
-import { TelemetryLogBusiness } from 'src/iot/business/telemetry-log.business';
-import { TelemetryLogRepository } from 'src/iot/repository/telemetry-log.repository';
+import { TelemetryLogBusiness } from 'src/iot/business/entity/telemetry-log.business';
+import { TelemetryLogRepository } from 'src/iot/business/entity/telemetry-log.repository';
+import { TelemetryPollingBusiness } from './business/telemetry-polling.business';
 import { TelemetryCronService } from './process/telemetry-cron.service';
-import { TelemetryProcessor } from './process/telemetry-processor';
 import { RealtimeModule } from 'src/realtime/realtime.module';
 import { InfraModule } from 'src/infra/infra.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
@@ -19,7 +19,7 @@ import { PrismaModule } from 'src/prisma/prisma.module';
   imports: [
     RealtimeModule,
     PrismaModule,
-    forwardRef(() => InfraModule),
+    InfraModule,
   ],
   controllers: [
     DeviceController,
@@ -34,9 +34,9 @@ import { PrismaModule } from 'src/prisma/prisma.module';
     DeviceComponentRepository,
     TelemetryLogBusiness,
     TelemetryLogRepository,
-    TelemetryProcessor,
+    TelemetryPollingBusiness,
     TelemetryCronService,
   ],
-  exports: [DeviceComponentRepository, TelemetryLogRepository],
+  exports: [DeviceComponentBusiness, TelemetryLogBusiness],
 })
 export class IotModule {}

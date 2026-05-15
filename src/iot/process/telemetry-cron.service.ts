@@ -1,8 +1,8 @@
-import { forwardRef, Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { TelemetryProcessor } from './telemetry-processor';
+import { TelemetryPollingBusiness } from '../business/telemetry-polling.business';
+import { ProcessLogBusiness } from 'src/infra/business/entity/process-log.business';
 import { RealtimeGateway } from 'src/realtime/realtime.gateway';
-import { ProcessLogService } from 'src/infra/process-log/process-log.service';
 
 const PROCESS_NAME = 'telemetry_processor';
 
@@ -14,9 +14,9 @@ export class TelemetryCronService implements OnModuleInit {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly processor: TelemetryProcessor,
+    private readonly telemetryPollingBusiness: TelemetryPollingBusiness,
+    private readonly processLogBusiness: ProcessLogBusiness,
     private readonly realtimeGateway: RealtimeGateway,
-    @Inject(forwardRef(() => ProcessLogService)) private readonly processLogService: ProcessLogService,
   ) {}
 
   onModuleInit() {
@@ -38,7 +38,7 @@ export class TelemetryCronService implements OnModuleInit {
       let itemCount = 0;
 
       try {
-        itemCount = await this.processor.process();
+        itemCount = await this.telemetryPollingBusiness.process();
       } catch (err: any) {
         status = 'error';
         errorMsg = err?.message ?? String(err);
@@ -47,7 +47,7 @@ export class TelemetryCronService implements OnModuleInit {
       const endedAt = new Date();
       const durationMs = Date.now() - startTs;
 
-      await this.processLogService
+      await this.processLogBusiness
         .log({ processName: PROCESS_NAME, startedAt, endedAt, durationMs, itemCount, status, errorMsg })
         .catch(() => {});
 

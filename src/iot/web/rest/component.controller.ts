@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body, Query, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse, ApiQuery } from '@nestjs/swagger';
-import { DeviceComponentBusiness } from 'src/iot/business/device-component.business';
-import { TelemetryLogBusiness } from 'src/iot/business/telemetry-log.business';
+import { DeviceComponentBusiness } from 'src/iot/business/entity/device-component.business';
+import { TelemetryLogBusiness } from 'src/iot/business/entity/telemetry-log.business';
 import { DeviceComponentDto } from 'src/iot/dto/device-component.dto';
 import { TelemetryLogDto } from 'src/iot/dto/telemetry-log.dto';
 import { CommandDto } from 'src/iot/dto/command.dto';

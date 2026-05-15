@@ -5,6 +5,7 @@ let allLogs = [];
 let logPage = 0;
 const LOG_PAGE_SIZE = 50;
 let deviceSearch = '';
+let userDeviceSearch = '';
 let logFilterComponentId = '';
 let logFilterDirection = '';
 const deviceComponents = {};
@@ -24,6 +25,7 @@ const collapsedNodes = new Set(); // nodeId dei nodi collassati (i figli non ven
 
 // --- Topology collapse state ---
 const collapsedTopoNodes = new Set();
+const collapsedUserTopoNodes = new Set();
 
 // --- Configuration state ---
 let cfgSections = [];

@@ -169,13 +169,14 @@ function _cfgTable(items) {
       ${items.map(c => `
         <tr>
           <td><code>${esc(c.code)}</code></td>
-          <td>${esc(c.name)}${c.description ? `<br><span class="muted-text">${esc(c.description)}</span>` : ''}</td>
+          <td>${esc(c.name)}${c.isSystem ? ' <span class="badge badge-system">SYS</span>' : ''}${c.description ? `<br><span class="muted-text">${esc(c.description)}</span>` : ''}</td>
           <td><span class="badge">${esc(c.dataType)}</span></td>
           <td id="cfgval-${esc(c.code)}">${_cfgDisplayValue(c)}</td>
           <td class="actions">
             <button title="Modifica valore" onclick="openCfgEditValueModal('${esc(c.code)}')">&#x270F;&#xFE0F;</button>
+            ${!c.isSystem ? `
             <button title="Modifica (admin)" onclick="openCfgAdminModal('${esc(c.code)}')">&#x2699;&#xFE0F;</button>
-            <button title="Elimina" onclick="deleteCfgConfig('${esc(c.code)}')">&#x1F5D1;&#xFE0F;</button>
+            <button title="Elimina" onclick="deleteCfgConfig('${esc(c.code)}')">&#x1F5D1;&#xFE0F;</button>` : ''}
           </td>
         </tr>`).join('')}
     </tbody>

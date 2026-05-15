@@ -138,6 +138,6 @@ Placeholder senza logica. Può avere figli — utile per strutturare l'albero.
 
 1. Aggiungere il valore all'enum `AuenNodeCategory` in `schema.prisma`
 2. Eseguire `prisma migrate dev` e `prisma generate`
-3. Implementare la nuova classe che implementa `NodeStrategy`
-4. Registrarla nella `StrategyFactory`
+3. Implementare la nuova classe che implementa `NodeStrategy` in `src/auto-engine/business/node-strategy/strategies/`
+4. Registrarla nella `StrategyFactory` (`src/auto-engine/business/node-strategy/strategy.factory.ts`)
 5. Decidere il gruppo di appartenenza e aggiornare le regole sui figli e `iotComponentId`

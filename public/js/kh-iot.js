@@ -425,19 +425,179 @@ async function loadComponentStatuses(deviceId, components) {
 }
 
 function renderComponentStatus(componentId) {
-  const cell = document.getElementById(`status-${componentId}`);
-  if (!cell) return;
   const log = componentLatest[componentId];
-  if (!log) {
-    cell.innerHTML = '<span class="muted-text">—</span>';
+  const html = !log
+    ? '<span class="muted-text">—</span>'
+    : (() => {
+        const dirClass = log.direction === 'READ' ? 'dir-read' : 'dir-write';
+        const date = log.createdAt ? new Date(log.createdAt).toLocaleString('it-IT') : '';
+        return `<span class="status-value">${esc(log.value)}</span> ` +
+               `<span class="badge ${dirClass}">${esc(log.direction)}</span>` +
+               `<br><span class="muted-text">${esc(date)}</span>`;
+      })();
+  const adminCell = document.getElementById(`status-${componentId}`);
+  if (adminCell) adminCell.innerHTML = html;
+  const userCell = document.getElementById(`user-status-${componentId}`);
+  if (userCell) userCell.innerHTML = html;
+}
+
+// ============================================================
+// UTENTE — User device view (read-only + send command)
+// ============================================================
+
+function renderUserDevices() {
+  const tbody = document.querySelector('#user-device-table tbody');
+  if (!tbody) return;
+  const now = Date.now();
+
+  const deviceLastSeen = {};
+  allLogs.forEach(l => {
+    const comp = componentsList.find(c => c.id === l.componentId);
+    if (!comp) return;
+    const ts = new Date(l.createdAt).getTime();
+    if (!deviceLastSeen[comp.deviceId] || ts > deviceLastSeen[comp.deviceId]) {
+      deviceLastSeen[comp.deviceId] = ts;
+    }
+  });
+
+  const filtered = devicesList.filter(d => {
+    if (!userDeviceSearch) return true;
+    return (
+      (d.deviceName || '').toLowerCase().includes(userDeviceSearch) ||
+      (d.ipAddress || '').toLowerCase().includes(userDeviceSearch) ||
+      (d.macAddress || '').toLowerCase().includes(userDeviceSearch)
+    );
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-cell">Nessun dispositivo trovato</td></tr>';
     return;
   }
-  const dirClass = log.direction === 'READ' ? 'dir-read' : 'dir-write';
-  const date = log.createdAt ? new Date(log.createdAt).toLocaleString('it-IT') : '';
-  cell.innerHTML =
-    `<span class="status-value">${esc(log.value)}</span> ` +
-    `<span class="badge ${dirClass}">${esc(log.direction)}</span>` +
-    `<br><span class="muted-text">${esc(date)}</span>`;
+
+  tbody.innerHTML = filtered.map(d => {
+    const lastSeen = deviceLastSeen[d.id];
+    const isOnline = lastSeen && (now - lastSeen) < 60000;
+    const statusBadge = `<span class="badge ${isOnline ? 'badge-online' : 'badge-offline'}">${isOnline ? 'Online' : 'Offline'}</span>`;
+    return `
+      <tr class="device-row">
+        <td>${esc(d.id)}</td>
+        <td>${esc(d.deviceName)}</td>
+        <td>${esc(d.macAddress)}</td>
+        <td>${esc(d.ipAddress)}</td>
+        <td>${esc(d.driver)}</td>
+        <td>${statusBadge}</td>
+        <td class="actions">
+          <button class="accordion-toggle" title="Componenti" onclick="toggleUserAccordion(${d.id})">&#x25B6;</button>
+        </td>
+      </tr>
+      <tr class="accordion-row" id="user-accordion-${d.id}">
+        <td colspan="7">
+          <div class="accordion-content">
+            <div class="accordion-toolbar">
+              <span class="accordion-label">${esc(d.deviceName || d.ipAddress)} — Componenti</span>
+            </div>
+            <div id="user-accordion-body-${d.id}" class="accordion-body">
+              <p class="loading-cell">Caricamento...</p>
+            </div>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+async function toggleUserAccordion(deviceId) {
+  const row = document.getElementById(`user-accordion-${deviceId}`);
+  if (!row) return;
+  const isOpen = row.classList.contains('open');
+  const toggleBtn = row.previousElementSibling?.querySelector('.accordion-toggle');
+  if (isOpen) {
+    row.classList.remove('open');
+    if (toggleBtn) toggleBtn.textContent = '▶';
+  } else {
+    row.classList.add('open');
+    if (toggleBtn) toggleBtn.textContent = '▼';
+    await loadUserAccordionComponents(deviceId);
+  }
+}
+
+async function loadUserAccordionComponents(deviceId) {
+  const body = document.getElementById(`user-accordion-body-${deviceId}`);
+  if (!body) return;
+  body.innerHTML = '<p class="loading-cell">Caricamento...</p>';
+  try {
+    const res = await fetch(`/api/iot/devices/${deviceId}/components`);
+    const components = await res.json();
+    deviceComponents[deviceId] = components;
+    renderUserAccordionComponents(deviceId, components);
+    loadComponentStatuses(deviceId, components);
+  } catch {
+    body.innerHTML = '<p class="loading-cell">Errore caricamento componenti</p>';
+  }
+}
+
+function renderUserAccordionComponents(deviceId, components) {
+  const body = document.getElementById(`user-accordion-body-${deviceId}`);
+  if (!body) return;
+  if (components.length === 0) {
+    body.innerHTML = '<p class="empty-cell">Nessun componente per questo dispositivo</p>';
+    return;
+  }
+  body.innerHTML = `
+    <table class="accordion-table">
+      <thead>
+        <tr><th>ID</th><th>Nome</th><th>HW Index</th><th>Nodo</th><th>Stato</th><th>Azioni</th></tr>
+      </thead>
+      <tbody>
+        ${components.map(c => {
+          const nodeLabel = c.linkedNode
+            ? `<span class="badge badge-cat-node" style="font-size:11px">${esc(c.linkedNode.code ?? '#' + c.linkedNode.id)}</span>`
+            : `<span class="muted-text">—</span>`;
+          const statusId = `user-status-${c.id}`;
+          return `<tr>
+          <td>${esc(c.id)}</td>
+          <td>${esc(c.componentName)}</td>
+          <td>${esc(c.hardwareIndex)}</td>
+          <td>${nodeLabel}</td>
+          <td id="${statusId}" class="status-cell"><span class="muted-text">—</span></td>
+          <td class="actions">
+            <button title="Invia comando"
+              data-cid="${c.id}" data-did="${deviceId}" data-cname="${esc(c.componentName || '')}"
+              onclick="openCommandModal(this)">&#x26A1;</button>
+          </td>
+        </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+
+  // Render cached statuses in user cells
+  components.forEach(c => {
+    const log = componentLatest[c.id];
+    if (!log) return;
+    const cell = document.getElementById(`user-status-${c.id}`);
+    if (!cell) return;
+    const dirClass = log.direction === 'READ' ? 'dir-read' : 'dir-write';
+    const date = log.createdAt ? new Date(log.createdAt).toLocaleString('it-IT') : '';
+    cell.innerHTML =
+      `<span class="status-value">${esc(log.value)}</span> ` +
+      `<span class="badge ${dirClass}">${esc(log.direction)}</span>` +
+      `<br><span class="muted-text">${esc(date)}</span>`;
+  });
+}
+
+async function reloadUserStatuses() {
+  const openRows = document.querySelectorAll('#user-device-table-container .accordion-row.open');
+  if (openRows.length === 0) { showToast('Nessun accordion aperto'); return; }
+  const btn = document.getElementById('user-reload-statuses-btn');
+  if (btn) btn.disabled = true;
+  try {
+    await Promise.all([...openRows].map(row => {
+      const deviceId = Number(row.id.replace('user-accordion-', ''));
+      return loadComponentStatuses(deviceId, deviceComponents[deviceId] || []);
+    }));
+    showToast('Stati aggiornati');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 async function reloadAllStatuses() {
