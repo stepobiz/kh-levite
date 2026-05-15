@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { AttributeTypeRepository } from './attribute-type.repository';
 import { AttributeTypeMapper } from './attribute-type.mapper';
 import { AttributeTypeDto } from '../../dto/attribute-type.dto';
@@ -24,15 +24,13 @@ export class AttributeTypeBusiness {
   }
 
   async update(id: number, dto: AttributeTypeDto): Promise<AttributeTypeDto> {
-    const existing = await this.findById(id);
-    if (existing.isSystem) throw new ForbiddenException(`AttributeType ${id} is a system record and cannot be modified`);
+    await this.findById(id);
     const entity = await this.repository.update(id, AttributeTypeMapper.toUpdateInput(dto));
     return AttributeTypeMapper.toDto(entity);
   }
 
   async delete(id: number): Promise<void> {
-    const existing = await this.findById(id);
-    if (existing.isSystem) throw new ForbiddenException(`AttributeType ${id} is a system record and cannot be deleted`);
+    await this.findById(id);
     await this.repository.delete(id);
   }
 }
