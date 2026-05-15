@@ -173,10 +173,13 @@ async function openNodeModal(id = null) {
   const attrSection = document.getElementById('node-attributes-section');
   const attrHint = document.getElementById('node-attributes-hint');
   const tagSection = document.getElementById('node-tags-section');
+  const createAttrsSection = document.getElementById('node-create-attrs-section');
   if (node) {
     attrSection.classList.remove('hidden');
     tagSection.classList.remove('hidden');
     attrHint.classList.add('hidden');
+    createAttrsSection.classList.add('hidden');
+    document.getElementById('node-create-attrs-list').innerHTML = '';
     renderNodeAttributesList(node.id, node.attributes || []);
     populateAttrTypeSelect();
     document.getElementById('attr-type-select').value = '';
@@ -190,7 +193,9 @@ async function openNodeModal(id = null) {
   } else {
     attrSection.classList.add('hidden');
     tagSection.classList.add('hidden');
-    attrHint.classList.remove('hidden');
+    attrHint.classList.add('hidden');
+    createAttrsSection.classList.add('hidden');
+    document.getElementById('node-create-attrs-list').innerHTML = '';
   }
 
   const deleteBtn = document.getElementById('node-delete-btn');
@@ -479,7 +484,7 @@ function clearIotComponent() {
   document.getElementById('node-iot-component-dropdown')?.classList.add('hidden');
 }
 
-function onNodeTypeSelectChange() {
+async function onNodeTypeSelectChange() {
   const typeId = Number(document.getElementById('node-type-select').value);
   const nt = auenNodeTypes.find(t => t.id === typeId);
   const cat = nt?.category ?? '';
@@ -490,15 +495,80 @@ function onNodeTypeSelectChange() {
   if (isLogicalRow) isLogicalRow.style.display = isFake ? 'none' : '';
 
   const isLogical = isFake ? true : (isLogicalChk?.checked ?? false);
-  const section = document.getElementById('node-iot-component-section');
-  if (section) {
+  const iotSection = document.getElementById('node-iot-component-section');
+  if (iotSection) {
     const show = !isLogical && (cat.startsWith('in_') || cat.startsWith('out_') || cat.startsWith('proxy_'));
-    section.classList.toggle('hidden', !show);
+    iotSection.classList.toggle('hidden', !show);
     if (!show) {
       document.getElementById('node-iot-component-search').value = '';
       document.getElementById('node-iot-component-id').value = '';
     }
   }
+
+  const isNewNode = !document.getElementById('node-form').recordId.value;
+  if (isNewNode) {
+    await _loadNodeTypeAttrsForCreate(typeId || null, cat);
+  }
+}
+
+async function _loadNodeTypeAttrsForCreate(typeId, category) {
+  const section = document.getElementById('node-create-attrs-section');
+  const listEl = document.getElementById('node-create-attrs-list');
+
+  if (!typeId) {
+    section.classList.add('hidden');
+    listEl.innerHTML = '';
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/auen/node-types/${typeId}/attributes`);
+    const attrs = await res.json();
+
+    const required = attrs.filter(a => a.isRequired);
+    const optional = attrs.filter(a => !a.isRequired);
+
+    let html = '';
+
+    if (category === 'out_thermostat') {
+      html += `<p class="muted-text" style="margin:0 0 10px;font-size:12px">
+        &#x2139;&#xFE0F; Verranno creati automaticamente 2 nodi child: <strong>Setpoint</strong>, <strong>Sensore temperatura</strong>.
+      </p>`;
+    }
+
+    if (required.length === 0 && optional.length === 0) {
+      html += '<p class="muted-text attr-empty">Nessun attributo previsto per questo tipo</p>';
+    } else {
+      required.forEach(a => { html += _attrInputRow(a, true); });
+      optional.forEach(a => { html += _attrInputRow(a, false); });
+    }
+
+    listEl.innerHTML = html;
+    section.classList.remove('hidden');
+  } catch {
+    section.classList.add('hidden');
+    listEl.innerHTML = '';
+  }
+}
+
+function _attrInputRow(a, isRequired) {
+  const code = esc(a.attribute?.code ?? `#${a.attributeId}`);
+  const dataType = a.attribute?.dataType ?? 'string';
+  const reqMark = isRequired ? '<span class="required">*</span>' : '';
+  const inputId = `node-create-attr-${a.attributeId}`;
+  let input;
+  if (dataType === 'boolean') {
+    input = `<select id="${inputId}" data-attr-id="${a.attributeId}" data-required="${isRequired}">
+      <option value="">— seleziona —</option>
+      <option value="1">ON (1)</option>
+      <option value="0">OFF (0)</option>
+    </select>`;
+  } else if (dataType === 'number') {
+    input = `<input id="${inputId}" type="number" step="any" placeholder="0" data-attr-id="${a.attributeId}" data-required="${isRequired}" />`;
+  } else {
+    input = `<input id="${inputId}" type="text" data-attr-id="${a.attributeId}" data-required="${isRequired}" />`;
+  }
+  return `<div class="form-row"><label>${code} ${reqMark}</label>${input}</div>`;
 }
 
 function onIsLogicalChange() {
@@ -522,6 +592,22 @@ async function handleNodeSubmit(e) {
     iotComponentId: iotComponentIdVal ? Number(iotComponentIdVal) : null,
     isLogical,
   };
+
+  if (!id && !cloneFromId) {
+    const attrInputs = document.querySelectorAll('#node-create-attrs-list [data-attr-id]');
+    const attributes = [];
+    for (const el of attrInputs) {
+      const val = el.value;
+      if (val !== '') attributes.push({ attributeId: Number(el.dataset.attrId), value: val });
+    }
+    const requiredInputs = [...attrInputs].filter(el => el.dataset.required === 'true');
+    const missingRequired = requiredInputs.filter(el => el.value === '');
+    if (missingRequired.length > 0) {
+      showToast('Compila tutti gli attributi obbligatori', true);
+      return;
+    }
+    if (attributes.length > 0) dto.attributes = attributes;
+  }
   let url, method;
   if (cloneFromId != null) {
     url = `/api/auen/nodes/${cloneFromId}/clone`;

@@ -470,6 +470,19 @@
             </select>
           </div>
         </div>
+        <div id="node-type-attrs-section" class="hidden">
+          <div class="attr-section-header">Attributi associati</div>
+          <div id="node-type-attrs-list"></div>
+          <div class="attr-add-row">
+            <select id="nt-attr-type-select">
+              <option value="">— seleziona attributo —</option>
+            </select>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;white-space:nowrap">
+              <input type="checkbox" id="nt-attr-is-required" /> Obbligatorio
+            </label>
+            <button type="button" class="btn-secondary btn-sm" onclick="addNodeTypeAttribute()">&#xFF0B; Aggiungi</button>
+          </div>
+        </div>
         <div class="modal-footer">
           <button class="btn-secondary" type="button" onclick="closeModal('node-type-modal')">Annulla</button>
           <button class="btn-primary" type="submit">Salva</button>
@@ -551,6 +564,11 @@
               Nodo logico
             </label>
           </div>
+        </div>
+        <!-- Info / attributi adattativi — visibili solo per nuovo nodo, in base al tipo selezionato -->
+        <div id="node-create-attrs-section" class="hidden">
+          <div class="attr-section-header">Attributi del tipo</div>
+          <div id="node-create-attrs-list"></div>
         </div>
         <!-- Componente IoT (per categorie in_*, out_*, proxy_*; nascosto se nodo logico) -->
         <div id="node-iot-component-section" class="hidden">
