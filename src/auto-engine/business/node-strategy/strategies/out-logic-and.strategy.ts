@@ -4,7 +4,7 @@ export class OutLogicAndStrategy implements NodeStrategy {
   async calculateDesired(node: AuenNodeWithAttributes, context: LogicEngineContext): Promise<string> {
     const children = context.allNodes.filter(n => n.parentId === node.id);
     if (children.length === 0) return '0';
-    return children.every(c => _childContributes(c, node)) ? '1' : '0';
+    return children.every(c => _childContributes(c, node, context.allNodes)) ? '1' : '0';
   }
 
   updateActual(node: AuenNodeWithAttributes): string | undefined {
@@ -26,11 +26,26 @@ export class OutLogicAndStrategy implements NodeStrategy {
   }
 }
 
-function _childContributes(child: AuenNodeWithAttributes, parent: AuenNodeWithAttributes): boolean {
-  if (child.type.valueType === 'thermal') {
+function _getEffectiveValueType(child: AuenNodeWithAttributes, allNodes: AuenNodeWithAttributes[]): string {
+  if (child.type.category.startsWith('proxy_')) {
+    const sourceAttr = child.attributes.find(a => a.attribute.code === 'source_node_id');
+    const sourceId = sourceAttr ? Number(sourceAttr.value) : null;
+    const source = sourceId ? allNodes.find(n => n.id === sourceId) : null;
+    if (source?.type?.valueType) return source.type.valueType;
+  }
+  return child.type.valueType ?? 'boolean';
+}
+
+function _childContributes(
+  child: AuenNodeWithAttributes,
+  parent: AuenNodeWithAttributes,
+  allNodes: AuenNodeWithAttributes[],
+): boolean {
+  const vt = _getEffectiveValueType(child, allNodes);
+  if (vt === 'thermal') {
     const trigger = parent.attributes.find(a => a.attribute.code === 'thermal_trigger')?.value;
-    if (!trigger) return false;
-    return child.actualValue === trigger;
+    if (trigger) return child.actualValue === trigger;
+    return child.actualValue !== 'off' && child.actualValue != null;
   }
   return child.actualValue === '1';
 }

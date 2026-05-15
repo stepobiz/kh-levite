@@ -94,7 +94,7 @@ function renderAuenNodes() {
     const prefix = depth > 0 ? '└ ' : '';
     const inTransition = n.desiredValue !== n.actualValue;
     const trClass = inTransition ? ' class="node-transitioning"' : '';
-    const vt = n.type?.valueType ?? 'boolean';
+    const vt = _getEffectiveVt(n);
     const desiredCell = `<span class="mono-val">${formatNodeValue(n.desiredValue, vt)}</span>`
       + (n.desiredValueUpdatedAt ? `<br><span class="muted-text">${fmtNodeTs(n.desiredValueUpdatedAt)}</span>` : '');
     const actualCell = `<span class="mono-val${inTransition ? ' val-pending' : ''}">${formatNodeValue(n.actualValue, vt)}</span>`
@@ -597,6 +597,19 @@ function _attrInputRow(a, isRequired) {
     </select>`;
   } else if (dataType === 'number') {
     input = `<input id="${inputId}" type="number" step="any" placeholder="0" data-attr-id="${a.attributeId}" data-required="${isRequired}" />`;
+  } else if (dataType === 'auen_node') {
+    const opts = _buildParentOptions(auenNodes, null, 0).join('');
+    input = `<select id="${inputId}" data-attr-id="${a.attributeId}" data-required="${isRequired}">
+      <option value="">— seleziona nodo —</option>${opts}</select>`;
+  } else if (dataType === 'select') {
+    const attrType = auenAttributeTypes.find(x => x.id === a.attributeId);
+    let optsHtml = '';
+    try {
+      const parsed = JSON.parse(attrType?.options ?? '[]');
+      optsHtml = parsed.map(o => `<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('');
+    } catch { /* empty */ }
+    input = `<select id="${inputId}" data-attr-id="${a.attributeId}" data-required="${isRequired}">
+      <option value="">— seleziona —</option>${optsHtml}</select>`;
   } else {
     input = `<input id="${inputId}" type="text" data-attr-id="${a.attributeId}" data-required="${isRequired}" />`;
   }

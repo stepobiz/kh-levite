@@ -78,7 +78,7 @@ function _onNodeUpdate(data) {
 
   // Update admin topology SVG in-place if visible
   if (document.getElementById('topology')?.classList.contains('active')) {
-    const vt = auenNodes[idx].type?.valueType ?? 'boolean';
+    const vt = _getEffectiveVt(auenNodes[idx]);
     const desiredEl = document.getElementById('topo-desired-' + data.nodeId);
     const actualEl  = document.getElementById('topo-actual-'  + data.nodeId);
     const rectEl    = document.getElementById('topo-rect-'    + data.nodeId);

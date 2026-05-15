@@ -226,7 +226,7 @@ function _buildNodeFeedHtml(e) {
   const label = node?.code ?? `#${e.nodeId}`;
   const vt = node?.type?.valueType ?? 'boolean';
   const fmtVal = (val) => vt === 'boolean'
-    ? (val === '1' ? '<span style="color:#16a34a">&#9679;</span>' : '<span style="color:#dc2626">&#9679;</span>')
+    ? (val === '1' ? '<span style="color:#16a34a">&#9679;</span>' : '<span style="color:#1e293b">&#9679;</span>')
     : esc(String(val ?? '—'));
   return `<li class="feed-item feed-node">
     <span class="feed-ts">${esc(ts)}</span>

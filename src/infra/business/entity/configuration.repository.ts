@@ -54,7 +54,7 @@ export class ConfigurationRepository {
     if (data.description !== undefined) prismaData.description = data.description;
     if (data.sectionId !== undefined) prismaData.sectionId = data.sectionId ?? null;
     if (data.dataType !== undefined) prismaData.dataType = data.dataType;
-    if ('options' in data) prismaData.options = data.options ?? null;
+    if (data.options !== undefined) prismaData.options = data.options ?? null;
     if ('valInt' in data) prismaData.valInt = data.valInt ?? null;
     if ('valFloat' in data) prismaData.valFloat = data.valFloat ?? null;
     if ('valBool' in data) prismaData.valBool = data.valBool ?? null;

@@ -186,7 +186,7 @@ function _cfgDisplayValue(c) {
   switch (c.dataType) {
     case 'boolean': return c.valBool === true
       ? '<span style="color:#16a34a;font-weight:600">ON</span>'
-      : '<span style="color:#dc2626;font-weight:600">OFF</span>';
+      : '<span style="color:#1e293b;font-weight:600">OFF</span>';
     case 'integer': return c.valInt != null ? `<code>${c.valInt}</code>` : '<span class="muted-text">—</span>';
     case 'float':   return c.valFloat != null ? `<code>${c.valFloat}</code>` : '<span class="muted-text">—</span>';
     case 'text':    return c.valText != null ? `<code>${esc(c.valText)}</code>` : '<span class="muted-text">—</span>';

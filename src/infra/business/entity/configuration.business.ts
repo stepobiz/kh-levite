@@ -41,7 +41,9 @@ export class ConfigurationBusiness {
       description: dto.description,
       sectionId: dto.sectionId,
       dataType: dto.dataType as any,
-      options: dto.dataType === 'select' ? (dto.options ?? null) : null,
+      options: dto.dataType !== undefined
+        ? (dto.dataType === 'select' ? (dto.options ?? null) : null)
+        : undefined,
       valInt: dto.valInt,
       valFloat: dto.valFloat,
       valBool: dto.valBool,

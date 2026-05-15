@@ -8,6 +8,7 @@ const V_GAP = 65;
 // Module-level set updated on each full render — used by updateTopoValues for in-place stroke update
 let topoConnectedSourceIds = new Set();
 let _lastTopoRootId = null;
+let _lastFollowConnected = false;
 
 // Shared helper — called also from kh-realtime.js for in-place updates
 // Logical nodes: dashed grey. Boolean nodes: green/red border, yellow solid blink when desired≠actual.
@@ -26,7 +27,7 @@ function _topoRectAttrs(nodeId, desiredValue, actualValue, vt) {
   if (vt === 'boolean') {
     if (desiredValue !== actualValue) return { stroke: '#eab308', dash: null, blink: true };
     if (actualValue === '1') return { stroke: '#16a34a', dash: null, blink: false };
-    return { stroke: '#dc2626', dash: null, blink: false };
+    return { stroke: '#1e293b', dash: null, blink: false };
   }
   return { stroke: '#cbd5e1', dash: null, blink: false };
 }
@@ -34,7 +35,7 @@ function _topoRectAttrs(nodeId, desiredValue, actualValue, vt) {
 // Returns SVG text content (may contain <tspan>) for a value label
 function _topoValSvg(val, vt, label) {
   if (vt === 'boolean') {
-    const color = val === '1' ? '#16a34a' : '#dc2626';
+    const color = val === '1' ? '#16a34a' : '#1e293b';
     return `${esc(label)}<tspan fill="${color}" font-size="14">&#x25CF;</tspan>`;
   }
   if (vt === 'thermal') {
@@ -94,13 +95,25 @@ function initTopologyRootSelect() {
   if (current) sel.value = current;
 }
 
+// For proxy nodes, the effective valueType is the source node's valueType.
+function _getEffectiveVt(node) {
+  const cat = node?.type?.category ?? '';
+  if (cat.startsWith('proxy_')) {
+    const sourceAttr = (node.attributes || []).find(a => a.attribute?.code === 'source_node_id');
+    const sourceId = sourceAttr ? Number(sourceAttr.value) : null;
+    const source = sourceId ? auenNodes.find(n => n.id === sourceId) : null;
+    if (source?.type?.valueType) return source.type.valueType;
+  }
+  return node?.type?.valueType ?? 'boolean';
+}
+
 function _topoPlainVal(value, vt) {
   if (vt === 'boolean') return value === '1' ? 'ON' : 'OFF';
   return value ?? '—';
 }
 
 function _topoValColor(value, vt) {
-  if (vt === 'boolean') return value === '1' ? '#16a34a' : '#dc2626';
+  if (vt === 'boolean') return value === '1' ? '#16a34a' : '#1e293b';
   if (vt === 'thermal') {
     if (value === 'heat') return '#f97316';
     if (value === 'cool') return '#0ea5e9';
@@ -148,7 +161,7 @@ async function updateTopoValues() {
       if (old.desiredValue === updated.desiredValue && old.actualValue === updated.actualValue) return;
 
       auenNodes[idx] = { ...old, ...updated };
-      const vt = updated.type?.valueType ?? 'boolean';
+      const vt = _getEffectiveVt(auenNodes[idx]);
 
       const desiredEl = document.getElementById('topo-desired-' + updated.id);
       const actualEl  = document.getElementById('topo-actual-'  + updated.id);
@@ -190,13 +203,17 @@ function renderTopology() {
     return;
   }
 
-  // When root changes: collapse all nodes that have children (except root itself)
-  if (rootId !== _lastTopoRootId) {
+  // Reset collapse state when root or followConnected changes.
+  // When followConnected is on, skip auto-collapse so proxy nodes stay visible.
+  if (rootId !== _lastTopoRootId || followConnected !== _lastFollowConnected) {
     collapsedTopoNodes.clear();
-    auenNodes
-      .filter(n => n.id !== rootId && auenNodes.some(c => c.parentId === n.id))
-      .forEach(n => collapsedTopoNodes.add(n.id));
+    if (!followConnected) {
+      auenNodes
+        .filter(n => n.id !== rootId && auenNodes.some(c => c.parentId === n.id))
+        .forEach(n => collapsedTopoNodes.add(n.id));
+    }
     _lastTopoRootId = rootId;
+    _lastFollowConnected = followConnected;
   }
 
   const positions = {};
@@ -284,7 +301,7 @@ function renderTopology() {
     const pos = positions[nId];
     if (!pos) return;
 
-    const vt = node.type?.valueType ?? 'boolean';
+    const vt = _getEffectiveVt(node);
     const cat = node.type?.category ?? '';
     const isFake = cat === 'fake';
     const isOut = cat.startsWith('out_');
@@ -379,6 +396,7 @@ function renderTopology() {
 // ============================================================
 
 let _lastUserTopoRootId = null;
+let _lastUserFollowConnected = false;
 
 function initUserTopologyRootSelect() {
   const sel = document.getElementById('user-topology-root-select');
@@ -421,12 +439,15 @@ function renderUserTopology() {
     return;
   }
 
-  if (rootId !== _lastUserTopoRootId) {
+  if (rootId !== _lastUserTopoRootId || followConnected !== _lastUserFollowConnected) {
     collapsedUserTopoNodes.clear();
-    auenNodes
-      .filter(n => n.id !== rootId && auenNodes.some(c => c.parentId === n.id))
-      .forEach(n => collapsedUserTopoNodes.add(n.id));
+    if (!followConnected) {
+      auenNodes
+        .filter(n => n.id !== rootId && auenNodes.some(c => c.parentId === n.id))
+        .forEach(n => collapsedUserTopoNodes.add(n.id));
+    }
     _lastUserTopoRootId = rootId;
+    _lastUserFollowConnected = followConnected;
   }
 
   const positions = {};
@@ -508,7 +529,7 @@ function renderUserTopology() {
     const pos = positions[nId];
     if (!pos) return;
 
-    const vt = node.type?.valueType ?? 'boolean';
+    const vt = _getEffectiveVt(node);
     const cat = node.type?.category ?? '';
     const isFake = cat === 'fake';
     const isOut = cat.startsWith('out_');
