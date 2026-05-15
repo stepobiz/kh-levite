@@ -26,6 +26,7 @@ export class ConfigurationRepository {
     description?: string | null;
     sectionId?: number | null;
     dataType: CfgValueType;
+    options?: string | null;
     valInt?: number | null;
     valFloat?: number | null;
     valBool?: boolean | null;
@@ -41,6 +42,7 @@ export class ConfigurationRepository {
       description?: string | null;
       sectionId?: number | null;
       dataType?: CfgValueType;
+      options?: string | null;
       valInt?: number | null;
       valFloat?: number | null;
       valBool?: boolean | null;
@@ -52,6 +54,7 @@ export class ConfigurationRepository {
     if (data.description !== undefined) prismaData.description = data.description;
     if (data.sectionId !== undefined) prismaData.sectionId = data.sectionId ?? null;
     if (data.dataType !== undefined) prismaData.dataType = data.dataType;
+    if ('options' in data) prismaData.options = data.options ?? null;
     if ('valInt' in data) prismaData.valInt = data.valInt ?? null;
     if ('valFloat' in data) prismaData.valFloat = data.valFloat ?? null;
     if ('valBool' in data) prismaData.valBool = data.valBool ?? null;

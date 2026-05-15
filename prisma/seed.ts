@@ -30,7 +30,8 @@ async function main() {
     name: string;
     description?: string;
     sectionCode?: string;
-    dataType: 'integer' | 'float' | 'boolean' | 'text';
+    dataType: 'integer' | 'float' | 'boolean' | 'text' | 'select';
+    options?: string;
     valInt?: number;
     valFloat?: number;
     valBool?: boolean;
@@ -136,27 +137,38 @@ async function main() {
         description: c.description ?? null,
         sectionId,
         dataType:    c.dataType,
-        valInt:      c.valInt  ?? null,
-        valFloat:    c.valFloat ?? null,
-        valBool:     c.valBool  ?? null,
-        valText:     c.valText  ?? null,
+        options:     c.options    ?? null,
+        valInt:      c.valInt     ?? null,
+        valFloat:    c.valFloat   ?? null,
+        valBool:     c.valBool    ?? null,
+        valText:     c.valText    ?? null,
       },
     });
   }
 
   // 3. Auen Attribute Types ()
-  const attributeTypes: { code: string; description?: string; dataType: string }[] = [
+  const attributeTypes: { code: string; description?: string; dataType: string; options?: string }[] = [
     { code: 'delay_from_child',      description: 'Ritarda l\'avvio del padre almeno dopo N secondi che il figlio è aperto (in secondi)', dataType: 'number' },
     { code: 'source_node_id',        description: 'Attributo per nodi di tipo proxy. Indica il nodo da cui copiare i valori.',            dataType: 'auen_node' },
     { code: 'id_auditorium_of_mbs',  description: 'Id dell\'auditorium da interrogare su MBS',                                            dataType: 'number' },
     { code: 'hysteresis',            description: 'Isteresi del termostato in gradi. Default: 0.5',                                       dataType: 'number' },
     { code: 'setpoint_url',          description: 'URL da cui recuperare il valore setpoint (node_manual_value_by_url)',                  dataType: 'text' },
+    {
+      code: 'thermal_trigger',
+      description: 'Filtra il contributo di un child thermal. Il parent si attiva solo se child.actual_value corrisponde a questo valore.',
+      dataType: 'select',
+      options: JSON.stringify([
+        { value: 'heat', label: 'Heat' },
+        { value: 'cool', label: 'Cool' },
+        { value: 'off',  label: 'Off'  },
+      ]),
+    },
   ];
   for (const at of attributeTypes) {
     await prisma.auenAttributeType.upsert({
       where:  { code: at.code },
-      update: { description: at.description ?? null, dataType: at.dataType, },
-      create: { code: at.code, description: at.description ?? null, dataType: at.dataType, },
+      update: { description: at.description ?? null, dataType: at.dataType, options: at.options ?? null },
+      create: { code: at.code, description: at.description ?? null, dataType: at.dataType, options: at.options ?? null },
     });
   }
 

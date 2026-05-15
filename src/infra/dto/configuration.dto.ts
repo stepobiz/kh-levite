@@ -6,6 +6,7 @@ export enum CfgValueType {
   float = 'float',
   boolean = 'boolean',
   text = 'text',
+  select = 'select',
 }
 
 export class ConfigurationDto {
@@ -14,9 +15,9 @@ export class ConfigurationDto {
   @ApiPropertyOptional() @IsOptional() @IsString() description?: string;
   @ApiPropertyOptional() @IsOptional() @IsInt() sectionId?: number;
   @ApiProperty({ enum: CfgValueType }) @IsEnum(CfgValueType) dataType: CfgValueType;
+  @ApiPropertyOptional() @IsOptional() @IsString() options?: string;
   @ApiPropertyOptional() @IsOptional() @IsInt() valInt?: number;
   @ApiPropertyOptional() @IsOptional() @IsNumber() valFloat?: number;
   @ApiPropertyOptional() @IsOptional() @IsBoolean() valBool?: boolean;
   @ApiPropertyOptional() @IsOptional() @IsString() valText?: string;
-
 }

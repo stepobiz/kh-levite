@@ -272,6 +272,11 @@ function renderAttributeTypes() {
     </tr>`).join('');
 }
 
+function onAttrTypeDataTypeChange(sel) {
+  const isSelect = sel.value === 'select';
+  document.getElementById('at-options-row').classList.toggle('hidden', !isSelect);
+}
+
 function openAttributeTypeModal(id = null) {
   const at = id != null ? auenAttributeTypes.find(x => x.id === id) : null;
   const form = document.getElementById('attribute-type-form');
@@ -280,6 +285,8 @@ function openAttributeTypeModal(id = null) {
   form.code.value = at?.code ?? '';
   form.description.value = at?.description ?? '';
   form.dataType.value = at?.dataType ?? '';
+  if (at?.options) form.elements['options'].value = at.options;
+  onAttrTypeDataTypeChange(form.dataType);
   document.querySelector('#attribute-type-modal .modal-title').textContent =
     at ? 'Modifica Attribute Type' : 'Nuovo Attribute Type';
   document.getElementById('attribute-type-modal').classList.add('show');
@@ -293,6 +300,7 @@ async function handleAttributeTypeSubmit(e) {
     code: form.code.value,
     description: form.description.value || undefined,
     dataType: form.dataType.value,
+    options: form.dataType.value === 'select' ? (form.elements['options']?.value || undefined) : undefined,
   };
   try {
     const res = await fetch(id ? `/api/auen/attribute-types/${id}` : '/api/auen/attribute-types', {

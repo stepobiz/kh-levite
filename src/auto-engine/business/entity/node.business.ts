@@ -179,6 +179,14 @@ export class NodeBusiness {
 
   async upsertAttribute(nodeId: number, attributeId: number, value: string): Promise<NodeAttributeResponseDto> {
     await this._findNodeEntity(nodeId);
+    const attrType = await this.repository.findAttributeTypeById(attributeId);
+    if (attrType?.dataType === 'select' && attrType.options) {
+      let opts: { value: string }[] = [];
+      try { opts = JSON.parse(attrType.options); } catch { /* invalid options, skip validation */ }
+      if (opts.length > 0 && !opts.some(o => o.value === value)) {
+        throw new BadRequestException(`"${value}" is not a valid option for attribute ${attrType.code}`);
+      }
+    }
     const row = await this.repository.upsertAttribute(nodeId, attributeId, value);
     return NodeMapper.toAttributeDto(row);
   }

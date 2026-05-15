@@ -7,6 +7,7 @@ export class AttributeTypeMapper {
       code: dto.code!,
       description: dto.description ?? null,
       dataType: dto.dataType!,
+      options: dto.dataType === 'select' ? (dto.options ?? null) : null,
     };
   }
 
@@ -14,7 +15,10 @@ export class AttributeTypeMapper {
     const data: Prisma.AuenAttributeTypeUpdateInput = {};
     if (dto.code !== undefined) data.code = dto.code;
     if (dto.description !== undefined) data.description = dto.description;
-    if (dto.dataType !== undefined) data.dataType = dto.dataType;
+    if (dto.dataType !== undefined) {
+      data.dataType = dto.dataType;
+      data.options = dto.dataType === 'select' ? (dto.options ?? null) : null;
+    }
     return data;
   }
 
@@ -24,6 +28,7 @@ export class AttributeTypeMapper {
       code: entity.code,
       description: entity.description,
       dataType: entity.dataType,
+      options: entity.options ?? undefined,
     };
   }
 }

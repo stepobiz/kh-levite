@@ -226,18 +226,37 @@ function onAttrTypeChange() {
   const attrTypeId = Number(document.getElementById('attr-type-select').value);
   const at = auenAttributeTypes.find(x => x.id === attrTypeId);
   const isNodeType = at?.dataType === 'auen_node';
+  const isSelectType = at?.dataType === 'select';
   const input = document.getElementById('attr-value-input');
   const nodeSelect = document.getElementById('attr-node-select');
+  const attrSelect = document.getElementById('attr-select-input');
   if (isNodeType) {
     input.classList.add('hidden');
     nodeSelect.classList.remove('hidden');
+    if (attrSelect) attrSelect.classList.add('hidden');
     populateAttrNodeSelect();
+  } else if (isSelectType) {
+    input.classList.add('hidden');
+    nodeSelect.classList.add('hidden');
+    nodeSelect.value = '';
+    if (attrSelect) {
+      attrSelect.classList.remove('hidden');
+      _populateAttrSelectOptions(attrSelect, at.options);
+    }
   } else {
     nodeSelect.classList.add('hidden');
     nodeSelect.value = '';
+    if (attrSelect) attrSelect.classList.add('hidden');
     input.classList.remove('hidden');
     input.value = '';
   }
+}
+
+function _populateAttrSelectOptions(sel, optionsJson) {
+  try {
+    const opts = JSON.parse(optionsJson ?? '[]');
+    sel.innerHTML = opts.map(o => `<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('');
+  } catch { sel.innerHTML = ''; }
 }
 
 function populateAttrNodeSelect() {
@@ -295,6 +314,16 @@ function editNodeAttr(nodeId, attrId) {
       `<select id="aval-input-${attrId}" class="attr-inline-input">` +
       `<option value="">— seleziona —</option>${opts}</select>`;
     document.getElementById(`aval-input-${attrId}`).value = rawValue;
+  } else if (dataType === 'select') {
+    const at = auenAttributeTypes.find(x => String(x.id) === String(attrId));
+    let optsHtml = '';
+    try {
+      const opts = JSON.parse(at?.options ?? '[]');
+      optsHtml = opts.map(o => `<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('');
+    } catch { /* skip */ }
+    valCell.innerHTML =
+      `<select id="aval-input-${attrId}" class="attr-inline-input">${optsHtml}</select>`;
+    document.getElementById(`aval-input-${attrId}`).value = rawValue;
   } else {
     valCell.innerHTML =
       `<input id="aval-input-${attrId}" class="attr-inline-input" value="${esc(rawValue)}" />`;
@@ -328,10 +357,12 @@ async function addNodeAttribute() {
   const nodeId = form.recordId.value;
   const attributeId = document.getElementById('attr-type-select').value;
   const nodeSelect = document.getElementById('attr-node-select');
-  const isNodeType = !nodeSelect.classList.contains('hidden');
-  const value = isNodeType
-    ? nodeSelect.value
-    : document.getElementById('attr-value-input').value;
+  const attrSelect = document.getElementById('attr-select-input');
+  const isNodeType   = !nodeSelect.classList.contains('hidden');
+  const isSelectType = attrSelect && !attrSelect.classList.contains('hidden');
+  const value = isNodeType   ? nodeSelect.value
+              : isSelectType ? attrSelect.value
+              : document.getElementById('attr-value-input').value;
   if (!attributeId) { showToast('Seleziona un attributo', true); return; }
   if (!value) { showToast('Inserisci un valore', true); return; }
   try {
@@ -346,6 +377,7 @@ async function addNodeAttribute() {
       document.getElementById('attr-value-input').classList.remove('hidden');
       nodeSelect.classList.add('hidden');
       nodeSelect.value = '';
+      if (attrSelect) { attrSelect.classList.add('hidden'); attrSelect.value = ''; }
       await refreshNodeAttributes(Number(nodeId));
     } else {
       showToast('Errore aggiunta attributo', true);
