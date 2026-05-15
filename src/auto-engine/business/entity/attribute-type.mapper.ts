@@ -24,7 +24,6 @@ export class AttributeTypeMapper {
       code: entity.code,
       description: entity.description,
       dataType: entity.dataType,
-      isSystem: entity.isSystem,
     };
   }
 }

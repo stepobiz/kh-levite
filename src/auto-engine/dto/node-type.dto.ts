@@ -37,6 +37,4 @@ export class NodeTypeDto {
   @IsString()
   valueType?: string;
 
-  @ApiPropertyOptional()
-  isSystem?: boolean;
 }

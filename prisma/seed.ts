@@ -23,8 +23,8 @@ async function main() {
     });
   }
 
-  // 2. Cfg Configurations (isSystem: true)
-  // On update: only metadata (name, description, sectionId, isSystem) — val_* preserved as set by the user.
+  // 2. Cfg Configurations ()
+  // On update: only metadata (name, description, sectionId) — val_* preserved as set by the user.
   const cfgConfigurations: {
     code: string;
     name: string;
@@ -129,14 +129,13 @@ async function main() {
       : null;
     await prisma.cfgConfiguration.upsert({
       where:  { code: c.code },
-      update: { name: c.name, description: c.description ?? null, sectionId, isSystem: true },
+      update: { name: c.name, description: c.description ?? null, sectionId, },
       create: {
         code:        c.code,
         name:        c.name,
         description: c.description ?? null,
         sectionId,
         dataType:    c.dataType,
-        isSystem:    true,
         valInt:      c.valInt  ?? null,
         valFloat:    c.valFloat ?? null,
         valBool:     c.valBool  ?? null,
@@ -145,7 +144,7 @@ async function main() {
     });
   }
 
-  // 3. Auen Attribute Types (isSystem: true)
+  // 3. Auen Attribute Types ()
   const attributeTypes: { code: string; description?: string; dataType: string }[] = [
     { code: 'delay_from_child',      description: 'Ritarda l\'avvio del padre almeno dopo N secondi che il figlio è aperto (in secondi)', dataType: 'number' },
     { code: 'source_node_id',        description: 'Attributo per nodi di tipo proxy. Indica il nodo da cui copiare i valori.',            dataType: 'auen_node' },
@@ -156,12 +155,12 @@ async function main() {
   for (const at of attributeTypes) {
     await prisma.auenAttributeType.upsert({
       where:  { code: at.code },
-      update: { description: at.description ?? null, dataType: at.dataType, isSystem: true },
-      create: { code: at.code, description: at.description ?? null, dataType: at.dataType, isSystem: true },
+      update: { description: at.description ?? null, dataType: at.dataType, },
+      create: { code: at.code, description: at.description ?? null, dataType: at.dataType, },
     });
   }
 
-  // 4. Auen Node Types (isSystem: true) + associazioni attributi
+  // 4. Auen Node Types () + associazioni attributi
   const nodeTypes: {
     category: string;
     valueType: string;
@@ -184,8 +183,8 @@ async function main() {
   for (const nt of nodeTypes) {
     const nodeType = await prisma.auenNodeType.upsert({
       where:  { category_valueType: { category: nt.category as any, valueType: nt.valueType } },
-      update: { name: nt.name, iconSlug: nt.iconSlug ?? null, isSystem: true },
-      create: { name: nt.name, iconSlug: nt.iconSlug ?? null, category: nt.category as any, valueType: nt.valueType, isSystem: true },
+      update: { name: nt.name, iconSlug: nt.iconSlug ?? null, },
+      create: { name: nt.name, iconSlug: nt.iconSlug ?? null, category: nt.category as any, valueType: nt.valueType, },
     });
     for (const attr of nt.attributes ?? []) {
       const atEntity = await prisma.auenAttributeType.findUnique({ where: { code: attr.code } });
