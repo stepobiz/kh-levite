@@ -223,7 +223,7 @@ export class NodeBusiness {
   }
 
   private async _createAutoChild(spec: DefaultChildSpec, parentId: number) {
-    const childType = await this.repository.findTypeByCategory(spec.typeCategory);
+    const childType = await this.repository.findTypeByCategory(spec.typeCategory, spec.valueType);
     if (!childType) return;
     await this.repository.create({
       description: spec.description,

@@ -74,6 +74,7 @@ model AuenNodeType {
   nodes              AuenNode[]
   nodeTypeAttributes AuenNodeTypeAttribute[]
 
+  @@unique([category, valueType])
   @@map("auen_node_type")
 }
 

@@ -191,8 +191,10 @@ export class NodeRepository {
     return rows.map(r => r.attributeId);
   }
 
-  findTypeByCategory(category: string) {
-    return this.prisma.auenNodeType.findFirst({ where: { category: category as any } });
+  findTypeByCategory(category: string, valueType?: string) {
+    return this.prisma.auenNodeType.findFirst({
+      where: { category: category as any, ...(valueType ? { valueType } : {}) },
+    });
   }
 
   updateDesiredValue(id: number, value: string, updatedAt: Date) {

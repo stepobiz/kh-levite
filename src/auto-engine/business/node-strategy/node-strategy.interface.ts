@@ -12,6 +12,7 @@ export interface LogicEngineContext {
 export type DefaultChildSpec = {
   description?: string;
   typeCategory: string;
+  valueType?: string;
   isLogical?: boolean;
 };
 

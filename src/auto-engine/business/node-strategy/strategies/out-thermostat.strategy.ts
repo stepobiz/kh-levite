@@ -36,8 +36,8 @@ export class OutThermostatStrategy implements NodeStrategy {
 
   getDefaultChildren(): DefaultChildSpec[] {
     return [
-      { description: 'Setpoint', typeCategory: 'node_manual_target', isLogical: true },
-      { description: 'Sensore temperatura', typeCategory: 'in_sensor', isLogical: true },
+      { description: 'Setpoint', typeCategory: 'node_manual_target', valueType: 'number', isLogical: true },
+      { description: 'Sensore temperatura', typeCategory: 'in_sensor', valueType: 'number', isLogical: true },
     ];
   }
 }
