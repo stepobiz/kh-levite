@@ -10,37 +10,46 @@ export class OutThermostatStrategy implements NodeStrategy {
       c.type.category === 'node_manual_target',
     );
 
-    if (!sensor || !setpoint) return node.actualValue;
+    if (!sensor || !setpoint) return 'off';
 
     const currentTemp = parseFloat(sensor.actualValue);
     const targetTemp = parseFloat(setpoint.actualValue);
-    if (isNaN(currentTemp) || isNaN(targetTemp)) return node.actualValue;
+    if (isNaN(currentTemp) || isNaN(targetTemp)) return 'off';
 
     const hysteresisAttr = node.attributes.find(a => a.attribute.code === 'hysteresis');
     const hysteresis = parseFloat(hysteresisAttr?.value ?? '0.5');
 
-    if (node.actualValue === '1') {
-      return currentTemp > targetTemp + hysteresis ? '0' : '1';
-    } else {
-      return currentTemp < targetTemp - hysteresis ? '1' : '0';
+    const season = context.season;
+    if (!season || season === 'off') return 'off';
+
+    if (season === 'winter') {
+      if (currentTemp < targetTemp - hysteresis) return 'heat';
+      if (currentTemp > targetTemp + hysteresis) return 'off';
+      return node.actualValue === 'heat' ? 'heat' : 'off';
     }
+
+    if (season === 'summer') {
+      if (currentTemp > targetTemp + hysteresis) return 'cool';
+      if (currentTemp < targetTemp - hysteresis) return 'off';
+      return node.actualValue === 'cool' ? 'cool' : 'off';
+    }
+
+    return 'off';
   }
 
   updateActual(node: AuenNodeWithAttributes): string | undefined {
     return node.desiredValue;
   }
 
-  syncHardware(): 'WRITE' {
-    return 'WRITE';
+  syncHardware(): 'NONE' {
+    return 'NONE';
   }
 
   allowedValueTypes(): string[] {
-    return ['boolean'];
+    return ['thermal'];
   }
 
   async onCreate(ctx: NodeCreationContext): Promise<void> {
-    // Requires exactly one AuenNodeType per (category, valueType) pair in the DB.
-    // The @@unique([category, valueType]) constraint on AuenNodeType enforces this.
     await ctx.createChild({ description: 'Setpoint', typeCategory: 'node_manual_target', valueType: 'number', isLogical: true });
     await ctx.createChild({ description: 'Sensore temperatura', typeCategory: 'in_sensor', valueType: 'number', isLogical: true });
   }

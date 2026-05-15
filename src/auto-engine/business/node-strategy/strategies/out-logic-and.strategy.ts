@@ -4,7 +4,7 @@ export class OutLogicAndStrategy implements NodeStrategy {
   async calculateDesired(node: AuenNodeWithAttributes, context: LogicEngineContext): Promise<string> {
     const children = context.allNodes.filter(n => n.parentId === node.id);
     if (children.length === 0) return '0';
-    return children.every(c => c.actualValue === '1') ? '1' : '0';
+    return children.every(c => _childContributes(c, node)) ? '1' : '0';
   }
 
   updateActual(node: AuenNodeWithAttributes): string | undefined {
@@ -24,4 +24,13 @@ export class OutLogicAndStrategy implements NodeStrategy {
   allowedValueTypes(): string[] {
     return ['boolean'];
   }
+}
+
+function _childContributes(child: AuenNodeWithAttributes, parent: AuenNodeWithAttributes): boolean {
+  if (child.type.valueType === 'thermal') {
+    const trigger = parent.attributes.find(a => a.attribute.code === 'thermal_trigger')?.value;
+    if (!trigger) return false;
+    return child.actualValue === trigger;
+  }
+  return child.actualValue === '1';
 }

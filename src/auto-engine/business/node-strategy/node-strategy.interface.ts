@@ -7,6 +7,7 @@ export type AuenNodeWithAttributes = AuenNode & {
 
 export interface LogicEngineContext {
   allNodes: AuenNodeWithAttributes[];
+  season?: string;
 }
 
 export type DefaultChildSpec = {

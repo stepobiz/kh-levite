@@ -190,8 +190,24 @@ function _cfgDisplayValue(c) {
     case 'integer': return c.valInt != null ? `<code>${c.valInt}</code>` : '<span class="muted-text">—</span>';
     case 'float':   return c.valFloat != null ? `<code>${c.valFloat}</code>` : '<span class="muted-text">—</span>';
     case 'text':    return c.valText != null ? `<code>${esc(c.valText)}</code>` : '<span class="muted-text">—</span>';
+    case 'select': {
+      if (c.valText == null) return '<span class="muted-text">—</span>';
+      try {
+        const opts = JSON.parse(c.options ?? '[]');
+        const label = opts.find(o => o.value === c.valText)?.label ?? c.valText;
+        return `<code>${esc(label)}</code>`;
+      } catch { return `<code>${esc(c.valText)}</code>`; }
+    }
     default:        return '<span class="muted-text">—</span>';
   }
+}
+
+function _populateCfgSelectOptions(sel, optionsJson, current) {
+  try {
+    const opts = JSON.parse(optionsJson ?? '[]');
+    sel.innerHTML = opts.map(o => `<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('');
+    if (current != null) sel.value = current;
+  } catch { sel.innerHTML = ''; }
 }
 
 // --- Create/Edit configuration (full form) ---
@@ -208,6 +224,8 @@ function onCfgDataTypeChange() {
   document.getElementById('cfg-val-float').classList.toggle('hidden', dt !== 'float');
   document.getElementById('cfg-val-bool').classList.toggle('hidden', dt !== 'boolean');
   document.getElementById('cfg-val-text').classList.toggle('hidden', dt !== 'text');
+  document.getElementById('cfg-val-options').classList.toggle('hidden', dt !== 'select');
+  document.getElementById('cfg-val-select').classList.toggle('hidden', dt !== 'select');
 }
 
 function openCfgConfigModal() {
@@ -239,6 +257,10 @@ function openCfgAdminModal(code) {
   if (cfg.dataType === 'float')   form.elements['valFloat'].value = cfg.valFloat ?? '';
   if (cfg.dataType === 'boolean') form.elements['valBool'].value = cfg.valBool === true ? 'true' : 'false';
   if (cfg.dataType === 'text')    form.elements['valText'].value = cfg.valText ?? '';
+  if (cfg.dataType === 'select') {
+    form.elements['options'].value = cfg.options ?? '';
+    _populateCfgSelectOptions(document.getElementById('cfg-select-value'), cfg.options, cfg.valText);
+  }
   document.getElementById('cfg-config-code').disabled = true;
   document.getElementById('cfg-config-modal-title').textContent = `Admin — ${cfg.code}`;
   form.querySelector('[type=submit]').textContent = 'Salva';
@@ -256,10 +278,12 @@ async function handleCfgConfigSubmit(e) {
     description: form.elements['description'].value || null,
     sectionId: form.elements['sectionId'].value ? Number(form.elements['sectionId'].value) : null,
     dataType: dt,
+    options:  dt === 'select'  ? (form.elements['options'].value || null) : null,
     valInt:   dt === 'integer' ? (Number(form.elements['valInt'].value) || null) : null,
     valFloat: dt === 'float'   ? (parseFloat(form.elements['valFloat'].value) || null) : null,
     valBool:  dt === 'boolean' ? form.elements['valBool'].value === 'true' : null,
-    valText:  dt === 'text'    ? (form.elements['valText'].value || null) : null,
+    valText:  dt === 'text'    ? (form.elements['valText'].value || null)
+            : dt === 'select'  ? (form.elements['valSelect'].value || null) : null,
   };
   const isEdit = !!recordCode;
   try {
@@ -310,6 +334,15 @@ function openCfgEditValueModal(code) {
     case 'text':
       container.innerHTML = `<label>Valore (testo)</label><input name="val" type="text" value="${esc(cfg.valText ?? '')}" required/>`;
       break;
+    case 'select': {
+      let optsHtml = '';
+      try {
+        const opts = JSON.parse(cfg.options ?? '[]');
+        optsHtml = opts.map(o => `<option value="${esc(o.value)}"${o.value === cfg.valText ? ' selected' : ''}>${esc(o.label)}</option>`).join('');
+      } catch { /* skip */ }
+      container.innerHTML = `<label>Valore</label><select name="val">${optsHtml}</select>`;
+      break;
+    }
   }
   document.getElementById('cfg-edit-value-modal').classList.add('show');
 }
@@ -322,10 +355,11 @@ async function handleCfgEditValueSubmit(e) {
   if (!cfg) return;
   const rawVal = form.elements['val'].value;
   const dto = {};
-  if (cfg.dataType === 'integer') dto.valInt   = parseInt(rawVal, 10) || null;
+  if (cfg.dataType === 'integer')      dto.valInt   = parseInt(rawVal, 10) || null;
   else if (cfg.dataType === 'float')   dto.valFloat = parseFloat(rawVal) || null;
   else if (cfg.dataType === 'boolean') dto.valBool  = rawVal === 'true';
   else if (cfg.dataType === 'text')    dto.valText  = rawVal;
+  else if (cfg.dataType === 'select')  dto.valText  = rawVal;
   try {
     const res = await fetch(`/api/cfg/configurations/${encodeURIComponent(code)}`, {
       method: 'PATCH',

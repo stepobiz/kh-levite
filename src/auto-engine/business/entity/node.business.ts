@@ -14,11 +14,15 @@ const CAN_HAVE_CHILDREN = new Set<AuenNodeCategory>([
   AuenNodeCategory.fake,
 ]);
 
+const ALWAYS_LOGICAL = new Set<AuenNodeCategory>([
+  AuenNodeCategory.fake,
+  AuenNodeCategory.out_thermostat,
+]);
+
 const CAN_HAVE_COMPONENT = new Set<AuenNodeCategory>([
   AuenNodeCategory.in_sensor,
   AuenNodeCategory.out_logic_or,
   AuenNodeCategory.out_logic_and,
-  AuenNodeCategory.out_thermostat,
   AuenNodeCategory.proxy_mirror,
   AuenNodeCategory.proxy_inverter,
 ]);
@@ -50,9 +54,9 @@ export class NodeBusiness {
 
   async create(dto: NodeDto): Promise<NodeDto> {
     const nodeType = await this.repository.findTypeById(dto.typeId!);
-    const isFake = nodeType?.category === AuenNodeCategory.fake;
-    const resolvedIsLogical = isFake ? true : (dto.isLogical ?? false);
-    const resolvedIotComponentId = isFake ? null : (dto.iotComponentId ?? null);
+    const isAlwaysLogical = nodeType ? ALWAYS_LOGICAL.has(nodeType.category) : false;
+    const resolvedIsLogical = isAlwaysLogical ? true : (dto.isLogical ?? false);
+    const resolvedIotComponentId = isAlwaysLogical ? null : (dto.iotComponentId ?? null);
 
     if (resolvedIsLogical && resolvedIotComponentId != null) {
       throw new BadRequestException('A logical node (isLogical=true) cannot have an IoT component');
@@ -99,13 +103,13 @@ export class NodeBusiness {
     const existing = await this._findNodeEntity(id);
     const typeId = dto.typeId ?? existing.typeId;
     const nodeType = await this.repository.findTypeById(typeId);
-    const isFake = nodeType?.category === AuenNodeCategory.fake;
+    const isAlwaysLogical = nodeType ? ALWAYS_LOGICAL.has(nodeType.category) : false;
 
-    if (isFake && dto.isLogical === false) {
-      throw new BadRequestException('Nodes of type "fake" are always logical');
+    if (isAlwaysLogical && dto.isLogical === false) {
+      throw new BadRequestException(`Nodes of category "${nodeType?.category}" are always logical`);
     }
-    const resolvedIsLogical = isFake ? true : (dto.isLogical ?? existing.isLogical);
-    const resolvedIotComponentId = isFake
+    const resolvedIsLogical = isAlwaysLogical ? true : (dto.isLogical ?? existing.isLogical);
+    const resolvedIotComponentId = isAlwaysLogical
       ? null
       : ('iotComponentId' in dto ? dto.iotComponentId : existing.iotComponentId);
 
@@ -131,7 +135,7 @@ export class NodeBusiness {
       description: dto.description,
       typeId: dto.typeId,
       parentId: dto.parentId,
-      iotComponentId: isFake ? null : dto.iotComponentId,
+      iotComponentId: isAlwaysLogical ? null : dto.iotComponentId,
       isLogical: resolvedIsLogical,
       attributes: inputAttributes,
     });
@@ -179,6 +183,14 @@ export class NodeBusiness {
 
   async upsertAttribute(nodeId: number, attributeId: number, value: string): Promise<NodeAttributeResponseDto> {
     await this._findNodeEntity(nodeId);
+    const attrType = await this.repository.findAttributeTypeById(attributeId);
+    if (attrType?.dataType === 'select' && attrType.options) {
+      let opts: { value: string }[] = [];
+      try { opts = JSON.parse(attrType.options); } catch { /* invalid options, skip validation */ }
+      if (opts.length > 0 && !opts.some(o => o.value === value)) {
+        throw new BadRequestException(`"${value}" is not a valid option for attribute ${attrType.code}`);
+      }
+    }
     const row = await this.repository.upsertAttribute(nodeId, attributeId, value);
     return NodeMapper.toAttributeDto(row);
   }
