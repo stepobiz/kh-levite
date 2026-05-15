@@ -321,6 +321,7 @@ function renderLogs() {
 
   const pageLogs = filtered.slice(logPage * LOG_PAGE_SIZE, (logPage + 1) * LOG_PAGE_SIZE);
   const tbody = document.querySelector('#log-table tbody');
+  if (!tbody) return;
 
   if (pageLogs.length === 0) {
     tbody.innerHTML = '<tr><td colspan="6" class="empty-cell">Nessun log trovato</td></tr>';

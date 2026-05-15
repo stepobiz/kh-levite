@@ -40,7 +40,7 @@ function formatNodeValue(value, valueType) {
   if (valueType === 'boolean') {
     return value === '1'
       ? '<span style="color:#16a34a;font-size:16px" title="ON">&#x25CF;</span>'
-      : '<span style="color:#dc2626;font-size:16px" title="OFF">&#x25CF;</span>';
+      : '<span style="color:#1e293b;font-size:16px" title="OFF">&#x25CF;</span>';
   }
   return esc(value);
 }
