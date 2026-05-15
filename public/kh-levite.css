@@ -276,12 +276,6 @@ tbody tr:hover td {
   letter-spacing: 0.03em;
 }
 
-.badge-system {
-  background: #fef3c7;
-  color: #92400e;
-  font-size: 10px;
-}
-
 .badge-online {
   background: #dcfce7;
   color: #15803d;

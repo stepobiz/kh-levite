@@ -70,7 +70,6 @@ model AuenNodeType {
   iconSlug  String?          @map("icon_slug")
   category  AuenNodeCategory
   valueType String           @default("boolean") @map("value_type")
-  isSystem  Boolean          @default(false) @map("is_system")
   nodes              AuenNode[]
   nodeTypeAttributes AuenNodeTypeAttribute[]
 
@@ -126,7 +125,6 @@ model AuenAttributeType {
   code           String              @unique
   description    String?
   dataType       String              @map("data_type")
-  isSystem       Boolean             @default(false) @map("is_system")
   nodeAttributes     AuenNodeAttribute[]
   nodeTypeAttributes AuenNodeTypeAttribute[]
 
@@ -199,7 +197,6 @@ model CfgConfiguration {
   sectionId   Int?         @map("section_id")
   section     CfgSection?  @relation(fields: [sectionId], references: [id])
   dataType    CfgValueType @map("data_type")
-  isSystem    Boolean      @default(false) @map("is_system")
   valInt      Int?         @map("val_int")
   valFloat    Float?       @map("val_float")
   valBool     Boolean?     @map("val_bool")

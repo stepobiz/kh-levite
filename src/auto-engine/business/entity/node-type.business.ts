@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { AuenNodeCategory } from '@prisma/client';
 import { NodeTypeRepository } from './node-type.repository';
 import { NodeTypeMapper } from './node-type.mapper';
@@ -35,7 +35,6 @@ export class NodeTypeBusiness {
 
   async update(id: number, dto: NodeTypeDto): Promise<NodeTypeDto> {
     const existing = await this.findById(id);
-    if (existing.isSystem) throw new ForbiddenException(`NodeType ${id} is a system record and cannot be modified`);
     const category = dto.category ?? existing.category;
     const valueType = dto.valueType ?? existing.valueType;
     if (category && valueType !== undefined) {
@@ -54,8 +53,7 @@ export class NodeTypeBusiness {
   }
 
   async delete(id: number): Promise<void> {
-    const existing = await this.findById(id);
-    if (existing.isSystem) throw new ForbiddenException(`NodeType ${id} is a system record and cannot be deleted`);
+    await this.findById(id);
     await this.repository.delete(id);
   }
 
