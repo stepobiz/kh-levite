@@ -3,7 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { ProcessLogRepository } from '../business/entity/process-log.repository';
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
-const DEFAULT_RETENTION_DAYS = 7;
+const DEFAULT_RETENTION_HOURS = 24;
 
 @Injectable()
 export class ProcessLogRetentionProcess implements OnModuleInit {
@@ -26,22 +26,22 @@ export class ProcessLogRetentionProcess implements OnModuleInit {
   }
 
   private async purge() {
-    const retentionDays = await this.getRetentionDays();
-    const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
+    const retentionHours = await this.getRetentionHours();
+    const cutoff = new Date(Date.now() - retentionHours * 60 * 60 * 1000);
     const result = await this.repository.deleteOlderThan(cutoff);
     if (result.count > 0) {
-      this.logger.log(`Purged ${result.count} process logs older than ${retentionDays} days`);
+      this.logger.log(`Purged ${result.count} process logs older than ${retentionHours}h`);
     }
   }
 
-  private async getRetentionDays(): Promise<number> {
+  private async getRetentionHours(): Promise<number> {
     try {
       const cfg = await this.prisma.cfgConfiguration.findUnique({
-        where: { code: 'infra.process_log_retention_days' },
+        where: { code: 'infra.process_log_retention_hours' },
       });
-      return cfg?.valInt ?? DEFAULT_RETENTION_DAYS;
+      return cfg?.valInt ?? DEFAULT_RETENTION_HOURS;
     } catch {
-      return DEFAULT_RETENTION_DAYS;
+      return DEFAULT_RETENTION_HOURS;
     }
   }
 }
