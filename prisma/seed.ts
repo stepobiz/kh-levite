@@ -46,11 +46,11 @@ async function main() {
       valBool: true,
     },
     {
-      code: 'infra.process_log_retention_days',
-      name: 'Retention log processi',
-      description: 'Numero di giorni per cui conservare i log di esecuzione di tutti i processi (Logic Engine, Sync Engine). I log più vecchi vengono eliminati automaticamente dal RetentionService. Default: 7',
+      code: 'infra.process_log_retention_hours',
+      name: 'Retention log processi (ore)',
+      description: 'Numero di ore per cui conservare i log di esecuzione di tutti i processi (Logic Engine, Sync Engine). I log più vecchi vengono eliminati automaticamente ogni ora. Default: 24',
       dataType: 'integer',
-      valInt: 7,
+      valInt: 24,
     },
     {
       code: 'sync.enabled',

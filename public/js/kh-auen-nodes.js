@@ -99,7 +99,12 @@ function renderAuenNodes() {
       + (n.desiredValueUpdatedAt ? `<br><span class="muted-text">${fmtNodeTs(n.desiredValueUpdatedAt)}</span>` : '');
     const actualCell = `<span class="mono-val${inTransition ? ' val-pending' : ''}">${formatNodeValue(n.actualValue, vt)}</span>`
       + (n.actualValueUpdatedAt ? `<br><span class="muted-text">${fmtNodeTs(n.actualValueUpdatedAt)}</span>` : '');
-    const codeDisplay = n.code ?? `#${n.id}`;
+    const proxyLabel = _proxySourceLabel(n);
+    const codeDisplay = proxyLabel && n.code
+      ? `${esc(n.code)}<br><span class="muted-text" style="font-size:11px">⤷ ${esc(proxyLabel)}</span>`
+      : proxyLabel
+        ? `clone of: ${esc(proxyLabel)}`
+        : esc(n.code ?? `#${n.id}`);
     const tagBadges = (n.tags || []).map(t =>
       `<span class="badge" style="background:#e0f2fe;color:#0369a1;margin-left:4px">${esc(t.tag?.name ?? t.tagId)}</span>`
     ).join('');
@@ -108,7 +113,7 @@ function renderAuenNodes() {
       ? `<button class="btn-collapse-node" onclick="toggleNodeCollapse(${n.id})" title="${collapsedNodes.has(n.id) ? 'Espandi' : 'Comprimi'}">${collapsedNodes.has(n.id) ? '+' : '−'}</button>`
       : '<span style="display:inline-block;width:20px"></span>';
     return `<tr${trClass}>
-      <td><span style="padding-left:${indent}px">${collapseBtn}${esc(prefix)}${esc(codeDisplay)}</span>${tagBadges}</td>
+      <td><span style="padding-left:${indent}px">${collapseBtn}${esc(prefix)}${codeDisplay}</span>${tagBadges}</td>
       <td>${esc(n.description ?? '—')}</td>
       <td>${esc(n.type?.name ?? '—')}</td>
       <td>${n.type ? categoryBadge(n.type.category) : ''}</td>
@@ -674,6 +679,8 @@ async function handleNodeSubmit(e) {
       showToast(cloneFromId != null ? 'Nodo clonato' : (id ? 'Nodo aggiornato' : 'Nodo creato'));
       closeModal('node-modal');
       await fetchAuenNodes();
+      renderTopology();
+      renderUserTopology();
     } else {
       showToast('Errore durante il salvataggio', true);
     }

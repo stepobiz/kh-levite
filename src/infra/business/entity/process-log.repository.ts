@@ -44,7 +44,9 @@ export class ProcessLogRepository {
     });
   }
 
-  deleteOlderThan(before: Date) {
-    return this.prisma.sysProcessLog.deleteMany({ where: { startedAt: { lt: before } } });
+  async deleteOlderThan(before: Date): Promise<{ count: number }> {
+    const iso = before.toISOString();
+    const count = await this.prisma.$executeRaw`DELETE FROM sys_process_log WHERE started_at < ${iso}`;
+    return { count };
   }
 }

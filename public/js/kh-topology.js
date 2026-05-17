@@ -95,6 +95,15 @@ function initTopologyRootSelect() {
   if (current) sel.value = current;
 }
 
+// For proxy nodes, returns the source node's code (used in place of the proxy's own code).
+function _proxySourceLabel(node) {
+  if (!node?.type?.category?.startsWith('proxy_')) return null;
+  const sourceAttr = (node.attributes || []).find(a => a.attribute?.code === 'source_node_id');
+  const sourceId = sourceAttr ? Number(sourceAttr.value) : null;
+  const source = sourceId ? auenNodes.find(n => n.id === sourceId) : null;
+  return source ? (source.code ?? `#${source.id}`) : null;
+}
+
 // For proxy nodes, the effective valueType is the source node's valueType.
 function _getEffectiveVt(node) {
   const cat = node?.type?.category ?? '';
@@ -318,8 +327,14 @@ function renderTopology() {
     const strokeDashAttr = ra.dash ? ` stroke-dasharray="${ra.dash}"` : '';
     const blinkClass = ra.blink ? ' class="topo-blink"' : '';
 
-    const codeTxt = esc((node.code ?? '').substring(0, 18));
-    const typeTxt = esc((node.type?.name ?? '').substring(0, 24));
+    const proxyLabel = isProxy ? _proxySourceLabel(node) : null;
+    const hasOwnCode = isProxy && !!(node.code);
+    const codeTxt = (isProxy && proxyLabel && !hasOwnCode)
+      ? esc(('\u21b7 ' + proxyLabel).substring(0, 20))
+      : esc((node.code ?? '').substring(0, 18));
+    const typeTxt = (isProxy && proxyLabel && hasOwnCode)
+      ? esc(('\u21b7 ' + proxyLabel).substring(0, 24))
+      : esc((node.type?.name ?? '').substring(0, 24));
     const showDesired = !isFake && (isOut || isProxy);
     const showActual  = !isFake;
     const desiredSvg = showDesired ? _topoValSvg(node.desiredValue, vt, 'D: ') : '';
@@ -546,8 +561,14 @@ function renderUserTopology() {
     const strokeDashAttr = ra.dash ? ` stroke-dasharray="${ra.dash}"` : '';
     const blinkClass = ra.blink ? ' class="topo-blink"' : '';
 
-    const codeTxt = esc((node.code ?? '').substring(0, 18));
-    const typeTxt = esc((node.type?.name ?? '').substring(0, 24));
+    const proxyLabel = isProxy ? _proxySourceLabel(node) : null;
+    const hasOwnCode = isProxy && !!(node.code);
+    const codeTxt = (isProxy && proxyLabel && !hasOwnCode)
+      ? esc(('\u21b7 ' + proxyLabel).substring(0, 20))
+      : esc((node.code ?? '').substring(0, 18));
+    const typeTxt = (isProxy && proxyLabel && hasOwnCode)
+      ? esc(('\u21b7 ' + proxyLabel).substring(0, 24))
+      : esc((node.type?.name ?? '').substring(0, 24));
     const showDesired = !isFake && (isOut || isProxy);
     const showActual  = !isFake;
     const desiredSvg = showDesired ? _topoValSvg(node.desiredValue, vt, 'D: ') : '';

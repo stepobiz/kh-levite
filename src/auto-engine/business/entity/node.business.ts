@@ -124,10 +124,15 @@ export class NodeBusiness {
       await this._assertParentCanHaveChildren(dto.parentId);
     }
 
+    const typeChanging = dto.typeId != null && dto.typeId !== existing.typeId;
+
     let inputAttributes: Array<{ attributeId: number; value: string }> | undefined;
     if (dto.attributes !== undefined) {
       inputAttributes = (dto.attributes).filter(a => a.attributeId != null) as Array<{ attributeId: number; value: string }>;
       await this._assertRequiredAttributes(typeId, inputAttributes);
+    } else if (typeChanging) {
+      const existingAttributes = existing.attributes.map((a: any) => ({ attributeId: a.attributeId, value: a.value }));
+      await this._assertRequiredAttributes(typeId, existingAttributes);
     }
 
     const entity = await this.repository.update(id, {
@@ -268,12 +273,12 @@ export class NodeBusiness {
   }
 
   private async _assertRequiredAttributes(typeId: number, provided: Array<{ attributeId: number; value: string }>) {
-    const requiredIds = await this.repository.findTypeRequiredAttributeIds(typeId);
-    if (requiredIds.length === 0) return;
+    const required = await this.repository.findTypeRequiredAttributeIds(typeId);
+    if (required.length === 0) return;
     const providedIds = new Set(provided.map(a => a.attributeId));
-    const missing = requiredIds.filter(id => !providedIds.has(id));
+    const missing = required.filter(r => !providedIds.has(r.id));
     if (missing.length > 0) {
-      throw new BadRequestException(`Missing required attributes for this node type: attributeId [${missing.join(', ')}]`);
+      throw new BadRequestException(`Missing required attributes: [${missing.map(r => r.code).join(', ')}]`);
     }
   }
 

@@ -224,12 +224,12 @@ export class NodeRepository {
     return this.prisma.auenNodeType.findUnique({ where: { id: typeId } });
   }
 
-  async findTypeRequiredAttributeIds(typeId: number): Promise<number[]> {
+  async findTypeRequiredAttributeIds(typeId: number): Promise<{ id: number; code: string }[]> {
     const rows = await this.prisma.auenNodeTypeAttribute.findMany({
       where: { nodeTypeId: typeId, isRequired: true },
-      select: { attributeId: true },
+      select: { attributeId: true, attribute: { select: { code: true } } },
     });
-    return rows.map(r => r.attributeId);
+    return rows.map(r => ({ id: r.attributeId, code: r.attribute.code }));
   }
 
   findTypeByCategory(category: string, valueType?: string) {
