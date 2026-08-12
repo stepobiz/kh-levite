@@ -31,7 +31,7 @@ async function main() {
     name: string;
     description?: string;
     sectionCode?: string;
-    dataType: 'integer' | 'float' | 'boolean' | 'text' | 'select';
+    dataType: 'integer' | 'float' | 'boolean' | 'text' | 'select' | 'json';
     options?: string;
     valInt?: number;
     valFloat?: number;
@@ -123,6 +123,22 @@ async function main() {
       sectionCode: 'iot',
       dataType: 'integer',
       valInt: 0,
+    },
+    {
+      code: 'iot.mqtt.enabled',
+      name: 'Client MQTT abilitato',
+      description: 'Se true, KH Levite si connette ai server MQTT configurati in iot.mqtt.servers per ricevere telemetria push (es. Shelly H&T Gen3). Default: false',
+      sectionCode: 'iot',
+      dataType: 'boolean',
+      valBool: false,
+    },
+    {
+      code: 'iot.mqtt.servers',
+      name: 'Server MQTT',
+      description: 'Array JSON dei broker MQTT a cui connettersi. Normalmente un solo elemento. Campi per elemento: host, port, mainTopic, username (opzionale), password (opzionale). Default: []',
+      sectionCode: 'iot',
+      dataType: 'json',
+      valText: '[]',
     },
     {
       code: 'sistema.stagione',

@@ -32,6 +32,7 @@ export class TelemetryPollingBusiness {
         this.logger.error(`Unsupported driver: ${component.device.driver}`);
         continue;
       }
+      if (driver.pollable === false) continue;
 
       let hwValue: string;
       try {

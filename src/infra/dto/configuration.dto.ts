@@ -7,6 +7,7 @@ export enum CfgValueType {
   boolean = 'boolean',
   text = 'text',
   select = 'select',
+  json = 'json',
 }
 
 export class ConfigurationDto {
@@ -16,6 +17,8 @@ export class ConfigurationDto {
   @ApiPropertyOptional() @IsOptional() @IsInt() sectionId?: number;
   @ApiProperty({ enum: CfgValueType }) @IsEnum(CfgValueType) dataType: CfgValueType;
   @ApiPropertyOptional() @IsOptional() @IsString() options?: string;
+  @ApiPropertyOptional({ description: 'Solo per dataType=json: array JSON [{key,type,required}] che descrive la forma attesa degli oggetti nell\'array.' })
+  @IsOptional() @IsString() pattern?: string;
   @ApiPropertyOptional() @IsOptional() @IsInt() valInt?: number;
   @ApiPropertyOptional() @IsOptional() @IsNumber() valFloat?: number;
   @ApiPropertyOptional() @IsOptional() @IsBoolean() valBool?: boolean;

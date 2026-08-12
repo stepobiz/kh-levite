@@ -3,13 +3,13 @@ import type { Prisma } from '@prisma/client';
 
 export class DeviceMapper {
   static toCreateInput(dto: DeviceDto): Prisma.IotDeviceCreateInput {
-    const data: Prisma.IotDeviceCreateInput = {
-      ipAddress: dto.ipAddress,
-    };
+    const data: Prisma.IotDeviceCreateInput = {};
 
     if (dto.deviceName !== undefined) data.deviceName = dto.deviceName;
-    if (dto.macAddress !== undefined) data.macAddress = dto.macAddress;
     if (dto.driver !== undefined) data.driver = dto.driver;
+    if (dto.params !== undefined) {
+      data.params = { create: dto.params.map(p => ({ key: p.key, value: p.value })) };
+    }
 
     return data;
   }
@@ -17,9 +17,10 @@ export class DeviceMapper {
   static toUpdateInput(dto: Partial<DeviceDto>): Prisma.IotDeviceUpdateInput {
     const data: Prisma.IotDeviceUpdateInput = {};
     if (dto.deviceName !== undefined) data.deviceName = dto.deviceName;
-    if (dto.macAddress !== undefined) data.macAddress = dto.macAddress;
-    if (dto.ipAddress !== undefined) data.ipAddress = dto.ipAddress;
     if (dto.driver !== undefined) data.driver = dto.driver;
+    if (dto.params !== undefined) {
+      data.params = { deleteMany: {}, create: dto.params.map(p => ({ key: p.key, value: p.value })) };
+    }
     return data;
   }
 
@@ -27,9 +28,8 @@ export class DeviceMapper {
     return {
       id: entity.id,
       deviceName: entity.deviceName,
-      macAddress: entity.macAddress,
-      ipAddress: entity.ipAddress,
       driver: entity.driver,
+      params: entity.params?.map((p: any) => ({ key: p.key, value: p.value })) ?? [],
     };
   }
 }
