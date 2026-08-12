@@ -1,4 +1,4 @@
-import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiHideProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsInt, IsOptional, IsString } from 'class-validator';
 import { DeviceDto } from './device.dto';
 
@@ -21,10 +21,6 @@ export class DeviceComponentDto {
 	@IsOptional()
 	@IsString()
 	componentName?: string;
-
-	@ApiProperty({ description: 'Index of the hardware on the device' })
-	@IsInt()
-	hardwareIndex!: number;
 
 	@ApiPropertyOptional({ description: 'Hardware address of the component' })
 	@IsOptional()
