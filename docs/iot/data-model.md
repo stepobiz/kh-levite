@@ -19,7 +19,6 @@ Table IotDeviceComponent {
   id                  Int       [pk, increment]
   deviceId            Int       [not null, ref: > IotDevice.id, note: "FK verso il device padre"]
   componentName       String    [null, note: "Nome descrittivo del componente"]
-  hardwareIndex       Int       [not null, note: "Indice del componente sull'hardware (es. 0, 1, 2...)"]
   hardwareAddress     String    [null, note: "Indirizzo hardware del componente (es. ID switch Shelly)"]
   nextValue           String    [null, note: "CAMPO INTERNO — valore pendente da scrivere. Non esposto nei DTO. Vedi: next-value.md"]
   nextValueUpdatedAt  DateTime  [null, note: "CAMPO INTERNO — timestamp ultimo set di nextValue. Usato per il cooldown"]
@@ -46,7 +45,7 @@ Table IotTelemetryLog {
 **IotDeviceComponent**
 
 - Ogni component appartiene a esattamente un device (`deviceId` obbligatorio)
-- `hardwareIndex` identifica quale "canale" del dispositivo fisico rappresenta (es. switch 0, switch 1)
+- `hardwareAddress` identifica quale "canale" del dispositivo fisico rappresenta e come raggiungerlo (es. `switch:0`, `thermostat:0:target`) — vedi [../contributing/new-driver.md](../contributing/new-driver.md) per la convenzione
 - `nextValue` e `nextValueUpdatedAt` sono campi interni del meccanismo di comando — non compaiono mai nei DTO REST. Vedi [next-value.md](next-value.md)
 
 **IotTelemetryLog**
