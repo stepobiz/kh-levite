@@ -166,11 +166,21 @@ async function fetchDrivers() {
   }
 }
 
-function onDeviceDriverChange() {
-  _renderDeviceParamFields(document.getElementById('device-driver-select').value);
+async function onDeviceDriverChange() {
+  await _renderDeviceParamFields(document.getElementById('device-driver-select').value);
 }
 
-function _renderDeviceParamFields(protocol, existingParams = []) {
+async function _fetchMqttServerNames() {
+  try {
+    const res = await fetch(`/api/cfg/configurations/${encodeURIComponent('iot.mqtt.servers')}`);
+    if (!res.ok) return [];
+    const cfg = await res.json();
+    const servers = JSON.parse(cfg.valText ?? '[]');
+    return servers.map(s => s.name).filter(Boolean);
+  } catch { return []; }
+}
+
+async function _renderDeviceParamFields(protocol, existingParams = []) {
   const container = document.getElementById('device-params-fields');
   if (!container) return;
   const driver = driversList.find(d => d.protocol === protocol);
@@ -179,8 +189,23 @@ function _renderDeviceParamFields(protocol, existingParams = []) {
     container.innerHTML = '';
     return;
   }
+
+  const serverNames = defs.some(f => f.type === 'mqtt-server') ? await _fetchMqttServerNames() : [];
+
   container.innerHTML = defs.map(f => {
     const current = existingParams.find(p => p.key === f.key)?.value ?? '';
+    if (f.type === 'mqtt-server') {
+      const options = serverNames.map(n =>
+        `<option value="${esc(n)}"${n === current ? ' selected' : ''}>${esc(n)}</option>`).join('');
+      return `
+        <div class="form-row">
+          <label>${esc(f.label)}${f.required ? ' <span class="required">*</span>' : ''}</label>
+          <select data-param-key="${esc(f.key)}" ${f.required ? 'required' : ''}>
+            <option value="">— seleziona —</option>
+            ${options}
+          </select>
+        </div>`;
+    }
     const inputType = f.type === 'number' ? 'number' : 'text';
     return `
       <div class="form-row">
@@ -198,7 +223,7 @@ async function openDeviceModal(id = null) {
   form.recordId.value = device?.id ?? '';
   form.deviceName.value = device?.deviceName ?? '';
   form.protocol.value = device?.driver ?? '';
-  _renderDeviceParamFields(device?.driver ?? '', device?.params ?? []);
+  await _renderDeviceParamFields(device?.driver ?? '', device?.params ?? []);
   document.querySelector('#device-modal .modal-title').textContent =
     device ? 'Modifica dispositivo' : 'Nuovo dispositivo';
   document.getElementById('device-modal').classList.add('show');

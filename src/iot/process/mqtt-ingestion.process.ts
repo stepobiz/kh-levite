@@ -4,11 +4,13 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { DeviceComponentBusiness } from '../business/entity/device-component.business';
 import { TelemetryLogBusiness } from '../business/entity/telemetry-log.business';
 import { RealtimeGateway } from 'src/realtime/realtime.gateway';
+import { getDeviceParam } from '../business/protocol-driver/iot-protocol-driver';
 
 interface MqttServerConfig {
+  name: string;
   host: string;
   port: number;
-  mainTopic: string;
+  mainTopic?: string;
   username?: string;
   password?: string;
 }
@@ -28,15 +30,21 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
  * i device MQTT (es. Shelly H&T Gen3) pubblicano da soli quando si svegliano,
  * KH Levite resta sottoscritto e registra la telemetria quando arriva.
  *
- * hardwareAddress dei componenti con driver shelly-mqtt: "<topic>" oppure
- * "<topic>|<campo>" se il payload è un oggetto JSON da cui estrarre un campo
- * (es. "shellyhtg3-AABBCCDDEEFF/status/temperature:0|tC").
+ * Gerarchia dei topic, a 3 livelli, tutti opzionali tranne il subtopic:
+ *   {server.mainTopic}/{device.mainTopic}/{subtopic componente}
+ *
+ * - server.mainTopic: config globale iot.mqtt.servers[].mainTopic
+ * - device.mainTopic: deviceParams del driver shelly-mqtt (insieme a "server",
+ *   il nome del server in iot.mqtt.servers a cui il device è collegato)
+ * - subtopic componente: hardwareAddress, "<subtopic>" oppure "<subtopic>|<campo>"
+ *   se il payload è un oggetto JSON da cui estrarre un campo
+ *   (es. "status/temperature:0|tC")
  */
 @Injectable()
 export class MqttIngestionProcess implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(MqttIngestionProcess.name);
-  private clients: mqtt.MqttClient[] = [];
-  private topicMap = new Map<string, TopicTarget[]>();
+  private clients = new Map<string, mqtt.MqttClient>();
+  private topicMapByServer = new Map<string, Map<string, TopicTarget[]>>();
   private currentEnabled = false;
   private currentServersJson = '';
 
@@ -67,10 +75,11 @@ export class MqttIngestionProcess implements OnModuleInit, OnModuleDestroy {
   }
 
   private async reconcile() {
-    await this.refreshTopicMap();
-
     const enabled = (await this.getCfgBool('iot.mqtt.enabled')) ?? false;
     const serversJson = (await this.getCfgText('iot.mqtt.servers')) ?? '[]';
+    const servers = this.parseServers(serversJson);
+
+    await this.refreshTopicMap(servers);
 
     if (!enabled) {
       if (this.currentEnabled) this.disconnectAll();
@@ -80,22 +89,18 @@ export class MqttIngestionProcess implements OnModuleInit, OnModuleDestroy {
 
     if (!this.currentEnabled || serversJson !== this.currentServersJson) {
       this.disconnectAll();
-      this.connectAll(serversJson);
+      for (const server of servers) this.connectOne(server);
       this.currentEnabled = true;
       this.currentServersJson = serversJson;
     }
   }
 
-  private connectAll(serversJson: string) {
-    let servers: MqttServerConfig[];
+  private parseServers(serversJson: string): MqttServerConfig[] {
     try {
-      servers = JSON.parse(serversJson);
+      return JSON.parse(serversJson);
     } catch {
       this.logger.error('iot.mqtt.servers non è JSON valido');
-      return;
-    }
-    for (const server of servers) {
-      this.connectOne(server);
+      return [];
     }
   }
 
@@ -108,7 +113,7 @@ export class MqttIngestionProcess implements OnModuleInit, OnModuleDestroy {
     });
 
     client.on('connect', () => {
-      this.logger.log(`Connesso al broker MQTT ${url}`);
+      this.logger.log(`Connesso al broker MQTT ${url} (${server.name})`);
       const topic = server.mainTopic ? `${server.mainTopic}/#` : '#';
       client.subscribe(topic, err => {
         if (err) this.logger.error(`Subscribe fallita per ${topic}`, err);
@@ -117,21 +122,21 @@ export class MqttIngestionProcess implements OnModuleInit, OnModuleDestroy {
     client.on('reconnect', () => this.logger.warn(`Riconnessione a ${url}...`));
     client.on('error', err => this.logger.error(`Errore client MQTT (${url})`, err));
     client.on('message', (topic, payload) => {
-      this.handleMessage(topic, payload).catch(err =>
+      this.handleMessage(server.name, topic, payload).catch(err =>
         this.logger.error(`Errore gestione messaggio ${topic}`, err),
       );
     });
 
-    this.clients.push(client);
+    this.clients.set(server.name, client);
   }
 
   private disconnectAll() {
     this.clients.forEach(c => c.end(true));
-    this.clients = [];
+    this.clients.clear();
   }
 
-  private async handleMessage(topic: string, payload: Buffer) {
-    const targets = this.topicMap.get(topic);
+  private async handleMessage(serverName: string, topic: string, payload: Buffer) {
+    const targets = this.topicMapByServer.get(serverName)?.get(topic);
     if (!targets || targets.length === 0) return;
 
     const raw = payload.toString();
@@ -169,18 +174,34 @@ export class MqttIngestionProcess implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  private async refreshTopicMap() {
+  private async refreshTopicMap(servers: MqttServerConfig[]) {
+    const serversByName = new Map(servers.map(s => [s.name, s]));
     const components = await this.componentBusiness.findAllForProcessor();
-    const map = new Map<string, TopicTarget[]>();
+    const map = new Map<string, Map<string, TopicTarget[]>>();
+
     for (const c of components) {
       if (c.device?.driver !== DRIVER || !c.hardwareAddress || c.id == null) continue;
+
+      const serverName = getDeviceParam(c.device, 'server');
+      const server = serverName ? serversByName.get(serverName) : undefined;
+      if (!server) {
+        this.logger.warn(`Componente ${c.id}: server MQTT "${serverName}" non trovato in iot.mqtt.servers`);
+        continue;
+      }
+      const deviceMainTopic = getDeviceParam(c.device, 'mainTopic');
+
       const sep = c.hardwareAddress.indexOf('|');
-      const topic = sep === -1 ? c.hardwareAddress : c.hardwareAddress.slice(0, sep);
+      const subtopic = sep === -1 ? c.hardwareAddress : c.hardwareAddress.slice(0, sep);
       const field = sep === -1 ? undefined : c.hardwareAddress.slice(sep + 1);
-      if (!map.has(topic)) map.set(topic, []);
-      map.get(topic)!.push({ componentId: c.id, field });
+      const topic = [server.mainTopic, deviceMainTopic, subtopic].filter(Boolean).join('/');
+
+      if (!map.has(server.name)) map.set(server.name, new Map());
+      const serverMap = map.get(server.name)!;
+      if (!serverMap.has(topic)) serverMap.set(topic, []);
+      serverMap.get(topic)!.push({ componentId: c.id, field });
     }
-    this.topicMap = map;
+
+    this.topicMapByServer = map;
   }
 
   private async getCfgBool(code: string): Promise<boolean | null> {

@@ -4,8 +4,10 @@ import { DeviceComponentDto } from '../../dto/device-component.dto';
 export class ShellyMqttDriver implements IotProtocolDriver {
   readonly protocol = 'shelly-mqtt';
   readonly pollable = false;
-  // Nessun parametro a livello device: topic e broker sono in hardwareAddress del componente + config globale iot.mqtt.servers.
-  readonly deviceParams: DeviceParamDef[] = [];
+  readonly deviceParams: DeviceParamDef[] = [
+    { key: 'server', label: 'Server MQTT', required: true, type: 'mqtt-server' },
+    { key: 'mainTopic', label: 'Topic principale device', required: true, type: 'string' },
+  ];
 
   async read(component: DeviceComponentDto): Promise<string> {
     if (!component.device) throw new Error('Device not loaded in component');

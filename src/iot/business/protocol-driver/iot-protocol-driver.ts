@@ -1,7 +1,11 @@
 import { DeviceComponentDto } from '../../dto/device-component.dto';
 import { DeviceDto } from '../../dto/device.dto';
 
-export type DeviceParamValueType = 'string' | 'ip' | 'mac' | 'number';
+/**
+ * "mqtt-server" -> la UI mostra una <select> popolata coi `name` configurati
+ * in iot.mqtt.servers, invece di un campo testo libero.
+ */
+export type DeviceParamValueType = 'string' | 'ip' | 'mac' | 'number' | 'mqtt-server';
 
 export interface DeviceParamDef {
   key: string;
