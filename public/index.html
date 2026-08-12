@@ -22,6 +22,7 @@
           <button class="nav-btn" data-section="devices">Dispositivi</button>
           <button class="nav-btn" data-section="topology">Topologia</button>
           <button class="nav-btn" data-section="auen-tags">Tag</button>
+          <button class="nav-btn" data-section="cfg-values">Configurazioni</button>
         </div>
       </div>
 	  <div class="nav-group">
@@ -48,13 +49,13 @@
         </div>
       </div>
       <div class="filter-bar">
-        <input id="device-search" type="text" placeholder="Cerca per nome, IP o MAC..." />
+        <input id="device-search" type="text" placeholder="Cerca per nome o parametri..." />
       </div>
       <div class="card" id="device-table-container">
         <table id="device-table">
           <thead>
             <tr>
-              <th>ID</th><th>Nome</th><th>MAC</th><th>IP</th><th>Driver</th><th>Stato</th><th>Azioni</th>
+              <th>ID</th><th>Nome</th><th>Parametri</th><th>Driver</th><th>Stato</th><th>Azioni</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -253,6 +254,13 @@
     </section>
 
     <!-- CONFIGURAZIONI -->
+    <section id="cfg-values" class="section">
+      <div class="toolbar">
+        <h1>Configurazioni</h1>
+      </div>
+      <div id="cfg-values-list"></div>
+    </section>
+
     <section id="cfg" class="section">
       <div class="toolbar">
         <h1>Configurazioni</h1>
@@ -342,13 +350,13 @@
         </div>
       </div>
       <div class="filter-bar">
-        <input id="user-device-search" type="text" placeholder="Cerca per nome, IP o MAC..." />
+        <input id="user-device-search" type="text" placeholder="Cerca per nome o parametri..." />
       </div>
       <div class="card" id="user-device-table-container">
         <table id="user-device-table">
           <thead>
             <tr>
-              <th>ID</th><th>Nome</th><th>MAC</th><th>IP</th><th>Driver</th><th>Stato</th><th></th>
+              <th>ID</th><th>Nome</th><th>Parametri</th><th>Driver</th><th>Stato</th><th></th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -373,22 +381,13 @@
             <input name="deviceName" />
           </div>
           <div class="form-row">
-            <label>MAC</label>
-            <input name="macAddress" placeholder="AA:BB:CC:DD:EE:FF" />
-          </div>
-          <div class="form-row">
-            <label>IP <span class="required">*</span></label>
-            <input name="ipAddress" required placeholder="192.168.1.100" />
-          </div>
-          <div class="form-row">
             <label>Driver</label>
-            <select name="protocol">
+            <select name="protocol" id="device-driver-select" onchange="onDeviceDriverChange()">
               <option value="">— nessuno —</option>
-              <option value="shelly-http">Shelly HTTP</option>
-              <option value="shelly-mqtt">Shelly MQTT</option>
             </select>
           </div>
         </div>
+        <div id="device-params-fields" class="form-grid"></div>
         <div class="modal-footer">
           <button class="btn-secondary" type="button" onclick="closeModal('device-modal')">Annulla</button>
           <button class="btn-primary" type="submit">Salva</button>
@@ -763,6 +762,7 @@
             <option value="boolean">boolean</option>
             <option value="text">text</option>
             <option value="select">select</option>
+            <option value="json">json</option>
           </select>
         </div>
         <div id="cfg-val-int" class="form-row hidden"><label>Valore (intero)</label><input name="valInt" type="number" step="1"/></div>
@@ -779,6 +779,14 @@
         <div id="cfg-val-select" class="form-row hidden">
           <label>Valore</label>
           <select id="cfg-select-value" name="valSelect"></select>
+        </div>
+        <div id="cfg-pattern-json" class="form-row hidden" style="grid-column:1/-1">
+          <label>Pattern oggetti (JSON) — chiavi attese</label>
+          <textarea name="pattern" rows="4" placeholder='[{"key":"host","type":"string","required":true},{"key":"port","type":"number","required":true}]' style="width:100%;font-family:monospace;font-size:12px"></textarea>
+        </div>
+        <div id="cfg-val-json" class="form-row hidden" style="grid-column:1/-1">
+          <label>Valore (array JSON)</label>
+          <textarea name="valJson" rows="6" placeholder='[{"host":"...","port":1883}]' style="width:100%;font-family:monospace;font-size:12px"></textarea>
         </div>
         <div class="modal-footer">
           <button class="btn-secondary" type="button" onclick="closeModal('cfg-config-modal')">Annulla</button>

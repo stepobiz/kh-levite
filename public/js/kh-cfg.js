@@ -103,52 +103,7 @@ function renderCfgConfigurations() {
     return;
   }
 
-  // Group by section
-  const bySectionId = {};
-  cfgConfigurations.forEach(c => {
-    const key = c.sectionId ?? '__none__';
-    if (!bySectionId[key]) bySectionId[key] = [];
-    bySectionId[key].push(c);
-  });
-
-  const html = [];
-
-  // Sections with configs
-  cfgSections.forEach(s => {
-    const items = bySectionId[s.id] || [];
-    if (!items.length) return;
-    html.push(`
-      <div class="accordion">
-        <button class="accordion-header" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
-          <span>${esc(s.name)}</span>
-          <span class="accordion-chevron">&#x25BE;</span>
-        </button>
-        <div class="accordion-content open">
-          <div class="accordion-body">
-            ${_cfgTable(items)}
-          </div>
-        </div>
-      </div>`);
-  });
-
-  // Configs without section
-  const noSection = bySectionId['__none__'] || [];
-  if (noSection.length) {
-    html.push(`
-      <div class="accordion">
-        <button class="accordion-header" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
-          <span>— Senza sezione —</span>
-          <span class="accordion-chevron">&#x25BE;</span>
-        </button>
-        <div class="accordion-content open">
-          <div class="accordion-body">
-            ${_cfgTable(noSection)}
-          </div>
-        </div>
-      </div>`);
-  }
-
-  container.innerHTML = html.join('');
+  container.innerHTML = _cfgGroupedHtml();
 
   // Restore closed state
   if (closedSections.size > 0) {
@@ -162,20 +117,88 @@ function renderCfgConfigurations() {
   }
 }
 
-function _cfgTable(items) {
+// Pagina "Valori Configurazione" (ADMIN, sola modifica valori — niente creazione/eliminazione/metadati)
+function renderCfgValuesOnly() {
+  const container = document.getElementById('cfg-values-list');
+  if (!container) return;
+  if (!cfgConfigurations.length) {
+    container.innerHTML = '<p class="muted-text" style="padding:12px">Nessuna configurazione</p>';
+    return;
+  }
+  container.innerHTML = _cfgGroupedHtml({ readOnly: true, idPrefix: 'cfgvalro' });
+}
+
+// Raggruppa cfgConfigurations per sezione e produce gli accordion — condiviso tra le due pagine.
+function _cfgGroupedHtml(tableOpts = {}) {
+  const bySectionId = {};
+  cfgConfigurations.forEach(c => {
+    const key = c.sectionId ?? '__none__';
+    if (!bySectionId[key]) bySectionId[key] = [];
+    bySectionId[key].push(c);
+  });
+
+  const html = [];
+
+  cfgSections.forEach(s => {
+    const items = bySectionId[s.id] || [];
+    if (!items.length) return;
+    html.push(`
+      <div class="accordion">
+        <button class="accordion-header" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+          <span>${esc(s.name)}</span>
+          <span class="accordion-chevron">&#x25BE;</span>
+        </button>
+        <div class="accordion-content open">
+          <div class="accordion-body">
+            ${_cfgTable(items, tableOpts)}
+          </div>
+        </div>
+      </div>`);
+  });
+
+  const noSection = bySectionId['__none__'] || [];
+  if (noSection.length) {
+    html.push(`
+      <div class="accordion">
+        <button class="accordion-header" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+          <span>— Senza sezione —</span>
+          <span class="accordion-chevron">&#x25BE;</span>
+        </button>
+        <div class="accordion-content open">
+          <div class="accordion-body">
+            ${_cfgTable(noSection, tableOpts)}
+          </div>
+        </div>
+      </div>`);
+  }
+
+  return html.join('');
+}
+
+function _cfgPatternDisplay(c) {
+  if (c.dataType !== 'json' || !c.pattern) return '<span class="muted-text">—</span>';
+  try {
+    const fields = JSON.parse(c.pattern);
+    return fields.map(f => `<code style="font-size:11px">${esc(f.key)}${f.required ? '*' : ''}: ${esc(f.type)}</code>`).join('<br>');
+  } catch { return '<span class="muted-text">—</span>'; }
+}
+
+function _cfgTable(items, { readOnly = false, idPrefix = 'cfgval' } = {}) {
   return `<table class="data-table">
-    <thead><tr><th>Codice</th><th>Nome</th><th>Tipo</th><th>Valore</th><th></th></tr></thead>
+    <thead><tr><th>Codice</th><th>Nome</th><th>Tipo</th><th>Pattern</th><th>Valore</th><th></th></tr></thead>
     <tbody>
       ${items.map(c => `
         <tr>
           <td><code>${esc(c.code)}</code></td>
           <td>${esc(c.name)}${c.description ? `<br><span class="muted-text">${esc(c.description)}</span>` : ''}</td>
           <td><span class="badge">${esc(c.dataType)}</span></td>
-          <td id="cfgval-${esc(c.code)}">${_cfgDisplayValue(c)}</td>
+          <td>${_cfgPatternDisplay(c)}</td>
+          <td id="${idPrefix}-${esc(c.code)}">${_cfgDisplayValue(c)}</td>
           <td class="actions">
-            <button title="Modifica valore" onclick="openCfgEditValueModal('${esc(c.code)}')">&#x270F;&#xFE0F;</button>
-            <button title="Modifica (admin)" onclick="openCfgAdminModal('${esc(c.code)}')">&#x2699;&#xFE0F;</button>
-            <button title="Elimina" onclick="deleteCfgConfig('${esc(c.code)}')">&#x1F5D1;&#xFE0F;</button>
+            ${readOnly
+              ? `<button title="Modifica valore" onclick="openCfgEditValueModal('${esc(c.code)}')">&#x270F;&#xFE0F;</button>`
+              : `<button title="Modifica (admin)" onclick="openCfgAdminModal('${esc(c.code)}')">&#x2699;&#xFE0F;</button>
+            <button title="Elimina" onclick="deleteCfgConfig('${esc(c.code)}')">&#x1F5D1;&#xFE0F;</button>`}
           </td>
         </tr>`).join('')}
     </tbody>
@@ -196,6 +219,13 @@ function _cfgDisplayValue(c) {
         const opts = JSON.parse(c.options ?? '[]');
         const label = opts.find(o => o.value === c.valText)?.label ?? c.valText;
         return `<code>${esc(label)}</code>`;
+      } catch { return `<code>${esc(c.valText)}</code>`; }
+    }
+    case 'json': {
+      if (c.valText == null) return '<span class="muted-text">—</span>';
+      try {
+        const arr = JSON.parse(c.valText);
+        return `<code>${arr.length} elemento${arr.length === 1 ? '' : 'i'}</code>`;
       } catch { return `<code>${esc(c.valText)}</code>`; }
     }
     default:        return '<span class="muted-text">—</span>';
@@ -226,6 +256,8 @@ function onCfgDataTypeChange() {
   document.getElementById('cfg-val-text').classList.toggle('hidden', dt !== 'text');
   document.getElementById('cfg-val-options').classList.toggle('hidden', dt !== 'select');
   document.getElementById('cfg-val-select').classList.toggle('hidden', dt !== 'select');
+  document.getElementById('cfg-val-json').classList.toggle('hidden', dt !== 'json');
+  document.getElementById('cfg-pattern-json').classList.toggle('hidden', dt !== 'json');
 }
 
 function openCfgConfigModal() {
@@ -261,6 +293,10 @@ function openCfgAdminModal(code) {
     form.elements['options'].value = cfg.options ?? '';
     _populateCfgSelectOptions(document.getElementById('cfg-select-value'), cfg.options, cfg.valText);
   }
+  if (cfg.dataType === 'json') {
+    form.elements['valJson'].value = cfg.valText ?? '';
+    form.elements['pattern'].value = cfg.pattern ?? '';
+  }
   document.getElementById('cfg-config-code').disabled = true;
   document.getElementById('cfg-config-modal-title').textContent = `Admin — ${cfg.code}`;
   form.querySelector('[type=submit]').textContent = 'Salva';
@@ -279,11 +315,13 @@ async function handleCfgConfigSubmit(e) {
     sectionId: form.elements['sectionId'].value ? Number(form.elements['sectionId'].value) : null,
     dataType: dt,
     options:  dt === 'select'  ? (form.elements['options'].value || null) : null,
+    pattern:  dt === 'json'    ? (form.elements['pattern'].value || null) : null,
     valInt:   dt === 'integer' ? (Number(form.elements['valInt'].value) || null) : null,
     valFloat: dt === 'float'   ? (parseFloat(form.elements['valFloat'].value) || null) : null,
     valBool:  dt === 'boolean' ? form.elements['valBool'].value === 'true' : null,
     valText:  dt === 'text'    ? (form.elements['valText'].value || null)
-            : dt === 'select'  ? (form.elements['valSelect'].value || null) : null,
+            : dt === 'select'  ? (form.elements['valSelect'].value || null)
+            : dt === 'json'    ? (form.elements['valJson'].value || null) : null,
   };
   const isEdit = !!recordCode;
   try {
@@ -343,6 +381,9 @@ function openCfgEditValueModal(code) {
       container.innerHTML = `<label>Valore</label><select name="val">${optsHtml}</select>`;
       break;
     }
+    case 'json':
+      container.innerHTML = `<label>Valore (array JSON)</label><textarea name="val" rows="6" style="width:100%;font-family:monospace;font-size:12px" required>${esc(cfg.valText ?? '')}</textarea>`;
+      break;
   }
   document.getElementById('cfg-edit-value-modal').classList.add('show');
 }
@@ -360,6 +401,7 @@ async function handleCfgEditValueSubmit(e) {
   else if (cfg.dataType === 'boolean') dto.valBool  = rawVal === 'true';
   else if (cfg.dataType === 'text')    dto.valText  = rawVal;
   else if (cfg.dataType === 'select')  dto.valText  = rawVal;
+  else if (cfg.dataType === 'json')    dto.valText  = rawVal;
   try {
     const res = await fetch(`/api/cfg/configurations/${encodeURIComponent(code)}`, {
       method: 'PATCH',
@@ -376,6 +418,8 @@ async function handleCfgEditValueSubmit(e) {
         cfgConfigurations[idx] = updated;
         const cell = document.getElementById('cfgval-' + code);
         if (cell) cell.innerHTML = _cfgDisplayValue(updated);
+        const cellRo = document.getElementById('cfgvalro-' + code);
+        if (cellRo) cellRo.innerHTML = _cfgDisplayValue(updated);
       }
     } else {
       showToast('Errore aggiornamento', true);

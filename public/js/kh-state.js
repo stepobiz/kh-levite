@@ -1,5 +1,6 @@
 // --- State ---
 let devicesList = [];
+let driversList = [];
 let componentsList = [];
 let allLogs = [];
 let logPage = 0;
