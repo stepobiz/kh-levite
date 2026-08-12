@@ -51,7 +51,6 @@ Usato sia per POST che per PATCH. Il `deviceId` non è nel DTO — viene ricavat
 | Campo | Tipo | Obbligatorio | Note |
 | --- | --- | --- | --- |
 | `componentName` | string | No | |
-| `hardwareIndex` | number | **Sì** | Indice HW sul dispositivo |
 | `hardwareAddress` | string | No | Es. ID switch Shelly |
 
 > `nextValue` e `nextValueUpdatedAt` sono campi interni — non compaiono mai nei DTO. Vedi [next-value.md](next-value.md).

@@ -24,7 +24,6 @@ model IotDeviceComponent {
   id                  Int               @id @default(autoincrement())
   deviceId            Int               @map("device_id")
   componentName       String?           @map("component_name")
-  hardwareIndex       Int               @map("hardware_index")
   hardwareAddress     String?           @map("hardware_address")
   nextValue           String?           @map("next_value")
   nextValueUpdatedAt  DateTime?         @map("next_value_updated_at")

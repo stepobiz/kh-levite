@@ -35,7 +35,6 @@ Il parametro `component: DeviceComponentDto` contiene tutto il necessario per co
 |---|---|
 | `component.device.ipAddress` | IP del dispositivo nella rete locale |
 | `component.device.driver` | Identificatore del driver (uguale a `protocol`) |
-| `component.hardwareIndex` | Indice numerico del componente sul dispositivo (es. relay 0, relay 1) |
 | `component.hardwareAddress` | Indirizzo hardware libero (es. topic MQTT, pin GPIO, ID canale) |
 
 ---
@@ -92,7 +91,7 @@ Nel pannello di gestione, crea un device con:
 - **Driver**: il valore di `protocol` del tuo driver (es. `mio-protocollo`)
 - **IP Address**: l'indirizzo IP del dispositivo
 
-Poi aggiungi i componenti con `hardwareIndex` e `hardwareAddress` secondo le specifiche del tuo dispositivo.
+Poi aggiungi i componenti con `hardwareAddress` secondo le specifiche del tuo dispositivo.
 
 ---
 
