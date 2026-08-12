@@ -12,8 +12,17 @@ registrare il driver, e il ciclo di telemetria lo userà automaticamente.
 
 ```typescript
 // src/iot/business/protocol-driver/iot-protocol-driver.ts
+export interface DeviceParamDef {
+  key: string;
+  label: string;
+  required: boolean;
+  type: 'string' | 'ip' | 'mac' | 'number';
+}
+
 export interface IotProtocolDriver {
   readonly protocol: string;
+  readonly pollable?: boolean;
+  readonly deviceParams: DeviceParamDef[];
   read(component: DeviceComponentDto): Promise<string>;
   write(component: DeviceComponentDto, value: string): Promise<void>;
 }
@@ -22,8 +31,14 @@ export interface IotProtocolDriver {
 | Metodo | Descrizione |
 |---|---|
 | `protocol` | Identificatore univoco del driver (es. `shelly-http`, `sonoff-diy`). Viene usato nel campo `driver` del device. |
-| `read(component)` | Legge lo stato attuale dall'hardware. Ritorna `'1'`/`'0'` per valori binari, stringa libera per analogici. |
+| `pollable` | `false` per i driver push-based (il device chiama fuori lui, es. MQTT/webhook) — `TelemetryCronService` salta i loro componenti. Omesso o `true` = polling normale. |
+| `deviceParams` | Parametri richiesti a livello device (es. `ipAddress`) — guida il form dinamico "Nuovo Device" in UI e viene esposto via `GET /api/iot/drivers`. Vuoto se il driver non ha bisogno di nulla a livello device (es. `shelly-mqtt`, dove tutto è nel `hardwareAddress` del componente + config globale). |
+| `read(component)` | Legge lo stato attuale dall'hardware. Ritorna `'1'`/`'0'` per valori binari, stringa libera per analogici. Se `pollable: false`, può lanciare — non viene mai chiamato dal cron. |
 | `write(component, value)` | Invia un comando all'hardware. `value` è la stringa passata dal comando. |
+
+### Driver push-based (es. MQTT)
+
+Se il device non è interrogabile ma pubblica lui i dati (sleepy sensor, webhook, MQTT), imposta `pollable = false` sul driver e implementa l'ingestion in un processo dedicato (vedi [`MqttIngestionProcess`](../../src/iot/process/mqtt-ingestion.process.ts) come esempio) invece che in `read()`.
 
 ---
 
@@ -33,7 +48,7 @@ Il parametro `component: DeviceComponentDto` contiene tutto il necessario per co
 
 | Campo | Descrizione |
 |---|---|
-| `component.device.ipAddress` | IP del dispositivo nella rete locale |
+| `component.device.params` | Array `{key, value}[]` dei parametri device dichiarati dal driver (es. `ipAddress`) — usa `getDeviceParam(component.device, 'ipAddress')` da `iot-protocol-driver.ts` per leggerli |
 | `component.device.driver` | Identificatore del driver (uguale a `protocol`) |
 | `component.hardwareAddress` | Indirizzo hardware libero (es. topic MQTT, pin GPIO, ID canale) |
 
@@ -50,14 +65,18 @@ src/iot/business/protocol-driver/{nome-protocollo}.driver.ts
 Implementa `IotProtocolDriver`. Esempio minimo:
 
 ```typescript
-import { IotProtocolDriver } from './iot-protocol-driver';
+import { getDeviceParam, IotProtocolDriver, DeviceParamDef } from './iot-protocol-driver';
 import { DeviceComponentDto } from '../dto/device-component.dto';
 
 export class MioDriver implements IotProtocolDriver {
   readonly protocol = 'mio-protocollo';
+  readonly deviceParams: DeviceParamDef[] = [
+    { key: 'ipAddress', label: 'Indirizzo IP', required: true, type: 'ip' },
+  ];
 
   async read(component: DeviceComponentDto): Promise<string> {
     if (!component.device) throw new Error('Device not loaded');
+    const ipAddress = getDeviceParam(component.device, 'ipAddress');
     // leggi dallo hardware e ritorna '1' o '0'
     return '0';
   }
@@ -87,9 +106,7 @@ export const driverRegistry: Record<string, IotProtocolDriver> = {
 
 ### 3. Configura un device nel sistema
 
-Nel pannello di gestione, crea un device con:
-- **Driver**: il valore di `protocol` del tuo driver (es. `mio-protocollo`)
-- **IP Address**: l'indirizzo IP del dispositivo
+Nel pannello di gestione, crea un device scegliendo il tuo driver dalla select — il form mostra automaticamente i campi dichiarati in `deviceParams` (via `GET /api/iot/drivers`), niente da modificare in UI per un nuovo driver.
 
 Poi aggiungi i componenti con `hardwareAddress` secondo le specifiche del tuo dispositivo.
 

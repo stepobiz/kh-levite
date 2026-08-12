@@ -11,6 +11,9 @@ import { TelemetryLogBusiness } from 'src/iot/business/entity/telemetry-log.busi
 import { TelemetryLogRepository } from 'src/iot/business/entity/telemetry-log.repository';
 import { TelemetryPollingBusiness } from './business/telemetry-polling.business';
 import { TelemetryCronService } from './process/telemetry-cron.service';
+import { MqttIngestionProcess } from './process/mqtt-ingestion.process';
+import { DriverController } from 'src/iot/web/rest/driver.controller';
+import { DriverBusiness } from 'src/iot/business/driver.business';
 import { RealtimeModule } from 'src/realtime/realtime.module';
 import { InfraModule } from 'src/infra/infra.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
@@ -26,6 +29,7 @@ import { PrismaModule } from 'src/prisma/prisma.module';
     ComponentController,
     ComponentsFlatController,
     TelemetryLogController,
+    DriverController,
   ],
   providers: [
     DeviceBusiness,
@@ -36,6 +40,8 @@ import { PrismaModule } from 'src/prisma/prisma.module';
     TelemetryLogRepository,
     TelemetryPollingBusiness,
     TelemetryCronService,
+    MqttIngestionProcess,
+    DriverBusiness,
   ],
   exports: [DeviceComponentBusiness, TelemetryLogBusiness],
 })
