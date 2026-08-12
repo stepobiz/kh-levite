@@ -59,6 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('device-form').addEventListener('submit', handleDeviceSubmit);
   document.getElementById('component-form').addEventListener('submit', handleComponentSubmit);
+  document.getElementById('hw-kind').addEventListener('change', updateHwAddressFromAssistant);
+  document.getElementById('hw-id').addEventListener('input', updateHwAddressFromAssistant);
+  document.getElementById('hw-field').addEventListener('change', updateHwAddressFromAssistant);
   document.getElementById('command-form').addEventListener('submit', handleCommandSubmit);
   document.getElementById('node-type-form').addEventListener('submit', handleNodeTypeSubmit);
   document.getElementById('attribute-type-form').addEventListener('submit', handleAttributeTypeSubmit);
