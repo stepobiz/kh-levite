@@ -116,7 +116,7 @@ function renderAccordionComponents(deviceId, components) {
   body.innerHTML = `
     <table class="accordion-table">
       <thead>
-        <tr><th>ID</th><th>Nome</th><th>HW Index</th><th>HW Addr</th><th>Nodo</th><th>Stato</th><th>Azioni</th></tr>
+        <tr><th>ID</th><th>Nome</th><th>HW Addr</th><th>Nodo</th><th>Stato</th><th>Azioni</th></tr>
       </thead>
       <tbody>
         ${components.map(c => {
@@ -126,7 +126,6 @@ function renderAccordionComponents(deviceId, components) {
           return `<tr>
           <td>${esc(c.id)}</td>
           <td>${esc(c.componentName)}</td>
-          <td>${esc(c.hardwareIndex)}</td>
           <td>${esc(c.hardwareAddress)}</td>
           <td>${nodeLabel}</td>
           <td id="status-${c.id}" class="status-cell"><span class="muted-text">—</span></td>
@@ -210,6 +209,24 @@ async function fetchComponents() {
   populateComponentFilter();
 }
 
+// hardwareAddress convention del driver shelly-http: "<kind>:<id>[:<field>]".
+// Vedi src/iot/business/protocol-driver/shelly-http.driver.ts
+function parseHwAddress(addr) {
+  const parts = String(addr ?? '').split(':');
+  if (parts.length >= 3) return { kind: parts[0], id: parts[1], field: parts[2] };
+  if (parts.length === 2) return { kind: parts[0], id: parts[1] };
+  return { kind: 'switch', id: parts[0] || '0' };
+}
+
+function updateHwAddressFromAssistant() {
+  const kind = document.getElementById('hw-kind').value;
+  const id = document.getElementById('hw-id').value || '0';
+  const fieldSelect = document.getElementById('hw-field');
+  fieldSelect.style.display = kind === 'thermostat' ? '' : 'none';
+  const addr = kind === 'thermostat' ? `${kind}:${id}:${fieldSelect.value}` : `${kind}:${id}`;
+  document.getElementById('component-form').hardwareAddress.value = addr;
+}
+
 function openComponentModal(id = null, deviceId = null) {
   let component = null;
   if (id != null) {
@@ -225,7 +242,20 @@ function openComponentModal(id = null, deviceId = null) {
   form.deviceId.value = resolvedDeviceId ?? '';
   form.componentName.value = component?.componentName ?? '';
   form.hardwareAddress.value = component?.hardwareAddress ?? '';
-  form.hardwareIndex.value = component?.hardwareIndex ?? '';
+
+  const device = devicesList.find(d => d.id === resolvedDeviceId);
+  const assistant = document.getElementById('hw-assistant');
+  if (device?.driver === 'shelly-http') {
+    assistant.style.display = '';
+    const parsed = parseHwAddress(component?.hardwareAddress);
+    document.getElementById('hw-kind').value = parsed.kind;
+    document.getElementById('hw-id').value = parsed.id;
+    if (parsed.field) document.getElementById('hw-field').value = parsed.field;
+    document.getElementById('hw-field').style.display = parsed.kind === 'thermostat' ? '' : 'none';
+  } else {
+    assistant.style.display = 'none';
+  }
+
   document.querySelector('#component-modal .modal-title').textContent =
     component ? 'Modifica componente' : 'Nuovo componente';
   document.getElementById('component-modal').classList.add('show');
@@ -239,7 +269,6 @@ async function handleComponentSubmit(e) {
   const dto = {
     componentName: form.componentName.value || undefined,
     hardwareAddress: form.hardwareAddress.value || undefined,
-    hardwareIndex: Number(form.hardwareIndex.value),
   };
   const url = id
     ? `/api/iot/devices/${deviceId}/components/${id}`
@@ -546,7 +575,7 @@ function renderUserAccordionComponents(deviceId, components) {
   body.innerHTML = `
     <table class="accordion-table">
       <thead>
-        <tr><th>ID</th><th>Nome</th><th>HW Index</th><th>Nodo</th><th>Stato</th><th>Azioni</th></tr>
+        <tr><th>ID</th><th>Nome</th><th>HW Addr</th><th>Nodo</th><th>Stato</th><th>Azioni</th></tr>
       </thead>
       <tbody>
         ${components.map(c => {
@@ -557,7 +586,7 @@ function renderUserAccordionComponents(deviceId, components) {
           return `<tr>
           <td>${esc(c.id)}</td>
           <td>${esc(c.componentName)}</td>
-          <td>${esc(c.hardwareIndex)}</td>
+          <td>${esc(c.hardwareAddress)}</td>
           <td>${nodeLabel}</td>
           <td id="${statusId}" class="status-cell"><span class="muted-text">—</span></td>
           <td class="actions">

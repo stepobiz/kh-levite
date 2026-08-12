@@ -412,13 +412,24 @@
             <label>Nome</label>
             <input name="componentName" />
           </div>
-          <div class="form-row">
-            <label>Indice HW <span class="required">*</span></label>
-            <input name="hardwareIndex" type="number" required />
+          <div id="hw-assistant" class="form-row" style="display:none">
+            <label>Assistente indirizzo (Shelly)</label>
+            <div style="display:flex; gap:8px">
+              <select id="hw-kind" style="flex:1">
+                <option value="switch">Switch (relè)</option>
+                <option value="temperature">Temperature (sensore)</option>
+                <option value="thermostat">Thermostat</option>
+              </select>
+              <input id="hw-id" type="number" min="0" value="0" placeholder="id" style="width:70px" />
+              <select id="hw-field" style="flex:1; display:none">
+                <option value="current">current (lettura)</option>
+                <option value="target">target (setpoint, scrivibile)</option>
+              </select>
+            </div>
           </div>
           <div class="form-row">
             <label>Indirizzo HW</label>
-            <input name="hardwareAddress" />
+            <input name="hardwareAddress" placeholder="es. switch:0, thermostat:0:target" />
           </div>
         </div>
         <div class="modal-footer">
