@@ -67,8 +67,8 @@ export class MqttIngestionProcess implements OnModuleInit, OnModuleDestroy {
     while (true) {
       try {
         await this.reconcile();
-      } catch (err) {
-        this.logger.error('MQTT reconcile error', err);
+      } catch (err: any) {
+        this.logger.error(`MQTT reconcile error: ${err?.message ?? err}`);
       }
       await sleep(RECHECK_INTERVAL_MS);
     }
@@ -116,14 +116,14 @@ export class MqttIngestionProcess implements OnModuleInit, OnModuleDestroy {
       this.logger.log(`Connesso al broker MQTT ${url} (${server.name})`);
       const topic = server.mainTopic ? `${server.mainTopic}/#` : '#';
       client.subscribe(topic, err => {
-        if (err) this.logger.error(`Subscribe fallita per ${topic}`, err);
+        if (err) this.logger.error(`Subscribe fallita per ${topic}: ${err.message}`);
       });
     });
     client.on('reconnect', () => this.logger.warn(`Riconnessione a ${url}...`));
-    client.on('error', err => this.logger.error(`Errore client MQTT (${url})`, err));
+    client.on('error', (err: any) => this.logger.error(`Errore client MQTT (${url}): ${err?.message ?? err}`));
     client.on('message', (topic, payload) => {
-      this.handleMessage(server.name, topic, payload).catch(err =>
-        this.logger.error(`Errore gestione messaggio ${topic}`, err),
+      this.handleMessage(server.name, topic, payload).catch((err: any) =>
+        this.logger.error(`Errore gestione messaggio ${topic}: ${err?.message ?? err}`),
       );
     });
 

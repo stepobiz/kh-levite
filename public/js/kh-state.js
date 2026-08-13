@@ -9,6 +9,7 @@ let deviceSearch = '';
 let userDeviceSearch = '';
 let logFilterComponentId = '';
 let logFilterDirection = '';
+let logFilterDeviceId = '';
 const deviceComponents = {};
 const componentLatest = {};
 

@@ -10,6 +10,7 @@ async function fetchDevices() {
   }
   renderDevices();
   renderLogs();
+  populateDeviceFilter();
   await fetchComponents();
 }
 
@@ -381,18 +382,50 @@ async function deleteComponent(id, deviceId) {
   }
 }
 
+function populateDeviceFilter() {
+  const select = document.getElementById('log-filter-device');
+  if (!select) return;
+  const currentVal = select.value;
+  select.innerHTML = '<option value="">Tutti i dispositivi</option>' +
+    devicesList.map(d => `<option value="${d.id}">${esc(_deviceLabel(d))}</option>`).join('');
+  select.value = currentVal;
+}
+
 function populateComponentFilter() {
   const select = document.getElementById('log-filter-component');
   if (!select) return;
   const currentVal = select.value;
+  const items = logFilterDeviceId
+    ? componentsList.filter(c => String(c.deviceId) === logFilterDeviceId)
+    : componentsList;
   select.innerHTML = '<option value="">Tutti i componenti</option>';
-  componentsList.forEach(c => {
+  items.forEach(c => {
     const opt = document.createElement('option');
     opt.value = String(c.id);
     opt.textContent = c.componentName ? `${c.componentName} (#${c.id})` : `Componente #${c.id}`;
     select.appendChild(opt);
   });
-  select.value = currentVal;
+  select.value = items.some(c => String(c.id) === currentVal) ? currentVal : '';
+}
+
+function onLogDeviceFilterChange() {
+  logFilterDeviceId = document.getElementById('log-filter-device').value;
+  logFilterComponentId = '';
+  populateComponentFilter();
+  logPage = 0;
+  renderLogs();
+}
+
+function onLogComponentFilterChange() {
+  logFilterComponentId = document.getElementById('log-filter-component').value;
+  logPage = 0;
+  renderLogs();
+}
+
+function onLogDirectionFilterChange() {
+  logFilterDirection = document.getElementById('log-filter-direction').value;
+  logPage = 0;
+  renderLogs();
 }
 
 // --- Logs ---
@@ -416,6 +449,10 @@ function renderLogs() {
   const filtered = allLogs.filter(l => {
     if (logFilterComponentId && String(l.componentId) !== logFilterComponentId) return false;
     if (logFilterDirection && l.direction !== logFilterDirection) return false;
+    if (logFilterDeviceId) {
+      const comp = componentsList.find(c => c.id === l.componentId);
+      if (!comp || String(comp.deviceId) !== logFilterDeviceId) return false;
+    }
     return true;
   });
 
