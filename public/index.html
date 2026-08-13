@@ -20,6 +20,7 @@
         <div class="nav-group-items">
           <button class="nav-btn" data-section="auen-nodes">Nodi</button>
           <button class="nav-btn" data-section="devices">Dispositivi</button>
+          <button class="nav-btn" data-section="telemetrie">Telemetrie</button>
           <button class="nav-btn" data-section="topology">Topologia</button>
           <button class="nav-btn" data-section="auen-tags">Tag</button>
           <button class="nav-btn" data-section="cfg-values">Configurazioni</button>
@@ -60,6 +61,43 @@
           </thead>
           <tbody></tbody>
         </table>
+      </div>
+    </section>
+
+    <!-- TELEMETRIE -->
+    <section id="telemetrie" class="section">
+      <div class="toolbar">
+        <h1>Telemetrie</h1>
+        <div class="toolbar-actions">
+          <button class="btn-secondary" onclick="fetchLogs()">&#x21BB; Aggiorna</button>
+          <span id="log-last-refresh" class="muted-text" style="font-size:12px"></span>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <select id="log-filter-device" onchange="onLogDeviceFilterChange()">
+          <option value="">Tutti i dispositivi</option>
+        </select>
+        <select id="log-filter-component" onchange="onLogComponentFilterChange()">
+          <option value="">Tutti i componenti</option>
+        </select>
+        <select id="log-filter-direction" onchange="onLogDirectionFilterChange()">
+          <option value="">READ + WRITE</option>
+          <option value="READ">Solo READ</option>
+          <option value="WRITE">Solo WRITE</option>
+        </select>
+      </div>
+      <div class="card">
+        <table id="log-table">
+          <thead>
+            <tr><th>ID</th><th>Componente</th><th>Dispositivo</th><th>Valore</th><th>Direzione</th><th>Data</th></tr>
+          </thead>
+          <tbody><tr><td colspan="6" class="empty-cell">Caricamento...</td></tr></tbody>
+        </table>
+        <div class="pagination">
+          <button id="log-prev" onclick="logPrevPage()">&#x2190; Precedente</button>
+          <span id="log-page-info"></span>
+          <button id="log-next" onclick="logNextPage()">Successiva &#x2192;</button>
+        </div>
       </div>
     </section>
 
@@ -765,28 +803,13 @@
             <option value="json">json</option>
           </select>
         </div>
-        <div id="cfg-val-int" class="form-row hidden"><label>Valore (intero)</label><input name="valInt" type="number" step="1"/></div>
-        <div id="cfg-val-float" class="form-row hidden"><label>Valore (decimale)</label><input name="valFloat" type="number" step="any"/></div>
-        <div id="cfg-val-bool" class="form-row hidden">
-          <label>Valore</label>
-          <select name="valBool"><option value="true">ON</option><option value="false">OFF</option></select>
-        </div>
-        <div id="cfg-val-text" class="form-row hidden"><label>Valore (testo)</label><input name="valText" type="text"/></div>
         <div id="cfg-val-options" class="form-row hidden" style="grid-column:1/-1">
           <label>Opzioni (JSON)</label>
           <textarea name="options" rows="3" placeholder='[{"value":"x","label":"X"}]' style="width:100%;font-family:monospace;font-size:12px"></textarea>
         </div>
-        <div id="cfg-val-select" class="form-row hidden">
-          <label>Valore</label>
-          <select id="cfg-select-value" name="valSelect"></select>
-        </div>
         <div id="cfg-pattern-json" class="form-row hidden" style="grid-column:1/-1">
           <label>Pattern oggetti (JSON) — chiavi attese</label>
           <textarea name="pattern" rows="4" placeholder='[{"key":"host","type":"string","required":true},{"key":"port","type":"number","required":true}]' style="width:100%;font-family:monospace;font-size:12px"></textarea>
-        </div>
-        <div id="cfg-val-json" class="form-row hidden" style="grid-column:1/-1">
-          <label>Valore (array JSON)</label>
-          <textarea name="valJson" rows="6" placeholder='[{"host":"...","port":1883}]' style="width:100%;font-family:monospace;font-size:12px"></textarea>
         </div>
         <div class="modal-footer">
           <button class="btn-secondary" type="button" onclick="closeModal('cfg-config-modal')">Annulla</button>

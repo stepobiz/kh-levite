@@ -185,7 +185,7 @@ function _cfgPatternDisplay(c) {
 
 function _cfgTable(items, { readOnly = false, idPrefix = 'cfgval' } = {}) {
   return `<table class="data-table">
-    <thead><tr><th>Codice</th><th>Nome</th><th>Tipo</th><th>Pattern</th><th>Valore</th><th></th></tr></thead>
+    <thead><tr><th>Codice</th><th>Nome</th><th>Tipo</th><th>Pattern</th>${readOnly ? '<th>Valore</th>' : ''}<th></th></tr></thead>
     <tbody>
       ${items.map(c => `
         <tr>
@@ -193,7 +193,7 @@ function _cfgTable(items, { readOnly = false, idPrefix = 'cfgval' } = {}) {
           <td>${esc(c.name)}${c.description ? `<br><span class="muted-text">${esc(c.description)}</span>` : ''}</td>
           <td><span class="badge">${esc(c.dataType)}</span></td>
           <td>${_cfgPatternDisplay(c)}</td>
-          <td id="${idPrefix}-${esc(c.code)}">${_cfgDisplayValue(c)}</td>
+          ${readOnly ? `<td id="${idPrefix}-${esc(c.code)}">${_cfgDisplayValue(c)}</td>` : ''}
           <td class="actions">
             ${readOnly
               ? `<button title="Modifica valore" onclick="openCfgEditValueModal('${esc(c.code)}')">&#x270F;&#xFE0F;</button>`
@@ -232,14 +232,6 @@ function _cfgDisplayValue(c) {
   }
 }
 
-function _populateCfgSelectOptions(sel, optionsJson, current) {
-  try {
-    const opts = JSON.parse(optionsJson ?? '[]');
-    sel.innerHTML = opts.map(o => `<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('');
-    if (current != null) sel.value = current;
-  } catch { sel.innerHTML = ''; }
-}
-
 // --- Create/Edit configuration (full form) ---
 function _populateCfgSectionSelect(sel) {
   const current = sel.value;
@@ -250,13 +242,7 @@ function _populateCfgSectionSelect(sel) {
 
 function onCfgDataTypeChange() {
   const dt = document.getElementById('cfg-config-data-type').value;
-  document.getElementById('cfg-val-int').classList.toggle('hidden', dt !== 'integer');
-  document.getElementById('cfg-val-float').classList.toggle('hidden', dt !== 'float');
-  document.getElementById('cfg-val-bool').classList.toggle('hidden', dt !== 'boolean');
-  document.getElementById('cfg-val-text').classList.toggle('hidden', dt !== 'text');
   document.getElementById('cfg-val-options').classList.toggle('hidden', dt !== 'select');
-  document.getElementById('cfg-val-select').classList.toggle('hidden', dt !== 'select');
-  document.getElementById('cfg-val-json').classList.toggle('hidden', dt !== 'json');
   document.getElementById('cfg-pattern-json').classList.toggle('hidden', dt !== 'json');
 }
 
@@ -285,18 +271,8 @@ function openCfgAdminModal(code) {
   form.elements['sectionId'].value = cfg.sectionId ?? '';
   form.elements['dataType'].value = cfg.dataType;
   onCfgDataTypeChange();
-  if (cfg.dataType === 'integer') form.elements['valInt'].value = cfg.valInt ?? '';
-  if (cfg.dataType === 'float')   form.elements['valFloat'].value = cfg.valFloat ?? '';
-  if (cfg.dataType === 'boolean') form.elements['valBool'].value = cfg.valBool === true ? 'true' : 'false';
-  if (cfg.dataType === 'text')    form.elements['valText'].value = cfg.valText ?? '';
-  if (cfg.dataType === 'select') {
-    form.elements['options'].value = cfg.options ?? '';
-    _populateCfgSelectOptions(document.getElementById('cfg-select-value'), cfg.options, cfg.valText);
-  }
-  if (cfg.dataType === 'json') {
-    form.elements['valJson'].value = cfg.valText ?? '';
-    form.elements['pattern'].value = cfg.pattern ?? '';
-  }
+  if (cfg.dataType === 'select') form.elements['options'].value = cfg.options ?? '';
+  if (cfg.dataType === 'json')   form.elements['pattern'].value = cfg.pattern ?? '';
   document.getElementById('cfg-config-code').disabled = true;
   document.getElementById('cfg-config-modal-title').textContent = `Admin — ${cfg.code}`;
   form.querySelector('[type=submit]').textContent = 'Salva';
@@ -314,14 +290,8 @@ async function handleCfgConfigSubmit(e) {
     description: form.elements['description'].value || null,
     sectionId: form.elements['sectionId'].value ? Number(form.elements['sectionId'].value) : null,
     dataType: dt,
-    options:  dt === 'select'  ? (form.elements['options'].value || null) : null,
-    pattern:  dt === 'json'    ? (form.elements['pattern'].value || null) : null,
-    valInt:   dt === 'integer' ? (Number(form.elements['valInt'].value) || null) : null,
-    valFloat: dt === 'float'   ? (parseFloat(form.elements['valFloat'].value) || null) : null,
-    valBool:  dt === 'boolean' ? form.elements['valBool'].value === 'true' : null,
-    valText:  dt === 'text'    ? (form.elements['valText'].value || null)
-            : dt === 'select'  ? (form.elements['valSelect'].value || null)
-            : dt === 'json'    ? (form.elements['valJson'].value || null) : null,
+    options: dt === 'select' ? (form.elements['options'].value || null) : null,
+    pattern: dt === 'json'   ? (form.elements['pattern'].value || null) : null,
   };
   const isEdit = !!recordCode;
   try {
