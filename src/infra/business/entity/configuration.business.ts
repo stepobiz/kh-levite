@@ -44,12 +44,11 @@ export class ConfigurationBusiness {
       description: dto.description,
       sectionId: dto.sectionId,
       dataType: dto.dataType as any,
-      options: dto.dataType !== undefined
-        ? (dto.dataType === 'select' ? (dto.options ?? null) : null)
-        : undefined,
-      pattern: dto.dataType !== undefined
-        ? (dto.dataType === 'json' ? (dto.pattern ?? null) : null)
-        : undefined,
+      // Ognuno dei campi sotto viene toccato SOLO se presente nella request —
+      // così il form anagrafica (senza val*) non azzera il valore, e il form
+      // "modifica valore" (senza options/pattern/dataType) non tocca i metadati.
+      options: dto.options !== undefined ? (dto.options ?? null) : undefined,
+      pattern: dto.pattern !== undefined ? (dto.pattern ?? null) : undefined,
       valInt: dto.valInt,
       valFloat: dto.valFloat,
       valBool: dto.valBool,
