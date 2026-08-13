@@ -69,6 +69,11 @@ export class ShellyHttpDriver implements IotProtocolDriver {
       return result?.tC != null ? String(result.tC) : '';
     }
 
+    if (kind === 'humidity') {
+      const result = await this.rpc<{ rh: number | null }>(component, 'Humidity.GetStatus', { id });
+      return result?.rh != null ? String(result.rh) : '';
+    }
+
     if (kind === 'thermostat') {
       const result = await this.rpc<{ current_C: number | null; target_C: number | null }>(
         component,
