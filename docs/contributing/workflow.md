@@ -40,6 +40,8 @@ git push origin main develop --tags
 
 Il push su `main` con il tag numerico trigga il build Docker che pubblica l'immagine con il tag versione su Docker Hub.
 
+Per rilasci da testare su stage prima di andare in produzione, si può taggare una release candidate (`X.Y.Z-rc1`, `-rc2`, ...) direttamente sul branch `release/` senza fare `git flow release finish` — vedi [ci-cd.md](ci-cd.md#release-candidate-rc).
+
 ### Hotfix urgente
 
 ```bash
