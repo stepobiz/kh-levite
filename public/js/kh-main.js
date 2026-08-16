@@ -9,7 +9,7 @@ async function ensureAuenLoaded() {
 
 // --- Section navigation ---
 function activateSection(sectionId) {
-  const valid = ['dashboard', 'devices', 'auen-node-types', 'auen-nodes', 'auen-tags', 'auen-attribute-types', 'topology', 'cfg', 'user-topology', 'user-devices'];
+  const valid = ['dashboard', 'devices', 'telemetrie', 'auen-node-types', 'auen-nodes', 'auen-tags', 'auen-attribute-types', 'topology', 'cfg', 'cfg-values', 'user-topology', 'user-devices'];
   const id = valid.includes(sectionId) ? sectionId : 'dashboard';
   document.querySelectorAll('.nav-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.section === id);
@@ -38,6 +38,14 @@ function activateSection(sectionId) {
   }
   if (id === 'cfg') {
     ensureCfgLoaded();
+  }
+  if (id === 'cfg-values') {
+    ensureCfgLoaded().then(renderCfgValuesOnly);
+  }
+  if (id === 'telemetrie') {
+    populateDeviceFilter();
+    populateComponentFilter();
+    renderLogs();
   }
   if (id === 'dashboard') {
     renderDashboardFeeds();

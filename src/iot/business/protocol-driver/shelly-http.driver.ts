@@ -1,4 +1,4 @@
-import { IotProtocolDriver } from './iot-protocol-driver';
+import { DeviceParamDef, getDeviceParam, IotProtocolDriver } from './iot-protocol-driver';
 import { DeviceComponentDto } from '../../dto/device-component.dto';
 import axios from 'axios';
 
@@ -34,11 +34,17 @@ function parseAddress(hardwareAddress: string | null | undefined): { kind: strin
 
 export class ShellyHttpDriver implements IotProtocolDriver {
   readonly protocol = 'shelly-http';
+  readonly deviceParams: DeviceParamDef[] = [
+    { key: 'ipAddress', label: 'Indirizzo IP', required: true, type: 'ip' },
+  ];
 
   private async rpc<T = any>(component: DeviceComponentDto, method: string, params?: any): Promise<T> {
     if (!component.device) throw new Error('Device not loaded in component');
 
-    const url = `http://${component.device.ipAddress}/rpc`;
+    const ipAddress = getDeviceParam(component.device, 'ipAddress');
+    if (!ipAddress) throw new Error('Missing ipAddress param on device');
+
+    const url = `http://${ipAddress}/rpc`;
     const body: JsonRpcRequest = {
       id: Date.now(),
       method,
@@ -47,6 +53,7 @@ export class ShellyHttpDriver implements IotProtocolDriver {
 
     const response = await axios.post<JsonRpcResponse<T>>(url, body, {
       headers: { 'Content-Type': 'application/json' },
+      timeout: 1500,
     });
 
     if (response.data.error) {
@@ -61,6 +68,11 @@ export class ShellyHttpDriver implements IotProtocolDriver {
     if (kind === 'temperature') {
       const result = await this.rpc<{ tC: number | null }>(component, 'Temperature.GetStatus', { id });
       return result?.tC != null ? String(result.tC) : '';
+    }
+
+    if (kind === 'humidity') {
+      const result = await this.rpc<{ rh: number | null }>(component, 'Humidity.GetStatus', { id });
+      return result?.rh != null ? String(result.rh) : '';
     }
 
     if (kind === 'thermostat') {

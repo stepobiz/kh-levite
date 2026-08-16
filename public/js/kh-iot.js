@@ -10,7 +10,21 @@ async function fetchDevices() {
   }
   renderDevices();
   renderLogs();
+  populateDeviceFilter();
   await fetchComponents();
+}
+
+function _deviceParam(d, key) {
+  return d.params?.find(p => p.key === key)?.value;
+}
+
+function _deviceParamsSummary(d) {
+  if (!d.params || d.params.length === 0) return '<span class="muted-text">—</span>';
+  return d.params.map(p => `<code style="font-size:11px">${esc(p.key)}: ${esc(p.value)}</code>`).join('<br>');
+}
+
+function _deviceLabel(d) {
+  return d.deviceName || `Device #${d.id}`;
 }
 
 function renderDevices() {
@@ -31,13 +45,12 @@ function renderDevices() {
     if (!deviceSearch) return true;
     return (
       (d.deviceName || '').toLowerCase().includes(deviceSearch) ||
-      (d.ipAddress || '').toLowerCase().includes(deviceSearch) ||
-      (d.macAddress || '').toLowerCase().includes(deviceSearch)
+      (d.params || []).some(p => (p.value || '').toLowerCase().includes(deviceSearch))
     );
   });
 
   if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-cell">Nessun dispositivo trovato</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-cell">Nessun dispositivo trovato</td></tr>';
     return;
   }
 
@@ -49,8 +62,7 @@ function renderDevices() {
       <tr class="device-row">
         <td>${esc(d.id)}</td>
         <td>${esc(d.deviceName)}</td>
-        <td>${esc(d.macAddress)}</td>
-        <td>${esc(d.ipAddress)}</td>
+        <td>${_deviceParamsSummary(d)}</td>
         <td>${esc(d.driver)}</td>
         <td>${statusBadge}</td>
         <td class="actions">
@@ -60,10 +72,10 @@ function renderDevices() {
         </td>
       </tr>
       <tr class="accordion-row" id="accordion-${d.id}">
-        <td colspan="7">
+        <td colspan="6">
           <div class="accordion-content">
             <div class="accordion-toolbar">
-              <span class="accordion-label">${esc(d.deviceName || d.ipAddress)} — Componenti</span>
+              <span class="accordion-label">${esc(_deviceLabel(d))} — Componenti</span>
               <button class="btn-primary btn-sm" onclick="openComponentModal(null, ${d.id})">&#xFF0B; Componente</button>
             </div>
             <div id="accordion-body-${d.id}" class="accordion-body">
@@ -142,15 +154,77 @@ function renderAccordionComponents(deviceId, components) {
     </table>`;
 }
 
-function openDeviceModal(id = null) {
+async function fetchDrivers() {
+  if (driversList.length) return;
+  try {
+    const res = await fetch('/api/iot/drivers');
+    driversList = await res.json();
+  } catch { driversList = []; }
+  const sel = document.getElementById('device-driver-select');
+  if (sel) {
+    sel.innerHTML = '<option value="">— nessuno —</option>' +
+      driversList.map(d => `<option value="${esc(d.protocol)}">${esc(d.protocol)}</option>`).join('');
+  }
+}
+
+async function onDeviceDriverChange() {
+  await _renderDeviceParamFields(document.getElementById('device-driver-select').value);
+}
+
+async function _fetchMqttServerNames() {
+  try {
+    const res = await fetch(`/api/cfg/configurations/${encodeURIComponent('iot.mqtt.servers')}`);
+    if (!res.ok) return [];
+    const cfg = await res.json();
+    const servers = JSON.parse(cfg.valText ?? '[]');
+    return servers.map(s => s.name).filter(Boolean);
+  } catch { return []; }
+}
+
+async function _renderDeviceParamFields(protocol, existingParams = []) {
+  const container = document.getElementById('device-params-fields');
+  if (!container) return;
+  const driver = driversList.find(d => d.protocol === protocol);
+  const defs = driver?.deviceParams ?? [];
+  if (defs.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const serverNames = defs.some(f => f.type === 'mqtt-server') ? await _fetchMqttServerNames() : [];
+
+  container.innerHTML = defs.map(f => {
+    const current = existingParams.find(p => p.key === f.key)?.value ?? '';
+    if (f.type === 'mqtt-server') {
+      const options = serverNames.map(n =>
+        `<option value="${esc(n)}"${n === current ? ' selected' : ''}>${esc(n)}</option>`).join('');
+      return `
+        <div class="form-row">
+          <label>${esc(f.label)}${f.required ? ' <span class="required">*</span>' : ''}</label>
+          <select data-param-key="${esc(f.key)}" ${f.required ? 'required' : ''}>
+            <option value="">— seleziona —</option>
+            ${options}
+          </select>
+        </div>`;
+    }
+    const inputType = f.type === 'number' ? 'number' : 'text';
+    return `
+      <div class="form-row">
+        <label>${esc(f.label)}${f.required ? ' <span class="required">*</span>' : ''}</label>
+        <input data-param-key="${esc(f.key)}" type="${inputType}" value="${esc(current)}" ${f.required ? 'required' : ''} />
+      </div>`;
+  }).join('');
+}
+
+async function openDeviceModal(id = null) {
+  await fetchDrivers();
   const device = id != null ? devicesList.find(d => d.id === id) : null;
   const form = document.getElementById('device-form');
   form.reset();
   form.recordId.value = device?.id ?? '';
   form.deviceName.value = device?.deviceName ?? '';
-  form.macAddress.value = device?.macAddress ?? '';
-  form.ipAddress.value = device?.ipAddress ?? '';
   form.protocol.value = device?.driver ?? '';
+  await _renderDeviceParamFields(device?.driver ?? '', device?.params ?? []);
   document.querySelector('#device-modal .modal-title').textContent =
     device ? 'Modifica dispositivo' : 'Nuovo dispositivo';
   document.getElementById('device-modal').classList.add('show');
@@ -160,11 +234,13 @@ async function handleDeviceSubmit(e) {
   e.preventDefault();
   const form = e.target;
   const id = form.recordId.value;
+  const params = Array.from(document.querySelectorAll('#device-params-fields [data-param-key]'))
+    .map(input => ({ key: input.dataset.paramKey, value: input.value }))
+    .filter(p => p.value !== '');
   const dto = {
     deviceName: form.deviceName.value || undefined,
-    macAddress: form.macAddress.value || undefined,
-    ipAddress: form.ipAddress.value,
     driver: form.protocol.value || undefined,
+    params,
   };
   try {
     const res = await fetch(id ? `/api/iot/devices/${id}` : '/api/iot/devices', {
@@ -306,18 +382,50 @@ async function deleteComponent(id, deviceId) {
   }
 }
 
+function populateDeviceFilter() {
+  const select = document.getElementById('log-filter-device');
+  if (!select) return;
+  const currentVal = select.value;
+  select.innerHTML = '<option value="">Tutti i dispositivi</option>' +
+    devicesList.map(d => `<option value="${d.id}">${esc(_deviceLabel(d))}</option>`).join('');
+  select.value = currentVal;
+}
+
 function populateComponentFilter() {
   const select = document.getElementById('log-filter-component');
   if (!select) return;
   const currentVal = select.value;
+  const items = logFilterDeviceId
+    ? componentsList.filter(c => String(c.deviceId) === logFilterDeviceId)
+    : componentsList;
   select.innerHTML = '<option value="">Tutti i componenti</option>';
-  componentsList.forEach(c => {
+  items.forEach(c => {
     const opt = document.createElement('option');
     opt.value = String(c.id);
     opt.textContent = c.componentName ? `${c.componentName} (#${c.id})` : `Componente #${c.id}`;
     select.appendChild(opt);
   });
-  select.value = currentVal;
+  select.value = items.some(c => String(c.id) === currentVal) ? currentVal : '';
+}
+
+function onLogDeviceFilterChange() {
+  logFilterDeviceId = document.getElementById('log-filter-device').value;
+  logFilterComponentId = '';
+  populateComponentFilter();
+  logPage = 0;
+  renderLogs();
+}
+
+function onLogComponentFilterChange() {
+  logFilterComponentId = document.getElementById('log-filter-component').value;
+  logPage = 0;
+  renderLogs();
+}
+
+function onLogDirectionFilterChange() {
+  logFilterDirection = document.getElementById('log-filter-direction').value;
+  logPage = 0;
+  renderLogs();
 }
 
 // --- Logs ---
@@ -341,6 +449,10 @@ function renderLogs() {
   const filtered = allLogs.filter(l => {
     if (logFilterComponentId && String(l.componentId) !== logFilterComponentId) return false;
     if (logFilterDirection && l.direction !== logFilterDirection) return false;
+    if (logFilterDeviceId) {
+      const comp = componentsList.find(c => c.id === l.componentId);
+      if (!comp || String(comp.deviceId) !== logFilterDeviceId) return false;
+    }
     return true;
   });
 
@@ -363,7 +475,7 @@ function renderLogs() {
       return `<tr>
         <td>${esc(l.id)}</td>
         <td>${esc(comp?.componentName ?? `#${l.componentId}`)}</td>
-        <td>${device ? esc(device.deviceName ? `${device.deviceName} (${device.ipAddress})` : device.ipAddress) : ''}</td>
+        <td>${device ? esc(_deviceLabel(device)) : ''}</td>
         <td>${esc(l.value)}</td>
         <td><span class="badge ${dirClass}">${esc(l.direction)}</span></td>
         <td>${esc(date)}</td>
@@ -494,13 +606,12 @@ function renderUserDevices() {
     if (!userDeviceSearch) return true;
     return (
       (d.deviceName || '').toLowerCase().includes(userDeviceSearch) ||
-      (d.ipAddress || '').toLowerCase().includes(userDeviceSearch) ||
-      (d.macAddress || '').toLowerCase().includes(userDeviceSearch)
+      (d.params || []).some(p => (p.value || '').toLowerCase().includes(userDeviceSearch))
     );
   });
 
   if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-cell">Nessun dispositivo trovato</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-cell">Nessun dispositivo trovato</td></tr>';
     return;
   }
 
@@ -512,8 +623,7 @@ function renderUserDevices() {
       <tr class="device-row">
         <td>${esc(d.id)}</td>
         <td>${esc(d.deviceName)}</td>
-        <td>${esc(d.macAddress)}</td>
-        <td>${esc(d.ipAddress)}</td>
+        <td>${_deviceParamsSummary(d)}</td>
         <td>${esc(d.driver)}</td>
         <td>${statusBadge}</td>
         <td class="actions">
@@ -521,10 +631,10 @@ function renderUserDevices() {
         </td>
       </tr>
       <tr class="accordion-row" id="user-accordion-${d.id}">
-        <td colspan="7">
+        <td colspan="6">
           <div class="accordion-content">
             <div class="accordion-toolbar">
-              <span class="accordion-label">${esc(d.deviceName || d.ipAddress)} — Componenti</span>
+              <span class="accordion-label">${esc(_deviceLabel(d))} — Componenti</span>
             </div>
             <div id="user-accordion-body-${d.id}" class="accordion-body">
               <p class="loading-cell">Caricamento...</p>

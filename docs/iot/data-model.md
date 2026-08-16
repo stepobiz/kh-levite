@@ -8,11 +8,15 @@ Il modulo IoT si basa su tre entità principali: il dispositivo fisico, i suoi c
 Table IotDevice {
   id          Int       [pk, increment]
   deviceName  String    [null, note: "Nome descrittivo del dispositivo"]
-  macAddress  String    [unique, null, note: "MAC address del dispositivo"]
-  ipAddress   String    [not null, note: "Indirizzo IP — obbligatorio per la comunicazione"]
   driver      String    [null, note: "Chiave nel driverRegistry (es. shelly-http)"]
   createdAt   DateTime  [default: `now()`]
   updatedAt   DateTime  [note: "Auto-aggiornato da Prisma"]
+}
+
+Table IotDeviceParam {
+  deviceId  Int     [not null, ref: > IotDevice.id, note: "FK verso il device, PK composta con key"]
+  key       String  [not null, note: "Chiave del parametro, dichiarata da driver.deviceParams (es. ipAddress)"]
+  value     String  [not null, note: "Valore inserito dall'utente"]
 }
 
 Table IotDeviceComponent {
@@ -39,8 +43,13 @@ Table IotTelemetryLog {
 
 **IotDevice**
 
-- `ipAddress` è l'unico campo obbligatorio — è il minimo necessario per comunicare con il dispositivo
 - `driver` è opzionale: se assente il dispositivo non può essere interrogato dal cron, ma può essere registrato in anagrafica
+- Non ha più campi fissi tipo `ipAddress`/`macAddress` — ogni driver dichiara i propri parametri richiesti tramite `IotProtocolDriver.deviceParams` (es. `shelly-http` richiede `ipAddress`, `shelly-mqtt` non richiede nulla a livello device). I valori vivono in `IotDeviceParam`. Vedi `GET /api/iot/drivers` per la lista dei parametri per driver, e [../contributing/new-driver.md](../contributing/new-driver.md).
+
+**IotDeviceParam**
+
+- Pattern EAV (stesso approccio di `AuenNodeAttribute`/`AuenAttributeType` in AutoEngine): `key` viene dal driver, `value` lo imposta l'utente
+- Cancellazione a cascata quando il device viene eliminato (`onDelete: Cascade`)
 
 **IotDeviceComponent**
 

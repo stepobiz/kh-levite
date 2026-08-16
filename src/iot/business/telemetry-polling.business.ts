@@ -32,13 +32,14 @@ export class TelemetryPollingBusiness {
         this.logger.error(`Unsupported driver: ${component.device.driver}`);
         continue;
       }
+      if (driver.pollable === false) continue;
 
       let hwValue: string;
       try {
         hwValue = await driver.read(component);
         processed++;
-      } catch (err) {
-        this.logger.error(`Read error for component ${component.id}:`, err);
+      } catch (err: any) {
+        this.logger.error(`Read error for component ${component.id}: ${err?.message ?? err}`);
         continue;
       }
 
@@ -83,8 +84,8 @@ export class TelemetryPollingBusiness {
             createdAt: writeLog.createdAt!,
           });
           await this.componentBusiness.setNextValue(component.id!, null);
-        } catch (err) {
-          this.logger.error(`Write error for component ${component.id}:`, err);
+        } catch (err: any) {
+          this.logger.error(`Write error for component ${component.id}: ${err?.message ?? err}`);
         }
       }
     }

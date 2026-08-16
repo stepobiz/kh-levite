@@ -10,14 +10,23 @@ datasource db {
 model IotDevice {
   id         Int                 @id @default(autoincrement())
   deviceName       String?
-  macAddress String?             @unique @map("mac_address")
-  ipAddress  String             @map("ip_address")
   driver   String?
   createdAt  DateTime            @default(now()) @map("created_at")
   updatedAt  DateTime            @updatedAt @map("updated_at")
   components IotDeviceComponent[]
+  params     IotDeviceParam[]
 
   @@map("iot_device")
+}
+
+model IotDeviceParam {
+  deviceId Int      @map("device_id")
+  key      String
+  value    String
+  device   IotDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@id([deviceId, key])
+  @@map("iot_device_param")
 }
 
 model IotDeviceComponent {
@@ -180,6 +189,7 @@ enum CfgValueType {
   boolean
   text
   select
+  json
 }
 
 model CfgSection {
@@ -199,6 +209,7 @@ model CfgConfiguration {
   section     CfgSection?  @relation(fields: [sectionId], references: [id])
   dataType    CfgValueType @map("data_type")
   options     String?
+  pattern     String?
   valInt      Int?         @map("val_int")
   valFloat    Float?       @map("val_float")
   valBool     Boolean?     @map("val_bool")

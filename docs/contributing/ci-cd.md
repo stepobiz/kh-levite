@@ -10,9 +10,11 @@ Il workflow si trova in [`.github/workflows/docker.yml`](../../.github/workflows
 
 | Evento | Condizione | Cosa pubblica |
 | --- | --- | --- |
-| Push su `main` | Sempre | `latest` |
-| Push di un tag | Tag numerico (es. `0.3`, `1.0.0`) | `latest` + tag versione |
+| Push di un tag | Tag numerico stabile (es. `0.3`, `1.0.0`) | `latest` + tag versione |
+| Push di un tag | Tag release candidate (es. `0.10.0-rc1`) | solo tag versione, **non** tocca `latest` |
 | `workflow_dispatch` | Manuale da GitHub UI | `latest` |
+
+Il pattern del trigger (`tags: ['[0-9]+.[0-9]+*']`) matcha già qualsiasi suffisso, incluse le RC — non richiede modifiche per pubblicare release candidate.
 
 ## Immagine Docker
 
@@ -43,6 +45,8 @@ Per triggerare manualmente un build senza fare un commit, usare **GitHub → Act
 
 ## Rilasciare una nuova versione
 
+Per rilasci diretti senza fase di test (fix minori, hotfix già validati):
+
 ```bash
 git flow release start X.Y
 # eventuale bump version
@@ -50,4 +54,29 @@ git flow release finish X.Y
 git push origin main develop --tags
 ```
 
-Il push del tag su `main` fa partire automaticamente il build con il tag versione.
+Il push del tag su `main` fa partire automaticamente il build con il tag versione e aggiorna `latest`.
+
+## Release candidate (RC)
+
+Per rilasci che richiedono un giro di test su stage prima di andare in produzione:
+
+```bash
+git flow release start X.Y.Z
+# bump package.json → "X.Y.Z-rc1"
+git add package.json && git commit -m "chore: bump version to X.Y.Z-rc1"
+git tag X.Y.Z-rc1
+git push origin release/X.Y.Z X.Y.Z-rc1
+```
+
+Il push del tag `X.Y.Z-rc1` fa partire il build e pubblica `stepobiz/kh-levite:X.Y.Z-rc1` **senza** toccare `latest`. Si punta temporaneamente il `docker-compose.yml` di stage a quel tag per il test. Se serve un altro giro, si ripete con `X.Y.Z-rc2` sullo stesso branch di release.
+
+Quando la RC è validata, si chiude il rilascio normalmente:
+
+```bash
+# bump package.json → "X.Y.Z" (rimuovere suffisso -rcN)
+git add package.json && git commit -m "chore: bump version to X.Y.Z"
+git flow release finish X.Y.Z
+git push origin main develop --tags
+```
+
+Questo mergia in `main`+`develop`, tagga `X.Y.Z` e aggiorna `latest`.

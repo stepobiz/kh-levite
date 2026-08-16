@@ -858,7 +858,7 @@ body:has(#topology.active) {
   display: none;
   position: absolute;
   top: 52px;
-  left: 0;
+  right: 0;
   background: #1e293b;
   border: 1px solid #334155;
   border-radius: 0 0 8px 8px;

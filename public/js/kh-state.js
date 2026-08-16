@@ -1,5 +1,6 @@
 // --- State ---
 let devicesList = [];
+let driversList = [];
 let componentsList = [];
 let allLogs = [];
 let logPage = 0;
@@ -8,6 +9,7 @@ let deviceSearch = '';
 let userDeviceSearch = '';
 let logFilterComponentId = '';
 let logFilterDirection = '';
+let logFilterDeviceId = '';
 const deviceComponents = {};
 const componentLatest = {};
 

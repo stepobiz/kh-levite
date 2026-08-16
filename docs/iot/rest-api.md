@@ -31,6 +31,12 @@ Tutte le operazioni sui component sono scoped sotto il device. Non esiste nessun
 | --- | --- | --- |
 | GET | `/api/iot/telemetry-logs` | Tutti i log (ordinati `createdAt DESC`) |
 
+## 4.3bis Driver — /api/iot/drivers
+
+| Metodo | Path | Descrizione |
+| --- | --- | --- |
+| GET | `/api/iot/drivers` | Driver disponibili nel `driverRegistry`, con `deviceParams` — usato dal form "Nuovo Device" per sapere quali campi mostrare in base al driver scelto |
+
 ## 4.4 DTO
 
 ### DeviceDto
@@ -40,9 +46,8 @@ Usato sia per POST (creazione) che per PATCH (aggiornamento parziale).
 | Campo | Tipo | Obbligatorio | Note |
 | --- | --- | --- | --- |
 | `deviceName` | string | No | |
-| `ipAddress` | string | **Sì** | |
-| `macAddress` | string | No | Unique |
 | `driver` | string | No | Chiave nel driverRegistry (es. `shelly-http`, `sonoff-diy`) |
+| `params` | `{key, value}[]` | No | Parametri richiesti dal driver scelto (es. `ipAddress`) — vedi `GET /api/iot/drivers` per sapere quali servono per ogni driver |
 
 ### DeviceComponentDto
 

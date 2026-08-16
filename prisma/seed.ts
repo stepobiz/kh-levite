@@ -31,17 +31,19 @@ async function main() {
     name: string;
     description?: string;
     sectionCode?: string;
-    dataType: 'integer' | 'float' | 'boolean' | 'text' | 'select';
+    dataType: 'integer' | 'float' | 'boolean' | 'text' | 'select' | 'json';
     options?: string;
+    pattern?: string;
     valInt?: number;
     valFloat?: number;
     valBool?: boolean;
     valText?: string;
   }[] = [
     {
-      code: 'allow_node_type_edit',
+      code: 'autoengine.allow_node_type_edit',
       name: 'Permetti la modifica del node type',
       description: 'Se true, permette la modifica e l\'eliminazione dei node type dalla UI. Se false o assente, i pulsanti di modifica sono disabilitati. Default: false',
+      sectionCode: 'autoengine',
       dataType: 'boolean',
       valBool: true,
     },
@@ -125,6 +127,30 @@ async function main() {
       valInt: 0,
     },
     {
+      code: 'iot.mqtt.enabled',
+      name: 'Client MQTT abilitato',
+      description: 'Se true, KH Levite si connette ai server MQTT configurati in iot.mqtt.servers per ricevere telemetria push (es. Shelly H&T Gen3). Default: false',
+      sectionCode: 'iot',
+      dataType: 'boolean',
+      valBool: false,
+    },
+    {
+      code: 'iot.mqtt.servers',
+      name: 'Server MQTT',
+      description: 'Array JSON dei broker MQTT a cui connettersi. Normalmente un solo elemento. "mainTopic" qui è il prefisso più esterno (opzionale) — ogni device aggiunge poi il proprio mainTopic. Default: []',
+      sectionCode: 'iot',
+      dataType: 'json',
+      pattern: JSON.stringify([
+        { key: 'name',      type: 'string', required: true },
+        { key: 'host',      type: 'string', required: true },
+        { key: 'port',      type: 'number', required: true },
+        { key: 'mainTopic', type: 'string', required: false },
+        { key: 'username',  type: 'string', required: false },
+        { key: 'password',  type: 'string', required: false },
+      ]),
+      valText: '[]',
+    },
+    {
       code: 'sistema.stagione',
       name: 'Stagione impianto',
       description: 'Determina il comportamento del termostato. winter = riscaldamento, summer = raffrescamento.',
@@ -144,7 +170,7 @@ async function main() {
       : null;
     await prisma.cfgConfiguration.upsert({
       where:  { code: c.code },
-      update: { name: c.name, description: c.description ?? null, sectionId, options: c.options ?? null },
+      update: { name: c.name, description: c.description ?? null, sectionId, options: c.options ?? null, pattern: c.pattern ?? null },
       create: {
         code:        c.code,
         name:        c.name,
@@ -152,6 +178,7 @@ async function main() {
         sectionId,
         dataType:    c.dataType,
         options:     c.options    ?? null,
+        pattern:     c.pattern    ?? null,
         valInt:      c.valInt     ?? null,
         valFloat:    c.valFloat   ?? null,
         valBool:     c.valBool    ?? null,
