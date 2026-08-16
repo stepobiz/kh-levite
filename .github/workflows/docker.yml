@@ -19,6 +19,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: stepobiz/kh-levite
+          flavor: |
+            latest=false
           tags: |
             type=raw,value=latest,enable=${{ !contains(github.ref_name, '-rc') }}
             type=ref,event=tag
