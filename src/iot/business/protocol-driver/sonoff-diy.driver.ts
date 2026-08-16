@@ -29,7 +29,7 @@ export class SonoffDiyDriver implements IotProtocolDriver {
     const res = await axios.post<SonoffDiyResponse>(
       `${this.baseUrl(component)}/info`,
       { deviceid: '', data: {} },
-      { timeout: 5000 },
+      { timeout: 1500 },
     );
     if (res.data.error !== 0) throw new Error(`Sonoff DIY error code: ${res.data.error}`);
     return res.data.data?.switch === 'on' ? '1' : '0';
@@ -40,7 +40,7 @@ export class SonoffDiyDriver implements IotProtocolDriver {
     const res = await axios.post<SonoffDiyResponse>(
       `${this.baseUrl(component)}/switch`,
       { deviceid: '', data: { switch: on ? 'on' : 'off' } },
-      { timeout: 5000 },
+      { timeout: 1500 },
     );
     if (res.data.error !== 0) throw new Error(`Sonoff DIY error code: ${res.data.error}`);
   }
