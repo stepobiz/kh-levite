@@ -40,9 +40,10 @@ async function main() {
     valText?: string;
   }[] = [
     {
-      code: 'allow_node_type_edit',
+      code: 'autoengine.allow_node_type_edit',
       name: 'Permetti la modifica del node type',
       description: 'Se true, permette la modifica e l\'eliminazione dei node type dalla UI. Se false o assente, i pulsanti di modifica sono disabilitati. Default: false',
+      sectionCode: 'autoengine',
       dataType: 'boolean',
       valBool: true,
     },

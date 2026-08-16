@@ -1,7 +1,7 @@
 // --- Node Types ---
 async function _fetchNodeTypeEditFlag() {
   try {
-    const res = await fetch('/api/cfg/configurations/allow_node_type_edit');
+    const res = await fetch('/api/cfg/configurations/autoengine.allow_node_type_edit');
     if (res.ok) {
       const cfg = await res.json();
       nodeTypeEditAllowed = cfg.valBool !== false; // default true if config exists but not explicitly false
