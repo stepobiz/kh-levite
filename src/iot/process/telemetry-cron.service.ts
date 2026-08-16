@@ -49,7 +49,7 @@ export class TelemetryCronService implements OnModuleInit {
 
       await this.processLogBusiness
         .log({ processName: PROCESS_NAME, startedAt, endedAt, durationMs, itemCount, status, errorMsg })
-        .catch(() => {});
+        .catch((err: any) => this.logger.warn(`Scrittura process log fallita: ${err?.message ?? err}`));
 
       this.realtimeGateway.emitProcessUpdate({
         processName: PROCESS_NAME,

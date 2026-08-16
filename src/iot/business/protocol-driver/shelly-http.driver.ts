@@ -53,6 +53,7 @@ export class ShellyHttpDriver implements IotProtocolDriver {
 
     const response = await axios.post<JsonRpcResponse<T>>(url, body, {
       headers: { 'Content-Type': 'application/json' },
+      timeout: 5000,
     });
 
     if (response.data.error) {
