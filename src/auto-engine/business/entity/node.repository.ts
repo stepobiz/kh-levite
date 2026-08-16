@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { AuenNodeCategory, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 const NODE_INCLUDE = {
@@ -100,6 +100,17 @@ export class NodeRepository {
     return this.prisma.auenNode.findFirst({
       where: {
         iotComponentId: componentId,
+        ...(excludeNodeId != null ? { id: { not: excludeNodeId } } : {}),
+      },
+      select: { id: true, code: true },
+    });
+  }
+
+  findExclusiveNodeByIotComponentId(componentId: number, categories: AuenNodeCategory[], excludeNodeId?: number) {
+    return this.prisma.auenNode.findFirst({
+      where: {
+        iotComponentId: componentId,
+        type: { category: { in: categories } },
         ...(excludeNodeId != null ? { id: { not: excludeNodeId } } : {}),
       },
       select: { id: true, code: true },

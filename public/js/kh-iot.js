@@ -132,8 +132,8 @@ function renderAccordionComponents(deviceId, components) {
       </thead>
       <tbody>
         ${components.map(c => {
-          const nodeLabel = c.linkedNode
-            ? `<span class="badge badge-cat-node" style="font-size:11px">${esc(c.linkedNode.code ?? '#' + c.linkedNode.id)}</span>`
+          const nodeLabel = (c.linkedNodes && c.linkedNodes.length > 0)
+            ? c.linkedNodes.map(n => `<span class="badge badge-cat-node" style="font-size:11px">${esc(n.code ?? '#' + n.id)}</span>`).join(' ')
             : `<span class="muted-text">—</span>`;
           return `<tr>
           <td>${esc(c.id)}</td>
@@ -689,8 +689,8 @@ function renderUserAccordionComponents(deviceId, components) {
       </thead>
       <tbody>
         ${components.map(c => {
-          const nodeLabel = c.linkedNode
-            ? `<span class="badge badge-cat-node" style="font-size:11px">${esc(c.linkedNode.code ?? '#' + c.linkedNode.id)}</span>`
+          const nodeLabel = (c.linkedNodes && c.linkedNodes.length > 0)
+            ? c.linkedNodes.map(n => `<span class="badge badge-cat-node" style="font-size:11px">${esc(n.code ?? '#' + n.id)}</span>`).join(' ')
             : `<span class="muted-text">—</span>`;
           const statusId = `user-status-${c.id}`;
           return `<tr>

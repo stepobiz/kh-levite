@@ -27,6 +27,16 @@ const CAN_HAVE_COMPONENT = new Set<AuenNodeCategory>([
   AuenNodeCategory.proxy_inverter,
 ]);
 
+// Categorie che scrivono sul componente collegato (attuatori, o proxy che pilotano un output):
+// un componente può avere al massimo un nodo di queste categorie. in_sensor (sola lettura) è escluso
+// di proposito e può condividere liberamente lo stesso componente con altri nodi.
+const EXCLUSIVE_COMPONENT_CATEGORIES = new Set<AuenNodeCategory>([
+  AuenNodeCategory.out_logic_or,
+  AuenNodeCategory.out_logic_and,
+  AuenNodeCategory.proxy_mirror,
+  AuenNodeCategory.proxy_inverter,
+]);
+
 @Injectable()
 export class NodeBusiness {
   constructor(
@@ -63,7 +73,7 @@ export class NodeBusiness {
     }
     if (resolvedIotComponentId != null) {
       await this._assertIotComponentAllowed(dto.typeId!);
-      await this._assertComponentNotUsed(resolvedIotComponentId);
+      await this._assertComponentNotUsed(resolvedIotComponentId, nodeType!.category);
     }
     if (dto.parentId != null) {
       await this._assertParentCanHaveChildren(dto.parentId);
@@ -116,9 +126,10 @@ export class NodeBusiness {
     if (resolvedIsLogical && resolvedIotComponentId != null) {
       throw new BadRequestException('A logical node (isLogical=true) cannot have an IoT component');
     }
-    if (resolvedIotComponentId != null && resolvedIotComponentId !== existing.iotComponentId) {
+    const categoryChanging = nodeType != null && existing.type.category !== nodeType.category;
+    if (resolvedIotComponentId != null && (resolvedIotComponentId !== existing.iotComponentId || categoryChanging)) {
       await this._assertIotComponentAllowed(typeId);
-      await this._assertComponentNotUsed(resolvedIotComponentId, id);
+      await this._assertComponentNotUsed(resolvedIotComponentId, nodeType!.category, id);
     }
     if (dto.parentId != null && dto.parentId !== existing.parentId) {
       await this._assertParentCanHaveChildren(dto.parentId);
@@ -294,8 +305,11 @@ export class NodeBusiness {
     }, tx);
   }
 
-  private async _assertComponentNotUsed(componentId: number, excludeNodeId?: number) {
-    const existing = await this.repository.findByIotComponentId(componentId, excludeNodeId);
+  private async _assertComponentNotUsed(componentId: number, category: AuenNodeCategory, excludeNodeId?: number) {
+    if (!EXCLUSIVE_COMPONENT_CATEGORIES.has(category)) return;
+    const existing = await this.repository.findExclusiveNodeByIotComponentId(
+      componentId, Array.from(EXCLUSIVE_COMPONENT_CATEGORIES), excludeNodeId,
+    );
     if (existing) {
       throw new BadRequestException(
         `IoT component ${componentId} is already linked to node "${existing.code ?? '#' + existing.id}"`,

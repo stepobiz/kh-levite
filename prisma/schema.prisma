@@ -40,7 +40,7 @@ model IotDeviceComponent {
   updatedAt           DateTime          @updatedAt @map("updated_at")
   device              IotDevice         @relation(fields: [deviceId], references: [id])
   telemetryLogs       IotTelemetryLog[]
-  auenNode            AuenNode?
+  auenNodes           AuenNode[]
 
   @@index([deviceId])
   @@map("iot_device_component")
@@ -91,7 +91,7 @@ model AuenNode {
   description           String?
   typeId                Int       @map("type_id")
   parentId              Int?      @map("parent_id")
-  iotComponentId        Int?      @unique @map("iot_component_id")
+  iotComponentId        Int?      @map("iot_component_id")
   isLogical             Boolean   @default(false) @map("is_logical")
   order                 Int       @default(0) @map("node_order")
   desiredValue          String    @default("0") @map("desired_value")

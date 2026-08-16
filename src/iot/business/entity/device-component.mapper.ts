@@ -29,7 +29,7 @@ export class DeviceComponentMapper {
       hardwareAddress: entity.hardwareAddress,
       createdAt: entity.createdAt,
       device: entity.device ? DeviceMapper.toDto(entity.device) : undefined,
-      linkedNode: entity.auenNode ? { id: entity.auenNode.id, code: entity.auenNode.code } : undefined,
+      linkedNodes: (entity.auenNodes ?? []).map((n: { id: number; code: string | null }) => ({ id: n.id, code: n.code })),
     };
   }
 }

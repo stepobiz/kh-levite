@@ -14,8 +14,8 @@ export class DeviceComponentDto {
 	@ApiHideProperty()
 	device?: DeviceDto;
 
-	@ApiPropertyOptional({ description: 'Linked AutoEngine node (at most one)' })
-	linkedNode?: { id: number; code?: string | null };
+	@ApiPropertyOptional({ description: 'AutoEngine nodes linked to this component (0..N — exclusive-category nodes are limited to 1, in_sensor can share)' })
+	linkedNodes?: { id: number; code?: string | null }[];
 
 	@ApiPropertyOptional({ description: 'Component name' })
 	@IsOptional()

@@ -12,21 +12,21 @@ export class DeviceComponentRepository {
 
   findAll() {
     return this.prisma.iotDeviceComponent.findMany({
-      include: { device: { include: { params: true } }, auenNode: { select: { id: true, code: true } } },
+      include: { device: { include: { params: true } }, auenNodes: { select: { id: true, code: true } } },
     });
   }
 
   findAllByDevice(deviceId: number) {
     return this.prisma.iotDeviceComponent.findMany({
       where: { deviceId },
-      include: { device: { include: { params: true } }, auenNode: { select: { id: true, code: true } } },
+      include: { device: { include: { params: true } }, auenNodes: { select: { id: true, code: true } } },
     });
   }
 
   findById(id: number) {
     return this.prisma.iotDeviceComponent.findUnique({
       where: { id },
-      include: { device: { include: { params: true } }, auenNode: { select: { id: true, code: true } } },
+      include: { device: { include: { params: true } }, auenNodes: { select: { id: true, code: true } } },
     });
   }
 
