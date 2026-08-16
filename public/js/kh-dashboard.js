@@ -30,8 +30,8 @@ function _startAgoInterval() {
   _agoIntervalId = setInterval(() => {
     DASHBOARD_PROCESSES.forEach(p => {
       const st = _dbProcessStats[p.id];
-      if (!st?.last?.startedAt) return;
-      _setText(`pb-${p.id}-ago`, _fmtAgo(new Date(st.last.startedAt)));
+      if (!st?.last?.endedAt) return;
+      _setText(`pb-${p.id}-ago`, _fmtAgo(new Date(st.last.endedAt)));
     });
   }, 1000);
 }
@@ -127,7 +127,7 @@ function _renderProcessBox(processId) {
   _setClass(`pb-${processId}-status`,   'process-box-badge ' + (ok ? 'badge-ok' : 'badge-err'));
   _setText(`pb-${processId}-duration`,  last.durationMs + ' ms');
   _setText(`pb-${processId}-started`,   last.startedAt ? new Date(last.startedAt).toLocaleTimeString('it-IT') : '—');
-  _setText(`pb-${processId}-ago`,       last.startedAt ? _fmtAgo(new Date(last.startedAt)) : '—');
+  _setText(`pb-${processId}-ago`,       last.endedAt ? _fmtAgo(new Date(last.endedAt)) : '—');
   _setText(`pb-${processId}-items`,     last.itemCount ?? last.itemsProcessed ?? '—');
   _setText(`pb-${processId}-avg`,       rollingAvg != null ? rollingAvg + ' ms' : '—');
 
