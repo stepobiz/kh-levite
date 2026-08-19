@@ -22,7 +22,7 @@ export class LogicEngineSolverBusiness {
 
     let season: string | undefined;
     try {
-      const cfg = await this.configurationBusiness.findByCode('sistema.stagione');
+      const cfg = await this.configurationBusiness.findByCode('autoengine.season');
       season = cfg.valText ?? undefined;
     } catch {
       // config not found — season remains undefined

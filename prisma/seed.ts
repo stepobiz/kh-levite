@@ -14,7 +14,6 @@ async function main() {
     { code: 'sync',        name: 'SyncModule' },
     { code: 'autoengine',  name: 'AutoEngineModule' },
     { code: 'iot',         name: 'IotModule' },
-    { code: 'sistema',     name: 'Sistema' },
   ];
   for (const s of cfgSections) {
     await prisma.cfgSection.upsert({
@@ -151,10 +150,10 @@ async function main() {
       valText: '[]',
     },
     {
-      code: 'sistema.stagione',
+      code: 'autoengine.season',
       name: 'Stagione impianto',
       description: 'Determina il comportamento del termostato. winter = riscaldamento, summer = raffrescamento.',
-      sectionCode: 'sistema',
+      sectionCode: 'autoengine',
       dataType: 'select',
       options: JSON.stringify([
         { value: 'winter', label: 'Inverno' },
